@@ -50,7 +50,6 @@ assert_eq!(slice, &[2, 3]); // true
 ```rust
     let cat = ("Furry McFurson", 3.5);
     let (name, age) = cat;
-
     println!("{} is {} years old.", name, age);
     // Output: Furry McFurson is 3.5 years old. 
 ///////////////////////////////////////////////
@@ -58,4 +57,9 @@ assert_eq!(slice, &[2, 3]); // true
     let (x, y, z) = tup;
     println!("The value of y is: {y}");
     // Output: The value of y is: 6.4
+///////////////////////////////////////////////
+    let x: (i32, f64, u8) = (500, 6.4, 1);
+    let five_hundred = x.0; // 500
+    let six_point_four = x.1; // 6.4
+    let one = x.2; // 1
 ```
