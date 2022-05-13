@@ -63,3 +63,41 @@ assert_eq!(slice, &[2, 3]); // true
     let six_point_four = x.1; // 6.4
     let one = x.2; // 1
 ```
+### Структуры
+1. Структуры определяются как ```struct```.
+```rust
+struct User {
+    active: bool,
+    username: String,
+    email: String,
+    sign_in_count: u64,
+}
+```
+> Инициализируются через:
+```rust
+    let user1 = User {
+        email: String::from("someone@example.com"),
+        username: String::from("someusername123"),
+        active: true,
+        sign_in_count: 1,
+    };
+    user1.email = String::from("anotheremail@example.com");
+    ///////////////////////////////////////////////////////
+    fn build_user(email: String, username: String) -> User {
+        User {
+            email: email,
+            username: username,
+            active: true,
+            sign_in_count: 1,
+        }
+    }
+    // Short initialization. Without adding field name, like in previous example(email: email)
+    fn build_user(email: String, username: String) -> User {
+        User {
+            email,
+            username,
+            active: true,
+            sign_in_count: 1,
+        }
+    }
+```
