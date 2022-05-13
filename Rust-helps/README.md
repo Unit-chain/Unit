@@ -44,3 +44,18 @@ assert_eq!(slice, &[2, 3]); // true
 > Эта инициализация похожа на создание ссылки на переменную String, но с дополнительным условием - указанием отрезка [0..5]. Вместо ссылки на всю String,     срез ссылается на её часть.
 
 ![slice-link](https://raw.githubusercontent.com/Abuzik/reborn-block/0902656ed67519e912e28df46a30ffd928a6d3c1/Rust-helps/images/trpl04-06.svg "Slice")
+
+### Кортежи
+1. Если кортеж содержит несколько типов переменных одновременно, можно получить поля этих кортежей одной строкой.
+```rust
+    let cat = ("Furry McFurson", 3.5);
+    let (name, age) = cat;
+
+    println!("{} is {} years old.", name, age);
+    // Output: Furry McFurson is 3.5 years old. 
+///////////////////////////////////////////////
+    let tup: (i32, f64, u8) = (500, 6.4, 1);
+    let (x, y, z) = tup;
+    println!("The value of y is: {y}");
+    // Output: The value of y is: 6.4
+```
