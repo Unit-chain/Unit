@@ -33,6 +33,8 @@ fn string_uppercase(mut data: String) {
 let s = String::from("hello world");
 let hello = &s[0..5];
 let world = &s[6..11];
+let slice = &s[..2]; // start from 0
+let slice = &s[..]; // start from 0 to end of string
 ```
 > Эта инициализация похожа на создание ссылки на переменную String, но с дополнительным условием - указанием отрезка [0..5]. Вместо ссылки на всю String,     срез ссылается на её часть.
 
