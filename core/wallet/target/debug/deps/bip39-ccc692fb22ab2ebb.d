@@ -1,0 +1,11 @@
+/Users/kirillzhukov/Documents/GitHub/reborn-block/core/wallet/target/debug/deps/bip39-ccc692fb22ab2ebb.rmeta: /Users/kirillzhukov/.cargo/registry/src/github.com-1ecc6299db9ec823/bip39-1.0.1/src/lib.rs /Users/kirillzhukov/.cargo/registry/src/github.com-1ecc6299db9ec823/bip39-1.0.1/src/internal_macros.rs /Users/kirillzhukov/.cargo/registry/src/github.com-1ecc6299db9ec823/bip39-1.0.1/src/language/mod.rs /Users/kirillzhukov/.cargo/registry/src/github.com-1ecc6299db9ec823/bip39-1.0.1/src/language/english.rs /Users/kirillzhukov/.cargo/registry/src/github.com-1ecc6299db9ec823/bip39-1.0.1/src/pbkdf2.rs
+
+/Users/kirillzhukov/Documents/GitHub/reborn-block/core/wallet/target/debug/deps/libbip39-ccc692fb22ab2ebb.rlib: /Users/kirillzhukov/.cargo/registry/src/github.com-1ecc6299db9ec823/bip39-1.0.1/src/lib.rs /Users/kirillzhukov/.cargo/registry/src/github.com-1ecc6299db9ec823/bip39-1.0.1/src/internal_macros.rs /Users/kirillzhukov/.cargo/registry/src/github.com-1ecc6299db9ec823/bip39-1.0.1/src/language/mod.rs /Users/kirillzhukov/.cargo/registry/src/github.com-1ecc6299db9ec823/bip39-1.0.1/src/language/english.rs /Users/kirillzhukov/.cargo/registry/src/github.com-1ecc6299db9ec823/bip39-1.0.1/src/pbkdf2.rs
+
+/Users/kirillzhukov/Documents/GitHub/reborn-block/core/wallet/target/debug/deps/bip39-ccc692fb22ab2ebb.d: /Users/kirillzhukov/.cargo/registry/src/github.com-1ecc6299db9ec823/bip39-1.0.1/src/lib.rs /Users/kirillzhukov/.cargo/registry/src/github.com-1ecc6299db9ec823/bip39-1.0.1/src/internal_macros.rs /Users/kirillzhukov/.cargo/registry/src/github.com-1ecc6299db9ec823/bip39-1.0.1/src/language/mod.rs /Users/kirillzhukov/.cargo/registry/src/github.com-1ecc6299db9ec823/bip39-1.0.1/src/language/english.rs /Users/kirillzhukov/.cargo/registry/src/github.com-1ecc6299db9ec823/bip39-1.0.1/src/pbkdf2.rs
+
+/Users/kirillzhukov/.cargo/registry/src/github.com-1ecc6299db9ec823/bip39-1.0.1/src/lib.rs:
+/Users/kirillzhukov/.cargo/registry/src/github.com-1ecc6299db9ec823/bip39-1.0.1/src/internal_macros.rs:
+/Users/kirillzhukov/.cargo/registry/src/github.com-1ecc6299db9ec823/bip39-1.0.1/src/language/mod.rs:
+/Users/kirillzhukov/.cargo/registry/src/github.com-1ecc6299db9ec823/bip39-1.0.1/src/language/english.rs:
+/Users/kirillzhukov/.cargo/registry/src/github.com-1ecc6299db9ec823/bip39-1.0.1/src/pbkdf2.rs:
