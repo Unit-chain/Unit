@@ -6,7 +6,7 @@ use bip0039::{Count, Language, Mnemonic};
 
 fn getPrivateKeyAsString() {}
 
-fn generateMnemonicPhrase(length: i8, lang: &Language) -> String {
+fn generateMnemonicPhrase(length: i8, lang: &Language) -> &str {
     if length == 12 {
         let mnemonic: Mnemonic = Mnemonic::generate_in(lang, Count::Words12);
         mnemonic.phrase()
