@@ -1,0 +1,2 @@
+- name: Auto Reviewers
+  uses: zattoo/reviewers@4.0.1
