@@ -114,7 +114,7 @@ struct User {
     // short initialization
     let user2 = User {
         email: String::from("another@example.com"),
-        ..user1 // takes other fields from user1
+        ..user1 // takes other fields from user1 ; can't use _user1_ anymore
     };
 ```
 3. Кортежные структуры:
