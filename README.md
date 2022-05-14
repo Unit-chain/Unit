@@ -4,3 +4,4 @@
 1. https://docs.rs/ed25519/latest/ed25519/
 2. https://docs.rs/rocksdb/latest/rocksdb/
 3. https://docs.rs/leveldb/latest/leveldb/
+4. https://github.com/koushiro/bip0039
