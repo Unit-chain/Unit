@@ -25,12 +25,9 @@ fn main() {
     /// Generates the HD wallet seed from the mnemonic and the passphrase.
     let seed = mnemonic.to_seed("123");
     println!("seed: {}", hex::encode(&seed[..]));
-
     /// Generates a Simplified Chinese mnemonic with 12 words randomly
     let mnemonic = Mnemonic::generate_in(Language::English, Count::Words12);
     println!("phrase: {}", mnemonic.phrase());
 
-    let mnem = Mnemonic::from_str(&*"123".to_string());
 
-    println!("from string: {}", mnemonic.phrase());
 }
