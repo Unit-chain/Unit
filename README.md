@@ -5,3 +5,4 @@
 2. https://docs.rs/rocksdb/latest/rocksdb/
 3. https://docs.rs/leveldb/latest/leveldb/
 4. https://github.com/koushiro/bip0039
+5. https://crates.io/crates/ed25519
