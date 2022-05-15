@@ -330,3 +330,197 @@ fn value_in_cents(coin: Coin) -> u8 {
         count += 1;
     }
 ```
+### Модули
+#### Ключевое слово `mod`.
+> Создадим новую библиотеку (библиотечный крейт) с именем `restaurant` выполнив команду `cargo new --lib restaurant`
+```rust
+   mod front_of_house {
+        mod hosting {
+            fn add_to_waitlist() {}
+
+            fn seat_at_table() {}
+        }
+
+        mod serving {
+            fn take_order() {}
+
+            fn serve_order() {}
+
+            fn take_payment() {}
+        }
+    }
+
+ 
+```    
+#### Ссылаемся на элементы дерева модулей при помощи путей
+```rust
+mod front_of_house {
+    mod hosting {
+        fn add_to_waitlist() {}
+    }
+}
+
+pub fn eat_at_restaurant() {
+    // Absolute path
+    crate::front_of_house::hosting::add_to_waitlist();
+
+    // Relative path
+    front_of_house::hosting::add_to_waitlist();
+}
+```
+#### Super
+```rust
+fn deliver_order() {}
+
+mod back_of_house {
+    fn fix_incorrect_order() {
+        cook_order();
+        super::deliver_order();
+    }
+
+    fn cook_order() {}
+}
+
+```
+> `super`обращается к родительскому модулю для `back_of_house`. Т.к родительский модуль для `back_of_house` - `crate`, то это эквивалентно: `crate::deliver_order()`
+
+#### Структуры в модуле
+```rust
+mod back_of_house {
+    pub struct Breakfast {
+        pub toast: String,
+        seasonal_fruit: String,
+    }
+
+    impl Breakfast {
+        pub fn summer(toast: &str) -> Breakfast {
+            Breakfast {
+                toast: String::from(toast),
+                seasonal_fruit: String::from("peaches"),
+            }
+        }
+    }
+}
+
+pub fn eat_at_restaurant() {
+    // Order a breakfast in the summer with Rye toast
+    let mut meal = back_of_house::Breakfast::summer("Rye");
+    // Change our mind about what bread we'd like
+    meal.toast = String::from("Wheat");
+    println!("I'd like {} toast please", meal.toast);
+
+    // The next line won't compile if we uncomment it; we're not allowed
+    // to see or modify the seasonal fruit that comes with the meal
+    // meal.seasonal_fruit = String::from("blueberries");
+}
+```    
+#### Enum
+```rust
+mod back_of_house {
+    pub enum Appetizer {
+        Soup,
+        Salad,
+    }
+}
+
+pub fn eat_at_restaurant() {
+    let order1 = back_of_house::Appetizer::Soup;
+    let order2 = back_of_house::Appetizer::Salad;
+}
+```
+> Поскольку мы сделали публичным список Appetizer, то можно использовать варианты Soup и Salad в функции eat_at_restaurant. Перечисления не очень полезны, если их варианты являются приватными: было бы досадно каждый раз аннотировать все перечисленные варианты как pub. По этой причине по умолчанию варианты перечислений являются публичными. Структуры часто полезны, если их поля не являются открытыми, поэтому поля структуры следуют общему правилу, согласно которому всё по умолчанию является приватными, если не указано pub.
+
+#### Use
+```rust
+mod front_of_house {
+    pub mod hosting {
+        pub fn add_to_waitlist() {}
+    }
+}
+
+use crate::front_of_house::hosting;
+
+pub fn eat_at_restaurant() {
+    hosting::add_to_waitlist();
+}
+```
+> `use` в *Rust* эквивалентно `using` в `C/C++` 
+```c++
+#include <iostream>
+using namespace std;
+int main() {
+    cout << "Hello, world!";
+}
+```
+> без `using` пришлось бы писать длиннее:
+```c++
+#include <iostream>
+int main() {
+    std::cout << "Hello, world!";
+}
+```
+> `use` - указывает область видимости
+#### As
+```rust
+use std::fmt::Result;
+use std::io::Result as IoResult;
+
+fn function1() -> Result {
+    // --snip--
+}
+
+fn function2() -> IoResult<()> {
+    // --snip--
+}
+```
+> `As` позволяет избежать ошибок, связанных с одниковым названием модулей/методов в разных библиблиотеках/модулях
+
+#### Реэкспорт имён с pub use
+```rust
+pub use crate::front_of_house::hosting;
+```
+> Благодаря использованию pub use, внешний код теперь может вызывать функцию add_to_waitlist используя hosting::add_to_waitlist. Если бы мы не указали pub use, то только функция eat_at_restaurant могла бы вызывать hosting::add_to_waitlist в своей области видимости, но внешний код не смог бы так сделать.
+> Вместо подключение двух модулей из одной облости видимости в две строки, можно объединить в одну 
+```rust
+// --snip--
+use std::cmp::Ordering;
+use std::io;
+// --snip--
+    /// eqauls
+// --snip--
+use std::{cmp::Ordering, io};
+// --snip--
+use std::io::{self, Write};
+```
+> Для подключения всех модулей из пакета, можно использовать оператор `*`
+```rust
+use std::collections::*;
+```
+#### Разделение модулей на разные файлы
+```rust
+mod front_of_house;
+
+pub use crate::front_of_house::hosting;
+
+pub fn eat_at_restaurant() {
+    hosting::add_to_waitlist();
+}
+```
+> Например, давайте начнём с кода листинга 7-17 и первым шагом переместим модуль front_of_house в свой собственный файл src/front_of_house.rs, изменив корневой файл крейта так, чтобы он содержал код показанный в листинге 7-21. В этом случае, корневым файлом крейта является src/lib.rs, но эта процедура также работает с исполняемыми крейтами у которых корневой файл крейта src/main.rs.
+> В данном случае будет искать файл с именем как у модуля, то есть `src/front_of_house.rs`. 
+> Инициализируем тело `hosting` в `front_of_house.rs`
+```rust
+pub mod hosting {
+    pub fn add_to_waitlist() {}
+}
+```
+> Использование точки с запятой после mod front_of_house, вместо объявления начала блока, говорит Rust загрузить содержимое модуля из другого файла имеющего такое же название как и имя модуля. Продолжим наш пример и выделим модуль hosting в отдельный файл, а затем поменяем содержимое файла src/front_of_house.rs так, чтобы он содержал только объявление модуля hosting:
+```rust
+pub mod hosting;
+```
+> Затем мы создаём каталог src/front_of_house и файл src/front_of_house/hosting.rs в данной директории. Чтобы вынести модуль мы, так же как и ранее, должны выделить содержимое модуля hosting из прежнего места и перенести его в свой файл модуля hosting.rs:
+> Файл: src/front_of_house/hosting.rs
+```rust
+pub fn add_to_waitlist() {}
+```    
+> это эквивалентно тому, что мы бы описали модуль в src/lib.rs
