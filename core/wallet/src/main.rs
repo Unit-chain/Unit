@@ -8,10 +8,7 @@ extern crate hex;
 use rand::rngs::OsRng;
 use ed25519_dalek::*;
 use bip0039::{Count, Language, Mnemonic};
-
-pub mod pkcs8;
-pub use crate::pkcs8::KeypairBytes;
-
+use std::time::{SystemTime, UNIX_EPOCH};
 
 fn main() {
     println!("Hello, world!");
