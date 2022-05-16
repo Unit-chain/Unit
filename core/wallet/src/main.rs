@@ -1,12 +1,17 @@
 extern crate ed25519_dalek;
 extern crate rand;
+extern crate ed25519;
+extern crate hex;
 
-use std::str::FromStr;
-use sha3::Sha3_512;
-use hex_literal::hex;
+// use sha3::Sha3_512;
+// use hex_literal::hex;
 use rand::rngs::OsRng;
 use ed25519_dalek::*;
 use bip0039::{Count, Language, Mnemonic};
+
+pub mod pkcs8;
+pub use crate::pkcs8::KeypairBytes;
+
 
 fn main() {
     println!("Hello, world!");
@@ -22,12 +27,24 @@ fn main() {
     let phrase = mnemonic.phrase();
     println!("phrase: {}", phrase);
 
-    /// Generates the HD wallet seed from the mnemonic and the passphrase.
-    let seed = mnemonic.to_seed("123");
-    println!("seed: {}", hex::encode(&seed[..]));
-    /// Generates a Simplified Chinese mnemonic with 12 words randomly
-    let mnemonic = Mnemonic::generate_in(Language::English, Count::Words12);
-    println!("phrase: {}", mnemonic.phrase());
+    let string: String = hex::encode(keypair.secret.to_bytes());
 
+    println!("{:?}", string);
+    println!("private key bytes before encoding {:?}", keypair.secret.to_bytes());
+    println!("private key bytes after decoding {:?}", hex::decode(string).ok().unwrap());
+    // /// Generates the HD wallet seed from the mnemonic and the passphrase.
+    // let seed = mnemonic.to_seed("123");
+    // println!("seed: {}", hex::encode(&seed[..]));
+    // /// Generates a Simplified Chinese mnemonic with 12 words randomly
+    // let mnemonic = Mnemonic::generate_in(Language::English, Count::Words12);
+    // println!("phrase: {}", mnemonic.phrase());
 
+    // let valid_keypair = pkcs8::KeypairBytes {
+    //     secret_key: keypair.secret.to_bytes(),
+    //     public_key: Some(keypair.public.to_bytes()),
+    // };
+
+    // println!("key bytes {:?}", valid_keypair.to_bytes().unwrap());
+
+    // println!("{:?}", std::str::from_utf8(&keypair.secret.to_bytes()));
 }
