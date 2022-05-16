@@ -1,5 +1,5 @@
-# reborn-block
-### Blockhain for holding info about transactions inside system.
+# Unit
+### Blockhain for holding info about transactions inside system Reborn-cash system.
 #### Dependencies list:
 1. https://docs.rs/ed25519/latest/ed25519/
 2. https://docs.rs/rocksdb/latest/rocksdb/
