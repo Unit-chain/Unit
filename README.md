@@ -7,3 +7,4 @@
 4. https://github.com/koushiro/bip0039
 5. https://crates.io/crates/ed25519
 6. https://en.wikipedia.org/wiki/Berkeley_Packet_Filter
+7. https://www.aumasson.jp
