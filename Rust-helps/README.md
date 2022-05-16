@@ -330,7 +330,7 @@ fn value_in_cents(coin: Coin) -> u8 {
         count += 1;
     }
 ```
-### Модули
+### Модули (`cargo new --lib restaurant`)
 #### Ключевое слово `mod`.
 > Создадим новую библиотеку (библиотечный крейт) с именем `restaurant` выполнив команду `cargo new --lib restaurant`
 ```rust
