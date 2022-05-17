@@ -1,8 +1,6 @@
 extern crate hex;
 #[path = "../../transaction/src/lib.rs"]
 pub mod transaction;
-// use std::time::{SystemTime, UNIX_EPOCH};
-// use sha3::Sha3_384;
 
 #[cfg(test)]
 mod tests {
