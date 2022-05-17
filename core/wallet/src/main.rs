@@ -3,7 +3,7 @@ extern crate rand;
 extern crate ed25519;
 extern crate hex;
 
-// use sha3::Sha3_512;
+use sha3::{Digest, Sha3_384};
 // use hex_literal::hex;
 use rand::rngs::OsRng;
 use ed25519_dalek::*;
@@ -29,6 +29,12 @@ fn main() {
     println!("{:?}", string);
     println!("private key bytes before encoding {:?}", keypair.secret.to_bytes());
     println!("private key bytes after decoding {:?}", hex::decode(string).ok().unwrap());
+
+    let strintest: String = String::from("112");
+
+    let mut hasher = Sha3_384::new();
+    hasher.update(strintest.as_bytes());
+    println!("hash {:?}", hex::encode(hasher.finalize()));
     // /// Generates the HD wallet seed from the mnemonic and the passphrase.
     // let seed = mnemonic.to_seed("123");
     // println!("seed: {}", hex::encode(&seed[..]));

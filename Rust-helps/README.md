@@ -524,3 +524,227 @@ pub mod hosting;
 pub fn add_to_waitlist() {}
 ```    
 > это эквивалентно тому, что мы бы описали модуль в src/lib.rs
+
+### Коллекции
+#### Создание нового вектора
+```rust
+    let v: Vec<i32> = Vec::new();
+//// or
+    let v = vec![1, 2, 3]; // Vec<i32>
+```
+> Добавление элементов
+```rust
+    let mut v = Vec::new();
+    v.push(5);
+    v.push(6);
+    v.push(7);
+    v.push(8);
+```
+> Удаление вектора происходит при выходе из области видимсоти    
+    
+> Способы сослаться на значение
+```rust
+    let v = vec![1, 2, 3, 4, 5];
+
+    let third: &i32 = &v[2];
+    println!("The third element is {}", third);
+
+    match v.get(2) {
+        Some(third) => println!("The third element is {}", third),
+        None => println!("There is no third element."),
+    }
+```
+> Можно так же итерировать ссылки
+```rust
+    let mut v = vec![100, 32, 57];
+    for i in &mut v {
+        *i += 50;
+    }
+```
+#### Использование перечислений для хранения множества разных типов
+> Векторы могут хранить значения только одинакового типа. Это может быть неудобно; определённо есть варианты использования для хранения списка элементов разных типов. К счастью, варианты перечисления определены для одного и того же типа перечисления, поэтому, когда нам нужен один тип для представления элементов разных типов, мы можем определить и использовать перечисление!
+> Например, мы хотим получить значения из строки в электронной таблице где некоторые столбцы строки содержат целые числа, некоторые числа с плавающей точкой, а другие - строковые значения. Можно определить перечисление, варианты которого будут содержать разные типы значений и тогда все варианты перечисления будут считаться одними и тем же типом: типом самого перечисления. Затем можно создать вектор, который содержит в себе значения этого перечисления и таким образом в конечном счёте добиться того, что в векторе будут сохраняться значения разного типа. Мы продемонстрировали это в листинге 8-10.
+```rust
+    enum SpreadsheetCell {
+        Int(i32),
+        Float(f64),
+        Text(String),
+    }
+
+    let row = vec![
+        SpreadsheetCell::Int(3),
+        SpreadsheetCell::Text(String::from("blue")),
+        SpreadsheetCell::Float(10.12),
+    ];
+```
+#### Строки
+> Присоединение к строке с помощью push_str и push
+```rust 
+    let mut s = String::from("foo");
+    s.push_str("bar"); // foobar
+```
+> Метод `push` принимает один символ в качестве параметра и добавляет его к String. В листинге 8-17 показан код, добавляющий букву "l" к String, используя метод push.
+```rust
+    let mut s = String::from("lo");
+    s.push('l');
+```
+> Объединение строк с помощью оператора + или макроса format!
+```rust
+    let s1 = String::from("Hello, ");
+    let s2 = String::from("world!");
+    let s3 = s1 + &s2; // note s1 has been moved here and can no longer be used
+```
+> Макрос `format`
+```rust
+    let s1 = String::from("tic");
+    let s2 = String::from("tac");
+    let s3 = String::from("toe");
+    let s = format!("{}-{}-{}", s1, s2, s3); // tic-tac-toe
+```
+> Получение буквы из строки
+```rust
+    let hello = "Здравствуйте";
+    let answer = &hello[0];
+```
+> Срезы
+```rust
+let hello = "Здравствуйте"; // Each symbol is 2 bytes. Remember it, cause first symbol can't be get by 1 byte
+let s = &hello[0..4]; // from zero to fourth byte. It's "Зд"
+```
+> Методы перебора
+```rust
+for c in "नमस्ते".chars() {
+    println!("{}", c);
+}
+// न
+// म
+// स
+// ्
+// त
+// े
+    
+for b in "नमस्ते".bytes() {
+    println!("{}", b);
+}
+// 164
+// --часть байтов вырезана--
+// 165
+// 135 
+```
+#### HashMap
+`HashMap<K, V>`, K - Key, V - Value
+> Создание новой хэш-карты
+```rust
+    use std::collections::HashMap;
+
+    let mut scores = HashMap::new(); // String : i32
+    scores.insert(String::from("Blue"), 10);
+    scores.insert(String::from("Yellow"), 50);
+```
+> Ещё один способ построения хеш-карты - использование метода collect на векторе кортежей, где каждый кортеж состоит из двух значений (первое может быть представлено как ключ, а второе как значение хеш-карты). Метод collect собирает данные в несколько типов коллекций, включая HashMap . Например, если бы у нас были названия команд и начальные результаты в двух отдельных векторах, то мы могли бы использовать метод zip для создания вектора кортежей, где имя "Blue" спарено с числом 10, и так далее. Тогда мы могли бы использовать метод collect, чтобы превратить этот вектор кортежей в HashMap, как показано в листинге 8-21.
+```rust
+    use std::collections::HashMap;
+
+    let teams = vec![String::from("Blue"), String::from("Yellow")];
+    let initial_scores = vec![10, 50];
+
+    let mut scores: HashMap<_, _> =
+        teams.into_iter().zip(initial_scores.into_iter()).collect(); // String(teams) : i32(initial_scores)
+```
+> Для типов, которые реализуют типаж Copy, например i32, значения копируются в HashMap. Для значений со владением, таких как String, значения будут перемещены в хеш-карту и она станет владельцем этих значений, как показано в листинге 8-22.
+```rust
+    use std::collections::HashMap;
+
+    let field_name = String::from("Favorite color");
+    let field_value = String::from("Blue");
+
+    let mut map = HashMap::new();
+    map.insert(field_name, field_value);
+    // field_name and field_value are invalid at this point, try using them and
+    // see what compiler error you get!
+```
+
+> Мы не можем использовать переменные field_name и field_value после того, как их значения были перемещены в HashMap вызовом метода insert.
+> Если мы вставим в HashMap ссылки на значения, то они не будут перемещены в HashMap. Значения, на которые указывают ссылки, должны быть действительными хотя бы до тех пор, пока хеш-карта действительна.
+##### Получение значеня
+```rust
+    use std::collections::HashMap;
+
+    let mut scores = HashMap::new();
+
+    scores.insert(String::from("Blue"), 10);
+    scores.insert(String::from("Yellow"), 50);
+
+    let team_name = String::from("Blue");
+    let score = scores.get(&team_name);
+```
+> Мы можем перебирать каждую пару ключ/значение в HashMap таким же образом, как мы делали с векторами, используя цикл for:
+```rust
+    use std::collections::HashMap;
+
+    let mut scores = HashMap::new();
+
+    scores.insert(String::from("Blue"), 10);
+    scores.insert(String::from("Yellow"), 50);
+
+    for (key, value) in &scores {
+        println!("{}: {}", key, value);
+    }
+```
+> Результат: 
+    
+```
+Yellow: 50
+Blue: 10
+```
+# Перезапись старых значений
+> Если мы вставим ключ и значение в HashMap, а затем вставим тот же ключ с новым значением, то старое значение связанное с этим ключом, будет заменено на новое. Даже несмотря на то, что код в листинге 8-24 вызывает insert дважды, хеш-карта будет содержать только одну пару ключ/значение, потому что мы вставляем значения для одного и того же ключа - ключа команды "Blue".
+```rust
+    use std::collections::HashMap;
+
+    let mut scores = HashMap::new();
+
+    scores.insert(String::from("Blue"), 10);
+    scores.insert(String::from("Blue"), 25);
+
+    println!("{:?}", scores); 
+```
+> Код напечатает `{"Blue": 25}`. Начальное значение `10` было перезаписано.
+
+##### Вставка значения только в том случае, когда ключ не имеет значения
+```rust
+    use std::collections::HashMap;
+
+    let mut scores = HashMap::new();
+    scores.insert(String::from("Blue"), 10);
+
+    scores.entry(String::from("Yellow")).or_insert(50);
+    scores.entry(String::from("Blue")).or_insert(50);
+
+    println!("{:?}", scores);
+```
+> Результат: 
+    
+`{"Yellow": 50, "Blue": 10}`
+##### Создание нового значения на основе старого значения
+> Другим распространённым вариантом использования хеш-карт является поиск значения по ключу, а затем обновление этого значения на основе старого значения. Например, в листинге 8-26 показан код, который подсчитывает, сколько раз определённое слово появляется в каком-либо тексте. Мы используем HashMap со словами в качестве ключей и увеличиваем соответствующее слову значение, чтобы отслеживать, сколько раз в тексте мы увидели слово. Если мы впервые увидели слово, то сначала вставляем значение 0.
+```rust
+    use std::collections::HashMap;
+
+    let text = "hello world wonderful world";
+
+    let mut map = HashMap::new();
+
+    for word in text.split_whitespace() {
+        let count = map.entry(word).or_insert(0);
+        *count += 1;
+    }
+
+    println!("{:?}", map);
+```
+> Результат:
+    
+`{"world": 2, "hello": 1, "wonderful": 1}.`
+> По умолчанию HashMap использует "криптографически сильную" функцию хэширования `SipHash`, которая может противостоять атакам класса отказ в обслуживании, Denial of Service (DoS). Это не самый быстрый из возможных алгоритмов хеширования, в данном случае производительность идёт на компромисс с обеспечением лучшей безопасности. Если после профилирования вашего кода окажется, что хэш функция используемая по умолчанию очень медленная, вы можете заменить её используя другой hasher. Hasher - это тип, реализующий трейт BuildHasher. Подробнее о типажах мы поговорим в Главе 10. Вам совсем не обязательно реализовывать свою собственную функцию хэширования, crates.io имеет достаточное количество библиотек, предоставляющих разные реализации hasher с множеством общих алгоритмов хэширования.
+
+
