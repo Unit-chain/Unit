@@ -18,6 +18,8 @@ pub mod instructions {
         find_block,
         burn_units,
         burn_structure_tokens,
-        get_structure_info
+        get_structure_info,
+        create_wallet,
+        wallet_listener
     }
 }
