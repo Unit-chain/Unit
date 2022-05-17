@@ -20,6 +20,6 @@ pub mod instructions {
         burn_structure_tokens,
         get_structure_info,
         create_wallet,
-        wallet_listener
+        wallet_listen
     }
 }
