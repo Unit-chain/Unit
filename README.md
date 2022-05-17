@@ -6,13 +6,15 @@
 3. https://docs.rs/leveldb/latest/leveldb/
 4. https://github.com/koushiro/bip0039
 5. https://crates.io/crates/ed25519
-6. https://en.wikipedia.org/wiki/Berkeley_Packet_Filter
-7. https://www.aumasson.jp
 
-# One of main steps
+#### Important articles:
+1. https://en.wikipedia.org/wiki/Berkeley_Packet_Filter
+2. https://www.aumasson.jp
+
+# Steps
 ## Unit Virtual Machine
+## Machine Type: `stack`
 > ByteCode example
-## Machine Type: `double-ended queue`
 ```
 // Bytecode stream: 03 3b 84 00 01 1a 05 68 3b a7 ff f9
 // Disassembly:
