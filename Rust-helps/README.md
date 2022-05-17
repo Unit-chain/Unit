@@ -926,3 +926,5 @@ use std::io;
 ```
 
 > Использование `?` допустимо только для `Result` и `Option`
+
+[Boxing errors](https://doc.rust-lang.org/stable/rust-by-example/error/multiple_error_types/boxing_errors.html)
