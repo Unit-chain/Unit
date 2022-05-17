@@ -6,8 +6,10 @@ mod tests {
         assert_eq!(result, 4);
     }
 }
-
+extern crate hex;
 pub mod transaction {
+    use sha3::{Digest, Sha3_384};
+
     pub struct NameValue {
         pub name: String,
         pub value: u64,
@@ -46,6 +48,26 @@ pub mod transaction {
                 sign,
                 previous,
             }
+        }
+        pub fn hash(&self) -> String {
+            let mut hasher = Sha3_384::new();
+
+            // write input message
+            hasher.update(format!(
+                "{}{}{}{}{}{}{}{}{}{}",
+                self.amount,
+                self.data,
+                self.from,
+                self.hash,
+                self.previous,
+                self.sign,
+                self.to,
+                self.tx_type,
+                self.typevalue.name,
+                self.typevalue.value,
+            ));
+            // read hash digest
+            format!("hash {:?}", hex::encode(hasher.finalize()))
         }
     }
 }
