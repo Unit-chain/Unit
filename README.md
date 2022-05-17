@@ -12,6 +12,7 @@
 # One of main steps
 ## Unit Virtual Machine
 > ByteCode example
+## Machine Type: `double-ended queue`
 ```
 // Bytecode stream: 03 3b 84 00 01 1a 05 68 3b a7 ff f9
 // Disassembly:
