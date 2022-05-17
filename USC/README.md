@@ -1,4 +1,4 @@
 # USC
 ***USC - is Unit Structure Comment***
 
-UDC describes structures available in Unit blockchain
+USC describes structures available in Unit blockchain
