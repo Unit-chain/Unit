@@ -926,7 +926,7 @@ use std::io;
 ```
 
 > Использование `?` допустимо только для `Result` и `Option`
-<<<<<<< HEAD
+[Boxing errors](https://doc.rust-lang.org/stable/rust-by-example/error/multiple_error_types/boxing_errors.html)
 	
 # Обобщенные типы
 > 10.1 как  в Java
@@ -1272,6 +1272,4 @@ impl<T: Display> ToString for T {
 	
 Основная цель времён жизни состоит в том, чтобы предотвратить недействительные ссылки (dangling references), которые приводят к тому, что программа ссылается на данные отличные от данных на которые она должна ссылаться. Рассмотрим программу из листинга 10-17, которая имеет внешнюю и внутреннюю области видимости.
 =======
-
-[Boxing errors](https://doc.rust-lang.org/stable/rust-by-example/error/multiple_error_types/boxing_errors.html)
 
