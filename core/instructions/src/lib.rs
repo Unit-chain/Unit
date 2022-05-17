@@ -10,14 +10,14 @@ mod tests {
 
 pub mod instructions {
     pub enum Instructions {
-        DEPLOY_STRUCTURE,
-        GET_BALANCE,
-        SEND_TRANSACTION,
-        CONVERT_INTO_STRUCTURE,
-        CONVERT_INTO_UNIT,
-        FIND_BLOCK,
-        BURN_UNITS,
-        BURN_STRUCTURE_TOKENS,
-        GET_STRUCTURE_INFO
+        deploy_structure,
+        get_balance,
+        send_transaction,
+        convert_into_structure,
+        convert_into_unit,
+        find_block,
+        burn_units,
+        burn_structure_tokens,
+        get_structure_info
     }
 }
