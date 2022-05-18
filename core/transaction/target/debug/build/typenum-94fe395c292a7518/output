@@ -1,0 +1,2 @@
+cargo:rustc-env=TYPENUM_BUILD_CONSTS=/Users/kirillzhukov/Documents/GitHub/reborn-block/core/transaction/target/debug/build/typenum-94fe395c292a7518/out/consts.rs
+cargo:rustc-env=TYPENUM_BUILD_OP=/Users/kirillzhukov/Documents/GitHub/reborn-block/core/transaction/target/debug/build/typenum-94fe395c292a7518/out/op.rs

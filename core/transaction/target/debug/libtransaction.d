@@ -1,1 +1,1 @@
-/home/yourgod/programming/Rust/Blockchain-Project/Unit-unit-rust-reborn/core/transaction/target/debug/libtransaction.rlib: /home/yourgod/programming/Rust/Blockchain-Project/Unit-unit-rust-reborn/core/transaction/src/lib.rs
+/Users/kirillzhukov/Documents/GitHub/reborn-block/core/transaction/target/debug/libtransaction.rlib: /Users/kirillzhukov/Documents/GitHub/reborn-block/core/transaction/src/lib.rs
