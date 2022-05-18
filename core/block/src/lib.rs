@@ -11,13 +11,13 @@ mod tests {
     }
 }
 
-pub use crate::serializer::Serializable;
-impl Serializable for blockimplementation::Block {
-    use serde::{Deserialize, Serialize};
-    fn serialize(&self) -> String {
-        String::from(serde_json::to_string(&self).unwrap())
-    }
-}
+// pub use crate::serializer::Serializable;
+// impl Serializable for blockimplementation::Block {
+//     use serde::{Deserialize, Serialize};
+//     fn serialize(&self) -> String {
+//         String::from(serde_json::to_string(&self).unwrap())
+//     }
+// }
 
 
 
