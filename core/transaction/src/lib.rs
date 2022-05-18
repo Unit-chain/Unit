@@ -6,6 +6,18 @@ mod tests {
         assert_eq!(result, 4);
     }
 }
+pub trait Serializable {
+    fn serialize(&self) -> String {
+        String::from("(Read more...)")
+    }
+}
+
+impl Serializable for transaction::Transaction {
+    fn serialize(&self) -> String {
+        String::from(serde_json::to_string(&self).unwrap())
+    }
+}
+
 extern crate hex;
 pub mod transaction {
     use serde::{Deserialize, Serialize};
@@ -73,14 +85,16 @@ pub mod transaction {
             format!("hash {:?}", hex::encode(hasher.finalize()))
         }
 
-        pub fn serialize(&self) -> String {
-            String::from(serde_json::to_string(&self).unwrap())
-        }
-
         // fn sign(&self, )
     }
     pub fn deserialize_transaction(transaction: String) -> Transaction {
         let transaction: Transaction = serde_json::from_str(&transaction).unwrap();
         transaction
     }
+
+    // pub fn serializeE(var: Serializable) String {
+    //     match var {
+    //         Serializable::Transaction => Transaction.serialize()
+    //     }
+    // }
 }
