@@ -1679,3 +1679,454 @@ use std::fmt::Display;
 }
 ```
 Это функция `longest` из листинга 10.22, которая возвращает наибольший из двух фрагментов строки. Но теперь у неё есть дополнительный параметр с именем `ann` обобщённого типа `T`, который может быть заполнен любым типом, реализующим типаж `Display`, как указано в предложении `where`. Этот дополнительный параметр будет напечатан с использованием `{}` , поэтому привязка типажа `Display` необходима. Поскольку время жизни является обобщённым типом, то объявления параметра времени жизни `'a` и параметра обобщённого типа `T` помещаются в один список внутри угловых скобок после имени функции.
+
+# Тесты
+
+Чтобы изменить функцию в тестирующую функцию добавьте `#[test]` в строку перед `fn` . Когда вы запускаете тесты командой `cargo test`, Rust создаёт бинарный модуль выполняющий функции аннотированные атрибутом `test` и сообщающий о том, прошла успешно или не прошла каждая тестирующая функция.
+
+макрос `assert_eq!` проверяет эквивалентность
+
+Команда `cargo test` выполнит все тесты в выбранном проекте и сообщит о результатах как в листинге 11-2:
+
+```markdown
+$ cargo test
+   Compiling adder v0.1.0 (file:///projects/adder)
+    Finished test [unoptimized + debuginfo] target(s) in 0.57s
+     Running unittests (target/debug/deps/adder-92948b65e88960b4)
+
+running 1 test
+test tests::it_works ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests adder
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+```
+
+## [Проверка результатов с помощью макроса `assert!`](https://doc.rust-lang.ru/book/ch11-01-writing-tests.html#%D0%9F%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D1%80%D0%B5%D0%B7%D1%83%D0%BB%D1%8C%D1%82%D0%B0%D1%82%D0%BE%D0%B2-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-%D0%BC%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D0%B0-assert)
+
+Макрос `assert!` доступен из стандартной библиотеки и является удобным, когда вы хотите проверить что некоторое условие в тесте вычисляется в значение `true`. Внутри макроса `assert!` переданный аргумент вычисляется в логическое значение. Если оно `true`, то `assert!` в тесте ничего не делает и он считается пройденным. Если же значение вычисляется в `false`, то макрос  `assert!` вызывает макрос `panic!`, что делает тест аварийным. Использование макроса `assert!` помогает проверить, что код функционирует как ожидалось.
+
+## [Проверка на равенство с помощью макросов `assert_eq!` и `assert_ne!`](https://doc.rust-lang.ru/book/ch11-01-writing-tests.html#%D0%9F%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%BD%D0%B0-%D1%80%D0%B0%D0%B2%D0%B5%D0%BD%D1%81%D1%82%D0%B2%D0%BE-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-%D0%BC%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D0%BE%D0%B2-assert_eq-%D0%B8-assert_ne)
+
+Общим способом проверки функциональности является использование сравнения результата тестируемого кода и ожидаемого значения, чтобы убедиться в их равенстве. Для этого можно использовать макрос `assert!`, передавая ему выражение с использованием оператора `==`. Важно также знать, что кроме этого стандартная библиотека предлагает пару макросов `assert_eq!` и `assert_ne!`, чтобы сделать тестирование более удобным. Эти макросы сравнивают два аргумента на равенство или неравенство соответственно. Макросы также печатают два значения входных параметров, если тест завершился ошибкой, что позволяет легче увидеть _почему_ тест ошибочен. Противоположно этому, макрос `assert!` может только отобразить, что он вычислил значение `false` для выражения `==`, но не значения, которые привели к результату `false`.
+	
+```rust
+pub fn greeting(name: &str) -> String {
+    format!("Hello {}!", name)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn greeting_contains_name() {
+        let result = greeting("Carol");
+        assert!(result.contains("Carol"));
+    }
+}
+```
+Требования к этой программе ещё не были согласованы и мы вполне уверены, что текст `Hello` в начале приветствия ещё изменится. Мы решили, что не хотим обновлять тест при изменении требований, поэтому вместо проверки на точное равенство со значением возвращённым из `greeting`, мы просто будем проверять, что вывод содержит текст из входного параметра.
+
+Давайте внесём ошибку в этот код, изменив `greeting` так, чтобы оно не включало `name` и увидим, как выглядит сбой этого теста:
+	
+```rust
+pub fn greeting(name: &str) -> String {
+    String::from("Hello!")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn greeting_contains_name() {
+        let result = greeting("Carol");
+        assert!(result.contains("Carol"));
+    }
+}
+```
+	
+Запуск этого теста выводит следующее:
+```markdown
+$ cargo test
+   Compiling greeter v0.1.0 (file:///projects/greeter)
+    Finished test [unoptimized + debuginfo] target(s) in 0.91s
+     Running unittests (target/debug/deps/greeter-170b942eb5bf5e3a)
+
+running 1 test
+test tests::greeting_contains_name ... FAILED
+
+failures:
+
+---- tests::greeting_contains_name stdout ----
+thread 'main' panicked at 'assertion failed: result.contains(\"Carol\")', src/lib.rs:12:9
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    tests::greeting_contains_name
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass '--lib'
+```	
+	
+	
+Сообщение содержит лишь информацию о том что сравнение не было успешным и в какой строке это произошло. В данном случае, более полезный текст сообщения был бы, если бы также выводилось значение из функции `greeting`. Изменим тестирующую функцию так, чтобы выводились пользовательское сообщение форматированное строкой с заменителем и фактическими данными из кода `greeting` :
+	
+```rust
+pub fn greeting(name: &str) -> String {
+    String::from("Hello!")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn greeting_contains_name() {
+        let result = greeting("Carol");
+        assert!(
+            result.contains("Carol"),
+            "Greeting did not contain name, value was `{}`",
+            result
+        );
+    }
+}
+```
+После того, как выполним тест ещё раз мы получим подробное сообщение об ошибке:
+
+```markdown
+$ cargo test
+   Compiling greeter v0.1.0 (file:///projects/greeter)
+    Finished test [unoptimized + debuginfo] target(s) in 0.93s
+     Running unittests (target/debug/deps/greeter-170b942eb5bf5e3a)
+
+running 1 test
+test tests::greeting_contains_name ... FAILED
+
+failures:
+
+---- tests::greeting_contains_name stdout ----
+thread 'main' panicked at 'Greeting did not contain name, value was `Hello!`', src/lib.rs:12:9
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    tests::greeting_contains_name
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass '--lib'
+```
+
+## [Проверка с помощью макроса `should_panic`](https://doc.rust-lang.ru/book/ch11-01-writing-tests.html#%D0%9F%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-%D0%BC%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D0%B0-should_panic)
+
+В дополнение к проверке того, что наш код возвращает правильные, ожидаемые значения, важным также является проверить, что наш код обрабатывает ошибки, которые мы ожидаем. Например, рассмотрим тип `Guess` который мы создали в главе 9, листинга 9-10. Другой код, который использует `Guess` зависит от гарантии того, что `Guess` экземпляры будут содержать значения только от 1 до 100. Мы можем написать тест, который гарантирует, что попытка создать экземпляр `Guess` со значением вне этого диапазона вызывает панику.
+
+Реализуем это с помощью другого атрибута тест функции `#[should_panic]`. Этот атрибут сообщает системе тестирования, что тест проходит, когда метод генерирует ошибку. Если ошибка не генерируется - тест считается не пройденным.
+
+Листинг 11-8 показывает тест, который проверяет, что условия ошибки `Guess::new`произойдут, когда мы их ожидаем их.
+	
+```rust
+pub struct Guess {
+    value: i32,
+}
+
+impl Guess {
+    pub fn new(value: i32) -> Guess {
+        if value < 1 || value > 100 {
+            panic!("Guess value must be between 1 and 100, got {}.", value);
+        }
+
+        Guess { value }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[should_panic]
+    fn greater_than_100() {
+        Guess::new(200);
+    }
+}
+```
+
+Тесты, которые используют `should_panic` могут быть неточными, потому что они только указывают, что код вызвал панику. Тест с атрибутом `should_panic` пройдёт, даже если тест паникует по причине, отличной от той, которую мы ожидали. Чтобы сделать тесты с `should_panic` более точными, мы можем добавить необязательный параметр `expected` для атрибута `should_panic`. Такая детализация теста позволит удостовериться, что сообщение об ошибке содержит предоставленный текст. Например, рассмотрим модифицированный код для `Guess` в листинге 11-9, где `new` функция паникует с различными сообщениями в зависимости от того, является ли значение слишком маленьким или слишком большим.
+
+Файл: src/lib.rs
+```rust
+pub struct Guess {
+    value: i32,
+}
+
+// --snip--
+impl Guess {
+    pub fn new(value: i32) -> Guess {
+        if value < 1 {
+            panic!(
+                "Guess value must be greater than or equal to 1, got {}.",
+                value
+            );
+        } else if value > 100 {
+            panic!(
+                "Guess value must be less than or equal to 100, got {}.",
+                value
+            );
+        }
+
+        Guess { value }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[should_panic(expected = "Guess value must be less than or equal to 100")]
+    fn greater_than_100() {
+        Guess::new(200);
+    }
+}
+```
+
+## [Использование `Result<T, E>` в тестах](https://doc.rust-lang.ru/book/ch11-01-writing-tests.html#%D0%98%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-resultt-e-%D0%B2-%D1%82%D0%B5%D1%81%D1%82%D0%B0%D1%85)
+
+Пока что мы написали тесты, которые паникуют, когда терпят неудачу. Мы также можем написать тесты которые используют `Result<T, E>`! Вот тест из листинга 11-1, переписанный с использованием `Result<T, E>` и возвращающий `Err` вместо паники:
+
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn it_works() -> Result<(), String> {
+        if 2 + 2 == 4 {
+            Ok(())
+        } else {
+            Err(String::from("two plus two does not equal four"))
+        }
+    }
+}
+```
+
+Для того, чтобы всегда видеть вывод на консоль корректно работающих программ, используйте флаг `--show-output`:
+`$ cargo test -- --show-output`
+
+## [Запуск подмножества тестов по имени](https://doc.rust-lang.ru/book/ch11-02-running-tests.html#%D0%97%D0%B0%D0%BF%D1%83%D1%81%D0%BA-%D0%BF%D0%BE%D0%B4%D0%BC%D0%BD%D0%BE%D0%B6%D0%B5%D1%81%D1%82%D0%B2%D0%B0-%D1%82%D0%B5%D1%81%D1%82%D0%BE%D0%B2-%D0%BF%D0%BE-%D0%B8%D0%BC%D0%B5%D0%BD%D0%B8)
+
+Бывают случаи, когда в запуске всех тестов нет необходимости и нужно запустить только несколько тестов. Если вы работаете над функцией и хотите запустить тесты, которые исследуют её работу - это было бы удобно. Вы можете это сделать, используя команду `cargo test`, передав в качестве аргумента имена тестов.
+
+Для демонстрации, как запустить группу тестов, мы создадим группу тестов для функции `add_two` (код программы 11-11) и постараемся выбрать интересующие нас тесты при их запуске:
+
+Filename: src/lib.rs
+```rust
+
+#![allow(unused)]
+fn main() {
+pub fn add_two(a: i32) -> i32 {
+    a + 2
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn add_two_and_two() {
+        assert_eq!(4, add_two(2));
+    }
+
+    #[test]
+    fn add_three_and_two() {
+        assert_eq!(5, add_two(3));
+    }
+
+    #[test]
+    fn one_hundred() {
+        assert_eq!(102, add_two(100));
+    }
+}
+}
+```
+
+## [Игнорирование тестов](https://doc.rust-lang.ru/book/ch11-02-running-tests.html#%D0%98%D0%B3%D0%BD%D0%BE%D1%80%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D1%82%D0%B5%D1%81%D1%82%D0%BE%D0%B2)
+
+Бывает, что некоторые тесты требуют продолжительного времени для своего исполнения, и вы хотите исключить их из исполнения при запуске `cargo test`. Вместо перечисления в командной строке всех тестов, которые вы хотите запускать, вы можете аннотировать тесты, требующие много времени для прогона, атрибутом `ignore`, чтобы исключить их, как показано здесь:
+
+Файл: src/lib.rs
+```rust
+#[test]
+fn it_works() {
+    assert_eq!(2 + 2, 4);
+}
+
+#[test]
+#[ignore]
+fn expensive_test() {
+    // code that takes an hour to run
+}
+```
+	
+Управляя тем, какие тесты запускать, вы можете быть уверены, что результаты вашего `cargo test` будут быстрыми. Вы можете фильтровать тесты по имени при запуске. Вы также можете указать какие тесты должны быть проигнорированы при помощи `ignored`, а также отдельно запускать проигнорированные тесты при помощи `cargo test -- --ignored`.
+
+## [Тестирование приватных функций (private)](https://doc.rust-lang.ru/book/ch11-03-test-organization.html#%D0%A2%D0%B5%D1%81%D1%82%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%B2%D0%B0%D1%82%D0%BD%D1%8B%D1%85-%D1%84%D1%83%D0%BD%D0%BA%D1%86%D0%B8%D0%B9-private)
+
+Сообщество программистов не имеет однозначного мнения по поводу тестировать или нет приватные функции. В некоторых языках весьма сложно или даже невозможно тестировать такие функции. Независимо от того, какой технологии тестирования вы придерживаетесь, в Rust приватные функции можно тестировать. Рассмотрим листинг 11-12 с приватной функцией `internal_adder`.
+
+Файл: src/lib.rs
+
+```rust
+pub fn add_two(a: i32) -> i32 {
+    internal_adder(a, 2)
+}
+
+fn internal_adder(a: i32, b: i32) -> i32 {
+    a + b
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn internal() {
+        assert_eq!(4, internal_adder(2, 2));
+    }
+}
+```
+
+Обратите внимание, что функция `internal_adder` не помечена как `pub`. Тесты — это просто Rust код, а модуль `tests` — это ещё один модуль. Как мы обсуждали в разделе [“Пути для ссылки на элемент в дереве модулей“](https://doc.rust-lang.ru/book/ch07-03-paths-for-referring-to-an-item-in-the-module-tree.html), элементы в дочерних модулях могут использовать элементы из своих родительских модулей. В этом тесте мы помещаем все элементы родительского модуля `test` в область видимости с помощью `use super::*` и затем тест может вызывать `internal_adder`. Если вы считаете, что приватные функции не нужно тестировать, то Rust не заставит вас это сделать.
+
+## [Интеграционные тесты](https://doc.rust-lang.ru/book/ch11-03-test-organization.html#%D0%98%D0%BD%D1%82%D0%B5%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%BD%D1%8B%D0%B5-%D1%82%D0%B5%D1%81%D1%82%D1%8B)
+
+В Rust интеграционные тесты являются полностью внешними по отношению к вашей библиотеке. Они используют вашу библиотеку так же, как любой другой код, что означает, что они могут вызывать только функции, которые являются частью публичного API библиотеки. Их целью является проверка, много ли частей вашей библиотеки работают вместе правильно. У модулей кода правильно работающих самостоятельно, могут возникнуть проблемы при интеграции, поэтому тестовое покрытие интегрированного кода также важно. Для создания интеграционных тестов сначала нужен каталог _tests_ .
+
+#### [Каталог _tests_](https://doc.rust-lang.ru/book/ch11-03-test-organization.html#%D0%9A%D0%B0%D1%82%D0%B0%D0%BB%D0%BE%D0%B3-tests)
+
+Для создания интеграционных тестов, мы создаём папку _tests_ в корневой папке вашего проекта, рядом с папкой _src_. Cargo знает, что файлы с интеграционными тестами будут храниться в этой директории. В этой директории можно создать столько интеграционных тестов, сколько нужно. Каждый такой файл будет компилироваться в отдельный крейт.
+
+Давайте создадим интеграционный тест. Рядом с кодом из листинга 11-12, который в файле _src/lib.rs_, создайте каталог _tests_, создайте новый файл с именем _tests/integration_test.rs_ и введите код из листинга 11-13.
+
+Файл: tests/integration_test.rs
+```rust
+use adder;
+
+#[test]
+fn it_adds_two() {
+    assert_eq!(4, adder::add_two(2));
+}
+```
+Мы добавили `use adder` в начале кода, который был не нужен в модульных тестах. Причина его присутствия в том, что каждый файл в каталоге `tests` является отдельным крейтом, поэтому нужно подключить нашу библиотеку в область видимости каждого интеграционного тест крейта.
+
+Нам не нужно комментировать код в _tests/integration_test.rs_ с помощью `#[cfg(test)]`. Cargo специальным образом обрабатывает каталог `tests` и компилирует файлы в этом каталоге только тогда, когда мы запускаем команду `cargo test`. Запустите `cargo test` сейчас:
+
+```markdown
+$ cargo test
+   Compiling adder v0.1.0 (file:///projects/adder)
+    Finished test [unoptimized + debuginfo] target(s) in 1.31s
+     Running unittests (target/debug/deps/adder-1082c4b063a8fbe6)
+
+running 1 test
+test tests::internal ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/integration_test.rs (target/debug/deps/integration_test-1082c4b063a8fbe6)
+
+running 1 test
+test it_adds_two ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests adder
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+```
+Три раздела вывода включают в себя модульные тесты, интеграционные тесты и док тесты. Первый раздел для модульных тестов такой же, как мы уже видели: одна строка для каждого модульного теста (одна с именем `internal` которой мы добавили в листинге 11-12) и затем итоговая строка для модульных тестов.
+
+Раздел интеграционных тестов начинается со строки `Running target/debug/deps/integration_test-1082c4b063a8fbe6` (хэш в конце вашего вывода будет другим). Далее идёт строка для каждой тестовой функции в этом интеграционном тесте и итоговая строка для результатов интеграционного теста непосредственно перед началом раздела `Doc-tests adder`.
+
+Подобно тому, как добавление большего количества функций модульных тестов добавляет большее количество строк вывода в разделе модульных тестов, добавление дополнительных функций тестирования в файл интеграционных тестов добавляет дополнительные строки вывода в разделе интеграционных тестов. Каждый файл интеграционных тестов имеет свой собственный раздел, поэтому, если мы добавим больше файлов в каталог _tests_, то будет длиннее раздел вывода результатов интеграционных тестов.
+
+Мы всё ещё можем запустить определённую функцию в интеграционных тестах, указав имя тест функции в качестве аргумента в `cargo test`. Чтобы запустить все тесты в конкретном файле интеграционных тестов, используйте аргумент `--test` сопровождаемый именем файла у команды `cargo test`:
+```markdown
+$ cargo test --test integration_test
+   Compiling adder v0.1.0 (file:///projects/adder)
+    Finished test [unoptimized + debuginfo] target(s) in 0.64s
+     Running tests/integration_test.rs (target/debug/deps/integration_test-82e7799c1bc62298)
+
+running 1 test
+test it_adds_two ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+```
+### [Подмодули в интеграционных тестах](https://doc.rust-lang.ru/book/ch11-03-test-organization.html#%D0%9F%D0%BE%D0%B4%D0%BC%D0%BE%D0%B4%D1%83%D0%BB%D0%B8-%D0%B2-%D0%B8%D0%BD%D1%82%D0%B5%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%BD%D1%8B%D1%85-%D1%82%D0%B5%D1%81%D1%82%D0%B0%D1%85)
+
+По мере добавления большего количества интеграционных тестов, можно создать более одного файла в каталоге _tests_, чтобы легче организовывать их; например, вы можете сгруппировать функции тестирования по функциональности, которую они проверяют. Как упоминалось ранее, каждый файл в каталоге _tests_ скомпилирован как отдельный крейт.
+
+Рассматривая каждый файл интеграционных тестов как отдельный крейт, полезно создать отдельные области видимости, которые больше похожи на то, как конечные пользователи будут использовать ваш крейт. Тем не менее, это означает, что файлы в каталоге _tests_ не разделяют поведение как это делают файлы в _src_, что вы изучили в главе 7 о том, как разделить код на модули и файлы.
+
+Различное поведение файлов в каталоге _tests_ наиболее заметно, когда у вас есть набор вспомогательных функций, которые будут полезны в нескольких интеграционных тест файлах и вы пытаетесь выполнить действия, описанные в разделе [«Разделение модулей в разные файлы»](https://doc.rust-lang.ru/book/ch07-05-separating-modules-into-different-files.html) главы 7, чтобы извлечь их в общий модуль. Например, если мы создадим _tests/common.rs_ и поместим в него функцию с именем `setup`, то можно добавить некоторый код в `setup`, который мы хотим вызвать из нескольких тестовых функций в нескольких тестовых файлах
+
+Файл: tests/common.rs
+```rust
+#![allow(unused)]
+fn main() {
+pub fn setup() {
+    // setup code specific to your library's tests would go here
+}
+}
+```
+	
+Когда мы снова запустим тесты, мы увидим новый раздел в результатах тестов для файла _common.rs_, хотя этот файл не содержит ни тестовых функций, ни того, что мы явно вызывали функцию `setup` откуда либо:
+	
+```
+$ cargo test
+   Compiling adder v0.1.0 (file:///projects/adder)
+    Finished test [unoptimized + debuginfo] target(s) in 0.89s
+     Running unittests (target/debug/deps/adder-92948b65e88960b4)
+
+running 1 test
+test tests::internal ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/common.rs (target/debug/deps/common-92948b65e88960b4)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/integration_test.rs (target/debug/deps/integration_test-92948b65e88960b4)
+
+running 1 test
+test it_adds_two ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests adder
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+```
+Появление файла `common` и появление сообщения в результатах выполнения тестов типа `running 0 tests` это не то, чтобы мы хотели. Мы только хотели использовать некоторый общий код с другими интеграционными файлами тестов.
+
+Чтобы избежать появления `common` в тестовом выводе, вместо создания _tests/common.rs_, мы создадим _tests/common/mod.rs._ Это альтернатива соглашению об именах, которое Rust также понимает. Именование файла таким образом говорит, что Rust не следует рассматривать `common` модуль как файл интеграционных тестов. Когда мы перемещаем код функции `setup` в файл _tests/common/mod.rs_ и удаляем файл _tests/common.rs_, то он больше не будет отображаться в результатах тестов. Файлы в подкаталогах каталога _tests_ не компилируются как отдельные крейты и не появляются в выводе выполнения тестов.
+
+#### [Интеграционные тесты для бинарных крейтов](https://doc.rust-lang.ru/book/ch11-03-test-organization.html#%D0%98%D0%BD%D1%82%D0%B5%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%BD%D1%8B%D0%B5-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B4%D0%BB%D1%8F-%D0%B1%D0%B8%D0%BD%D0%B0%D1%80%D0%BD%D1%8B%D1%85-%D0%BA%D1%80%D0%B5%D0%B9%D1%82%D0%BE%D0%B2)
+
+Если наш проект является бинарным крейтом, который содержит только _src/main.rs_ и не содержит _src/lib.rs_, то в таком случае, мы не можем создать интеграционные тесты в папке _tests_и подключить функции определённые в файле _src/main.rs_ в область видимости с помощью выражения `use`. Только библиотечные крейты могут предоставлять функции, которые можно использовать в других крейтах; бинарные крейты предназначены только для самостоятельного запуска.
+
+Это одна из причин того, что Rust проекты для выполняемой программы имеют просто файл _src/main.rs,_, который вызывает логику, которая находится в файле _src/lib.rs_. Используя такую структуру, интеграционные тесты _могут_ протестировать библиотечный крейт с помощью `use`, чтобы подключить важную функциональность и сделать её доступной. Если важная функциональность работает, то небольшое количество кода в файле _src/main.rs_ также будет работать, и этот небольшой объем кода не нужно проверять.
