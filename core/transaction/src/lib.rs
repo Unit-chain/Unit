@@ -20,7 +20,7 @@ impl Serializable for transaction::Transaction {
 
 extern crate hex;
 pub mod transaction {
-    use serde::{Deserialize, Serialize};
+    pub use serde::{Deserialize, Serialize};
     use sha3::{Digest, Sha3_384}; //To hash transaction struct
 
     #[derive(Serialize, Deserialize)]

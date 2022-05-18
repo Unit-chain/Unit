@@ -7,10 +7,12 @@ mod tests {
     }
 }
 
-use serde::{Deserialize, Serialize};
-pub trait Serializable {
-    fn serialize(&self) -> String {
-        String::from("(Read more...)")
+pub mod Serializer {
+    use serde::{Deserialize, Serialize};
+    pub trait JsonSerializer {
+        fn serialize(&self) -> String {
+            String::from("(Read more...)")
+        }
     }
 }
 

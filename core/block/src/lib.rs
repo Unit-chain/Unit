@@ -1,6 +1,8 @@
 extern crate hex;
 #[path = "../../transaction/src/lib.rs"]
 pub mod transaction;
+#[path = "../../serializer/src/lib.rs"]
+pub mod Serializer;
 
 #[cfg(test)]
 mod tests {
@@ -11,21 +13,22 @@ mod tests {
     }
 }
 
-// pub use crate::serializer::Serializable;
-// impl Serializable for blockimplementation::Block {
-//     use serde::{Deserialize, Serialize};
-//     fn serialize(&self) -> String {
-//         String::from(serde_json::to_string(&self).unwrap())
-//     }
-// }
+pub use crate::Serializer::Serializer::JsonSerializer;
+pub use serde::{Deserialize, Serialize};
 
-
+impl JsonSerializer for blockimplementation::Block {
+    fn serialize(&self) -> String {
+        String::from(serde_json::to_string(&self).unwrap())
+    }
+}
 
 pub mod blockimplementation {
     use sha3::{Digest, Sha3_384};
     use std::time::SystemTime;
     pub use crate::transaction::transaction::Transaction;
+    pub use super::{Deserialize, Serialize};
 
+    #[derive(Serialize, Deserialize)]
     pub struct Block{
         pub date: u128,
         pub index: u64,
@@ -54,5 +57,10 @@ pub mod blockimplementation {
             hasher.update(hash.as_bytes());
             hex::encode(hasher.finalize())
         }
+    }
+
+    pub fn deserialize_block(block: String) -> Block {
+        let block: Block = serde_json::from_str(&block).unwrap();
+        block
     }
 }
