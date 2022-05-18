@@ -8,12 +8,15 @@ mod tests {
 }
 extern crate hex;
 pub mod transaction {
-    use sha3::{Digest, Sha3_384};
+    use serde::{Deserialize, Serialize};
+    use sha3::{Digest, Sha3_384}; //To hash transaction struct
 
+    #[derive(Serialize, Deserialize)]
     pub struct NameValue {
         pub name: String,
         pub value: u64,
     }
+    #[derive(Serialize, Deserialize)]
     pub struct Transaction {
         pub hash: String,
         pub data: u128,
@@ -69,5 +72,15 @@ pub mod transaction {
             // read hash digest
             format!("hash {:?}", hex::encode(hasher.finalize()))
         }
+
+        pub fn serialize(&self) -> String {
+            String::from(serde_json::to_string(&self).unwrap())
+        }
+
+        // fn sign(&self, )
+    }
+    pub fn deserialize_transaction(transaction: String) -> Transaction {
+        let transaction: Transaction = serde_json::from_str(&transaction).unwrap();
+        transaction
     }
 }

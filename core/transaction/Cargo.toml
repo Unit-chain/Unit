@@ -6,5 +6,11 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+
+#For taking hash from transaction struct (from https://crates.io/crates/sha3 and https://crates.io/crates/hex)
 sha3 = "0.10.1"
 hex = "0.4.3"
+
+# For (struct <-> JSON) conversions (from https://turreta.com/2019/09/22/rust-convert-struct-instances-to-and-from-json/)
+serde = { version = "1.0.126", features = ["derive"] }
+serde_json = "1.0.64"
