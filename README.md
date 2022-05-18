@@ -12,6 +12,7 @@
 2. https://www.aumasson.jp
 3. https://docs1.w3cub.com/rust/book/error-handling/
 4. https://learnmeabitcoin.com/technical/blkdat
+5. https://live.blockcypher.com/btc/decodetx/
 
 # Steps
 ## Unit Virtual Machine
