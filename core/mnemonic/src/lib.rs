@@ -9,15 +9,17 @@ mod tests {
 
 extern crate rand;
 extern crate hex;
+extern crate base58;
 
 mod MnemonicUnitGenerator {
     use std::io::Cursor;
-    use std::collections::HashMap;
+    use std::str::FromStr;
     use bip0039::{Count, Language, Mnemonic};
     use rand::rngs::OsRng;
     use hmac::{Hmac, Mac};
     use sha3::{Digest, Sha3_384, Sha3_512};
     use byteorder::{ReadBytesExt, WriteBytesExt, BigEndian, LittleEndian};
+    use base58::ToBase58;
     type HmacSha256 = Hmac<Sha3_512>;
 
     pub fn generate_mnemonic_12() -> String {
@@ -56,10 +58,23 @@ mod MnemonicUnitGenerator {
     pub fn get_master_private_key(left_mnemonic: &mut String) -> u32 {
         let mut rdr = Cursor::new(left_mnemonic.as_bytes());
         rdr.read_u32::<BigEndian>().unwrap()
+        // to_be_bytes() - maybe should use later
     }
 
-    // pub fn get_base_58() -> String {
-    //     let mut scores = HashMap::new();
-
-    // }
+    pub fn get_base_58(left_mnemonic: String, master_chain_code: &String) -> String {
+        const NET_VERSION: &str = "0488b21b";
+        let depth_byte: u8 = b'\x00';
+        let parent_fingerprint: u8 = b'\x00' * 4;
+        let child_number_bytes: u8  = b'\x00' * 4; 
+        let mut phrase: Vec<u8> = left_mnemonic.clone().as_bytes().to_vec();
+        phrase.insert(0, b'\x00');
+        let mut concat_all: Vec<u8> = Vec::new();
+        concat_all.extend_from_slice(NET_VERSION.as_bytes());
+        concat_all.push(depth_byte);
+        concat_all.push(parent_fingerprint);
+        concat_all.push(child_number_bytes);
+        concat_all.extend_from_slice(String::from(master_chain_code).as_bytes());
+        concat_all.extend(phrase);
+        concat_all.as_slice().to_base58()
+    }
 }

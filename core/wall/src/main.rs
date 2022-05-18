@@ -38,6 +38,7 @@ fn main() {
     let result = mac.finalize();
     let code_bytes = result.into_bytes();
     println!("hex: {:?}", hex::encode(code_bytes));
+    println!("bytes: {:?}", code_bytes);
     // let string: String = hex::encode(keypair.secret.to_bytes());
 
     // println!("{:?}", string);
