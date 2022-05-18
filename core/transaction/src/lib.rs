@@ -39,6 +39,8 @@ pub mod transaction {
         pub typevalue: NameValue,
         pub sign: String,
         pub previous: String,
+        pub blockid: u128,
+        pub epoch: u64,
     }
     impl Transaction {
         pub fn new(
@@ -51,6 +53,8 @@ pub mod transaction {
             typevalue: NameValue,
             sign: String,
             previous: String,
+            blockid: u128,
+            epoch: u64
         ) -> Transaction {
             Transaction {
                 hash,
@@ -62,6 +66,8 @@ pub mod transaction {
                 typevalue,
                 sign,
                 previous,
+                blockid,
+                epoch
             }
         }
         pub fn hash(&self) -> String {
