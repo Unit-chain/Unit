@@ -18,10 +18,49 @@ impl Serializable for transaction::Transaction {
     }
 }
 
+// pub fn stacked_transactions<'a>(
+//     transaction: transaction::Transaction,
+//     stack: &'a transaction::Stack<transaction::Transaction>,
+// ) {
+
+// }
+
+#[path = "../../block/src/lib.rs"]
+mod blockimplementation;
+
 extern crate hex;
 pub mod transaction {
-    pub use serde::{Deserialize, Serialize};
+    use super::blockimplementation;
+    pub use serde::{Deserialize, Serialize}; //To serialize/deserialize a transaction
     use sha3::{Digest, Sha3_384}; //To hash transaction struct
+    pub struct StackUnit<T> {
+        pub stack: Vec<T>,
+    }
+
+    impl<tr: transaction::Transaction> StackUnit<tr: transaction::Transaction> {
+        pub fn new() -> Self {
+            StackUnit { stack: Vec::new() }
+        }
+        pub fn length(&self) -> usize {
+            self.stack.len()
+        }
+        pub fn pop(&mut self) -> Option<tr: transaction::Transaction> {
+            self.stack.pop()
+        }
+        pub fn push(&mut self, item: transaction::Transaction) {
+            self.stack.push(item)
+        }
+        pub fn is_empty(&self) -> bool {
+            self.stack.is_empty()
+        }
+        pub fn peek(&self) -> Option<&transaction::Transaction> {
+            self.stack.last()
+        }
+        pub fn pop_all(&self) -> &mut Vec<String> {}
+        // pub fn to_block(&self, index: u64, previous: String) -> Block {
+        //     blockimplementation::new(index, )
+        // }
+    }
 
     #[derive(Serialize, Deserialize)]
     pub struct NameValue {
@@ -43,6 +82,36 @@ pub mod transaction {
         pub epoch: u64,
     }
     impl Transaction {
+        fn new_forgerie_transaction(
+            hash: String,
+            data: u128,
+            from: String,
+            to: String,
+            amount: u128,
+            tx_type: u64,
+            typevalue: NameValue,
+            sign: String,
+            previous: String,
+            blockid: u128,
+            epoch: u64,
+        ) -> Transaction {
+            Transaction {
+                hash: String::from("some haaash"),
+                data: 123456u128,
+                from: String::from("From your mom!"),
+                to: String::from("To your mom!"),
+                amount: 100000000u128,
+                tx_type: 2u64,
+                typevalue: NameValue {
+                    name: String::from("Name"),
+                    value: 6u64,
+                },
+                sign: String::from("BIG SIIIIIGN"),
+                previous: String::from("some sign, meh"),
+                blockid: 4u128,
+                blockid: 5u64,
+            }
+        }
         pub fn new(
             hash: String,
             data: u128,
@@ -54,7 +123,7 @@ pub mod transaction {
             sign: String,
             previous: String,
             blockid: u128,
-            epoch: u64
+            epoch: u64,
         ) -> Transaction {
             Transaction {
                 hash,
@@ -67,7 +136,7 @@ pub mod transaction {
                 sign,
                 previous,
                 blockid,
-                epoch
+                epoch,
             }
         }
         pub fn hash(&self) -> String {
@@ -75,7 +144,7 @@ pub mod transaction {
 
             // write input message
             hasher.update(format!(
-                "{}{}{}{}{}{}{}{}{}{}",
+                "{}{}{}{}{}{}{}{}{}{}{}{}",
                 self.amount,
                 self.data,
                 self.from,
@@ -86,6 +155,8 @@ pub mod transaction {
                 self.tx_type,
                 self.typevalue.name,
                 self.typevalue.value,
+                self.epoch,
+                self.blockid
             ));
             // read hash digest
             format!("hash {:?}", hex::encode(hasher.finalize()))
@@ -97,10 +168,4 @@ pub mod transaction {
         let transaction: Transaction = serde_json::from_str(&transaction).unwrap();
         transaction
     }
-
-    // pub fn serializeE(var: Serializable) String {
-    //     match var {
-    //         Serializable::Transaction => Transaction.serialize()
-    //     }
-    // }
 }
