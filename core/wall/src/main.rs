@@ -11,6 +11,7 @@ use ed25519_dalek::*;
 use bip0039::{Count, Language, Mnemonic};
 use std::time::{SystemTime, UNIX_EPOCH};
 use hmac::{Hmac, Mac};
+use binascii::b32decode;
 type HmacSha256 = Hmac<Sha3_512>;
 
 fn main() {
@@ -39,6 +40,13 @@ fn main() {
     let code_bytes = result.into_bytes();
     println!("hex: {:?}", hex::encode(code_bytes));
     println!("bytes: {:?}", code_bytes);
+
+
+    let mut output_buffer = [0u8; 200];
+    let message = "MJUW4YLTMNUWSLLSOMQGS4ZAORUGKIDCMVZXIII=";
+
+    let result = b32decode(&message.as_bytes(), &mut output_buffer).ok().unwrap();
+    println!("result {:?}", result);
     // let string: String = hex::encode(keypair.secret.to_bytes());
 
     // println!("{:?}", string);
