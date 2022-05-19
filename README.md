@@ -6,6 +6,7 @@
 3. https://docs.rs/leveldb/latest/leveldb/
 4. https://github.com/koushiro/bip0039
 5. https://crates.io/crates/ed25519
+6. https://docs.rs/bip32/0.4.0/bip32/
 
 #### Important articles:
 1. https://en.wikipedia.org/wiki/Berkeley_Packet_Filter
