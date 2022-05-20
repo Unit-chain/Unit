@@ -53,7 +53,7 @@ mod tests {
         let tx = transaction::new_forgerie_transaction(232u128);
         use super::*;
         println!("{}", tx.serialize());
-        assert_eq!(tx.hash(), "44e9695058c7d88a728d79d56b9d3c14c448eeb8bda35ebe3d1d6d4d26297b9b275c8a6da9aa7b19135d1c545ddc6d2b")
+        assert_eq!(tx.hash(), "65e4037cba825c093499b6df3f26cf8bd8255e594836aec1f3355a1a656b014e25accdf0579d4682eed6108eac08ecdc")
     }
 }
 
@@ -195,16 +195,19 @@ pub mod transaction {
     }
     impl Transaction {
         pub fn serialize(&self) -> String {
-            String::from(serde_json::to_string(&self).unwrap())
+            serde_json::to_string(&self).unwrap()
         }
         pub fn hash(&self) -> String {
             let mut hasher = Sha3_384::new();
             // write input message
             hasher.update(format!("{}", self.serialize()));
             // read hash digest
+            let one_hash = hasher.finalize();
+
+            let mut hasher = Sha3_384::new();
+            hasher.update(format!("{}", hex::encode(one_hash)));
             format!("{}", hex::encode(hasher.finalize()))
         }
-
         // fn sign(&self, )
     }
     pub fn deserialize_transaction(transaction: String) -> Transaction {
