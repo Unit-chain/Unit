@@ -16,6 +16,7 @@
 5. https://live.blockcypher.com/btc/decodetx/
 6. https://bitcoin.stackexchange.com/questions/88288/how-exactly-do-i-decode-the-block-file-info-in-leveldb
 7. https://stackoverflow.com/questions/58863331/is-there-any-way-to-inspect-the-contents-of-the-rocksdb-instance-used-by-near-pr
+8. https://developpaper.com/a-simple-example-of-using-leveldb-in-rust-programming/
 
 # Steps
 ## Unit Virtual Machine
