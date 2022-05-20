@@ -55,12 +55,6 @@ mod tests {
         println!("{}", tx.serialize());
         assert_eq!(tx.hash(), "65e4037cba825c093499b6df3f26cf8bd8255e594836aec1f3355a1a656b014e25accdf0579d4682eed6108eac08ecdc")
     }
-
-    #[test]
-    fn transaction_to_binary() {
-        let tx = transaction::new_forgerie_transaction(232u128);
-        assert_eq!(tx.binary(), "00110100 00110100 01100101 00111001 00110110 00111001 00110101 00110000 00110101 00111000 01100011 00110111 01100100 00111000 00111000 01100001 00110111 00110010 00111000 01100100 00110111 00111001 01100100 00110101 00110110 01100010 00111001 01100100 00110011 01100011 00110001 00110100 01100011 00110100 00110100 00111000 01100101 01100101 01100010 00111000 01100010 01100100 01100001 00110011 00110101 01100101 01100010 01100101 00110011 01100100 00110001 01100100 00110110 01100100 00110100 01100100 00110010 00110110 00110010 00111001 00110111 01100010 00111001 01100010 00110010 00110111 00110101 01100011 00111000 01100001 00110110 01100100 01100001 00111001 01100001 01100001 00110111 01100010 00110001 00111001 00110001 00110011 00110101 01100100 00110001 01100011 00110101 00110100 00110101 01100100 01100100 01100011 00110110 01100100 00110010 01100010 ");
-    }
 }
 
 pub trait Serializable {
@@ -201,7 +195,7 @@ pub mod transaction {
     }
     impl Transaction {
         pub fn serialize(&self) -> String {
-            String::from(serde_json::to_string(&self).unwrap())
+            serde_json::to_string(&self).unwrap()
         }
         pub fn hash(&self) -> String {
             let mut hasher = Sha3_384::new();
@@ -213,13 +207,6 @@ pub mod transaction {
             let mut hasher = Sha3_384::new();
             hasher.update(format!("{}", hex::encode(one_hash)));
             format!("{}", hex::encode(hasher.finalize()))
-        }
-        pub fn binary(&self) -> String {
-            let mut binary = "".to_string();
-            for character in self.hash().clone().into_bytes() {
-                binary += &format!("0{:b} ", character);
-            }
-            format!("{}", binary)
         }
         // fn sign(&self, )
     }
