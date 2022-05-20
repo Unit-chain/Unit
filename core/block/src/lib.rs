@@ -16,12 +16,6 @@ mod tests {
 pub use crate::Serializer::Serializer::JsonSerializer;
 pub use serde::{Deserialize, Serialize};
 
-impl JsonSerializer for blockimplementation::Block {
-    fn serialize(&self) -> String {
-        String::from(serde_json::to_string(&self).unwrap())
-    }
-}
-
 pub mod blockimplementation {
     use sha3::{Digest, Sha3_384};
     use std::time::SystemTime;
@@ -30,16 +24,18 @@ pub mod blockimplementation {
 
     #[derive(Serialize, Deserialize)]
     pub struct Block{
+        pub net_version: u64,
         pub date: u128,
         pub index: u64,
         pub hash: String,
-        pub tx: Vec<String>,
+        pub tx: Vec<Transaction>,
         pub previous: String
     }
 
     impl Block{ 
-        pub fn new(index: u64, tx: &mut Vec<String>, previous: String) -> Block { 
+        pub fn new(net_version: u64, index: u64, tx: &mut Vec<Transaction>, previous: String) -> Block { 
             Block {
+                net_version: net_version,
                 date: SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).ok().unwrap().as_millis(),
                 index: index,
                 hash: Block::generate_hash(tx),
@@ -48,17 +44,20 @@ pub mod blockimplementation {
             }
         }
 
-        pub fn generate_hash(txs: &mut Vec<String>) -> String {
+        pub fn generate_hash(txs: &mut Vec<Transaction>) -> String {
             let mut hash: String = String::from("");
             for tx in txs { 
-                hash = format!("{}{}", &hash, tx);
+                hash = format!("{}{}", &hash, tx.hash);
             }
             let mut hasher = Sha3_384::new();
             hasher.update(hash.as_bytes());
             hex::encode(hasher.finalize())
         }
-    }
 
+        fn serialize(&self) -> String {
+            String::from(serde_json::to_string(&self).unwrap())
+        }
+    }
     pub fn deserialize_block(block: String) -> Block {
         let block: Block = serde_json::from_str(&block).unwrap();
         block

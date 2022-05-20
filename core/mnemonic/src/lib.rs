@@ -24,7 +24,6 @@ mod tests {
 extern crate rand;
 extern crate hex;
 extern crate base58;
-use binascii::b32decode;
 
 pub mod MnemonicUnitGenerator {
     use std::io::Cursor;
