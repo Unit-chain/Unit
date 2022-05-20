@@ -15,6 +15,7 @@
 4. https://learnmeabitcoin.com/technical/blkdat
 5. https://live.blockcypher.com/btc/decodetx/
 6. https://bitcoin.stackexchange.com/questions/88288/how-exactly-do-i-decode-the-block-file-info-in-leveldb
+7. https://stackoverflow.com/questions/58863331/is-there-any-way-to-inspect-the-contents-of-the-rocksdb-instance-used-by-near-pr
 
 # Steps
 ## Unit Virtual Machine
