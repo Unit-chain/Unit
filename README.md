@@ -14,6 +14,7 @@
 3. https://docs1.w3cub.com/rust/book/error-handling/
 4. https://learnmeabitcoin.com/technical/blkdat
 5. https://live.blockcypher.com/btc/decodetx/
+6. https://bitcoin.stackexchange.com/questions/88288/how-exactly-do-i-decode-the-block-file-info-in-leveldb
 
 # Steps
 ## Unit Virtual Machine
