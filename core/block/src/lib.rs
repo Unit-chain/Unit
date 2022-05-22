@@ -1,8 +1,8 @@
 extern crate hex;
-#[path = "../../transaction/src/lib.rs"]
-pub mod transaction;
-#[path = "../../serializer/src/lib.rs"]
-pub mod Serializer;
+// #[path = "../../transaction/src/lib.rs"]
+// pub mod transaction;
+// #[path = "../../serializer/src/lib.rs"]
+// pub mod Serializer;
 
 #[cfg(test)]
 mod tests {
@@ -13,8 +13,10 @@ mod tests {
     }
 }
 
-pub use crate::Serializer::Serializer::JsonSerializer;
+// pub use crate::Serializer::Serializer::JsonSerializer;
 pub use serde::{Deserialize, Serialize};
+pub use transaction;
+pub use serializer;
 
 pub mod blockimplementation {
     use sha3::{Digest, Sha3_384};

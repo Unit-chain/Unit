@@ -9,8 +9,8 @@
         "state": {
           "type": "markdown",
           "state": {
-            "file": "Rust-helps/CRATES.md",
-            "mode": "source"
+            "file": "Rust-helps/CLOSURES.md",
+            "mode": "preview"
           }
         }
       }
@@ -68,7 +68,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Rust-helps/CRATES.md",
+                "file": "Rust-helps/CLOSURES.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -88,8 +88,8 @@
   },
   "active": "77ebafa0b07d76fd",
   "lastOpenFiles": [
-    "Rust-helps/CRATES.md",
     "Rust-helps/CLOSURES.md",
+    "Rust-helps/CRATES.md",
     "Rust-helps/README.md",
     "README.md"
   ]

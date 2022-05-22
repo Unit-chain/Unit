@@ -120,6 +120,16 @@ pub mod transaction {
         pub name: String,
         pub value: u64,
     }
+
+    impl Clone for NameValue {
+        fn clone(&self) -> Self {
+            NameValue {
+                name: self.name.clone(), 
+                value: self.value
+            }
+        }
+    }
+
     #[derive(Serialize, Deserialize, PartialEq, Debug)]
     pub struct Transaction {
         pub hash: String,
@@ -214,4 +224,23 @@ pub mod transaction {
         let transaction: Transaction = serde_json::from_str(&transaction).unwrap();
         transaction
     }
+
+    impl Clone for Transaction {
+        fn clone(&self) -> Self {
+            Transaction {
+                hash: self.hash.clone(), 
+                data: self.data,
+                from: self.from.clone(),
+                to: self.to.clone(),
+                amount: self.amount,
+                tx_type: self.tx_type,
+                typevalue: self.typevalue.clone(),
+                sign: self.sign.clone(),
+                previous: self.previous.clone(),
+                blockid: self.blockid,
+                epoch: self.epoch
+            }
+        }
+    }
+
 }

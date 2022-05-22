@@ -1,9 +1,0 @@
-[workspace]
-members = [
-    "block",
-    "instruction",
-    "mnemonic",
-    "serializer",
-    "transaction",
-    "wallet"
-]
