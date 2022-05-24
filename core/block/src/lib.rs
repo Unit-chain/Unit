@@ -1,8 +1,4 @@
 extern crate hex;
-// #[path = "../../transaction/src/lib.rs"]
-// pub mod transaction;
-// #[path = "../../serializer/src/lib.rs"]
-// pub mod Serializer;
 
 #[cfg(test)]
 mod tests {
@@ -13,7 +9,6 @@ mod tests {
     }
 }
 
-// pub use crate::Serializer::Serializer::JsonSerializer;
 pub use serde::{Deserialize, Serialize};
 pub use transaction;
 pub use serializer;
@@ -40,7 +35,7 @@ pub mod blockimplementation {
                 net_version: net_version,
                 date: SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).ok().unwrap().as_millis(),
                 index: index,
-                hash: Block::generate_hash(tx),
+                hash: String::from(""),
                 tx: tx.to_vec(),
                 previous: previous
             }

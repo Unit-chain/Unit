@@ -4,13 +4,13 @@
     "type": "split",
     "children": [
       {
-        "id": "77ebafa0b07d76fd",
+        "id": "c0f60c7a2f8e1439",
         "type": "leaf",
         "state": {
           "type": "markdown",
           "state": {
-            "file": "Rust-helps/CLOSURES.md",
-            "mode": "preview"
+            "file": "SMART_POINTERS.md",
+            "mode": "source"
           }
         }
       }
@@ -68,7 +68,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Rust-helps/CLOSURES.md",
+                "file": "SMART_POINTERS.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -86,11 +86,12 @@
     "width": 300,
     "collapsed": true
   },
-  "active": "77ebafa0b07d76fd",
+  "active": "c0f60c7a2f8e1439",
   "lastOpenFiles": [
+    "SMART_POINTERS.md",
+    "Rust-helps/README.md",
     "Rust-helps/CLOSURES.md",
     "Rust-helps/CRATES.md",
-    "Rust-helps/README.md",
     "README.md"
   ]
 }
