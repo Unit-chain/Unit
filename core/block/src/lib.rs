@@ -41,14 +41,18 @@ pub mod blockimplementation {
             }
         }
 
-        pub fn generate_hash(txs: &mut Vec<Transaction>) -> String {
+        pub fn generate_hash(&mut self, txs: &mut Vec<Transaction>) -> () {
             let mut hash: String = String::from("");
             for tx in txs { 
                 hash = format!("{}{}", &hash, tx.hash);
             }
             let mut hasher = Sha3_384::new();
             hasher.update(hash.as_bytes());
-            hex::encode(hasher.finalize())
+            self.hash = hex::encode(hasher.finalize());
+        }
+
+        pub fn push_transaction(&mut self, transaction: &mut Transaction) -> () {
+            self.tx.push(transaction.clone());
         }
 
         fn serialize(&self) -> String {
