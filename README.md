@@ -24,6 +24,7 @@
 # ToDo:
 - [ ] Pseudonymous
 - [ ] VM
+- [ ] GPU counting Proof of Knowledge
 
 ## Unit Virtual Machine
 ## Machine Type: `stack`
