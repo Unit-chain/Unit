@@ -21,7 +21,10 @@
 10. https://github.com/microsoft/eevm
 11. https://ethereum.org/en/developers/docs/evm/
 
-# Steps
+# ToDo:
+[ ] Pseudonymous
+[ ] VM
+
 ## Unit Virtual Machine
 ## Machine Type: `stack`
 > ByteCode example
