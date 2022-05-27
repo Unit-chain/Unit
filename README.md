@@ -22,8 +22,8 @@
 11. https://ethereum.org/en/developers/docs/evm/
 
 # ToDo:
-[ ] Pseudonymous
-[ ] VM
+- [ ] Pseudonymous
+- [ ] VM
 
 ## Unit Virtual Machine
 ## Machine Type: `stack`
