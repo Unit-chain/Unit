@@ -21,7 +21,11 @@
 10. https://github.com/microsoft/eevm
 11. https://ethereum.org/en/developers/docs/evm/
 
-# Steps
+# ToDo:
+- [ ] Pseudonymous
+- [ ] VM
+- [ ] GPU counting Proof of Knowledge
+
 ## Unit Virtual Machine
 ## Machine Type: `stack`
 > ByteCode example
