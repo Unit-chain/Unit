@@ -69,51 +69,11 @@ impl Serializable for transaction::Transaction {
     }
 }
 
-// pub fn stacked_transactions<'a>(
-//     transaction: transaction::Transaction,
-//     stack: &'a transaction::Stack<transaction::Transaction>,
-// ) {
-
-// }
-
-// #[path = "../../block/src/lib.rs"]
-// mod blockimplementation;
-
 extern crate hex;
 pub mod transaction {
-    // use super::blockimplementation;
     pub use serde::{Deserialize, Serialize}; //To serialize/deserialize a transaction
     use sha3::{Digest, Sha3_384}; //To hash transaction struct
     use std::fmt; // To impl Display trait for the transaction
-
-    // pub struct StackUnit<T> {
-    //     pub stack: Vec<T>,
-    // }
-
-    // impl<tr: transaction::Transaction> StackUnit<tr: transaction::Transaction> {
-    //     pub fn new() -> Self {
-    //         StackUnit { stack: Vec::new() }
-    //     }
-    //     pub fn length(&self) -> usize {
-    //         self.stack.len()
-    //     }
-    //     pub fn pop(&mut self) -> Option<tr: transaction::Transaction> {
-    //         self.stack.pop()
-    //     }
-    //     pub fn push(&mut self, item: transaction::Transaction) {
-    //         self.stack.push(item)
-    //     }
-    //     pub fn is_empty(&self) -> bool {
-    //         self.stack.is_empty()
-    //     }
-    //     pub fn peek(&self) -> Option<&transaction::Transaction> {
-    //         self.stack.last()
-    //     }
-    //     pub fn pop_all(&self) -> &mut Vec<String> {}
-    //     // pub fn to_block(&self, index: u64, previous: String) -> Block {
-    //     //     blockimplementation::new(index, )
-    //     // }
-    // }
 
     #[derive(Serialize, Deserialize, PartialEq, Debug)]
     pub struct NameValue {
@@ -124,8 +84,8 @@ pub mod transaction {
     impl Clone for NameValue {
         fn clone(&self) -> Self {
             NameValue {
-                name: self.name.clone(), 
-                value: self.value
+                name: self.name.clone(),
+                value: self.value,
             }
         }
     }
@@ -228,7 +188,7 @@ pub mod transaction {
     impl Clone for Transaction {
         fn clone(&self) -> Self {
             Transaction {
-                hash: self.hash.clone(), 
+                hash: self.hash.clone(),
                 data: self.data,
                 from: self.from.clone(),
                 to: self.to.clone(),
@@ -238,7 +198,7 @@ pub mod transaction {
                 sign: self.sign.clone(),
                 previous: self.previous.clone(),
                 blockid: self.blockid,
-                epoch: self.epoch
+                epoch: self.epoch,
             }
         }
     }
