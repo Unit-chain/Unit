@@ -10,17 +10,24 @@ VM::~VM() {}
 
 [[noreturn]]
 void VM::run() {
+    START: {
+        this->instructionsReferences.push_back(&&LOOP);
+        this->instructionsReferences.push_back(&&ADD);
+        goto LOOP;
+    }
+
     LOOP: {
-        if (this->isEmptyInstructions()) {
+        if (this->instructions.empty()) {
             goto LOOP;
-        } else {
-            goto ADD;
         }
     }
 
     ADD: {
-
         goto LOOP;
+    };
+
+    CREATE_TX: {
+
     };
 }
 
@@ -31,6 +38,7 @@ void VM::popInstruction() {
 bool VM::pushInstruction(void *instruction) {
     try {
         this->instructions.push(instruction);
+        return true;
     } catch (const std::exception& e){
         return false;
     }

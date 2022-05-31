@@ -6,6 +6,7 @@
 #define UVM_VM_H
 #include <stack>
 #include "vector"
+#include "string"
 
 typedef int64_t WORD;
 constexpr WORD OP_CODE_MASK = 0b0000000000000000000000000000000000000000000000000000000011111111;
@@ -57,6 +58,7 @@ public:
         return this->instructions.empty();
     };
     std::vector<void*> memory;
+    std::vector<void*> instructionsReferences;
 };
 
 

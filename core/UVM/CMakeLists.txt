@@ -3,4 +3,4 @@ project(UVM)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(UVM main.cpp VM.cpp VM.h)
+add_executable(UVM main.cpp VM.cpp VM.h TXManager.cpp TXManager.h)
