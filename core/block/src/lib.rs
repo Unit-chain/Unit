@@ -30,13 +30,13 @@ pub mod blockimplementation {
     }
 
     impl Block{ 
-        pub fn new(net_version: u64, index: u64, tx: &mut Vec<Transaction>, previous: String) -> Block { 
+        pub fn new(net_version: u64, index: u64, previous: String) -> Block { 
             Block {
                 net_version: net_version,
                 date: SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).ok().unwrap().as_millis(),
                 index: index,
                 hash: String::from(""),
-                tx: tx.to_vec(),
+                tx: Vec::new(),
                 previous: previous
             }
         }
