@@ -9,7 +9,7 @@
         "state": {
           "type": "markdown",
           "state": {
-            "file": "Rust-helps/SMART_POINTERS.md",
+            "file": "core/UVM/README.md",
             "mode": "source"
           }
         }
@@ -68,7 +68,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Rust-helps/SMART_POINTERS.md",
+                "file": "core/UVM/README.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -88,6 +88,7 @@
   },
   "active": "c0f60c7a2f8e1439",
   "lastOpenFiles": [
+    "core/UVM/README.md",
     "Rust-helps/SMART_POINTERS.md",
     "Rust-helps/README.md",
     "Rust-helps/CLOSURES.md",
