@@ -3,6 +3,7 @@
 //
 
 #include "VM.h"
+#include "Opcodes.h"
 #include "iostream"
 
 VM::VM() {}
@@ -10,20 +11,19 @@ VM::~VM() {}
 
 [[noreturn]]
 void VM::run() {
-    START: {
-        this->instructionsReferences.push_back(&&LOOP);
-        this->instructionsReferences.push_back(&&ADD);
-        goto LOOP;
-    }
+    this->instructionsReferences.push_back(&&loop);
+    this->instructionsReferences.push_back(&&inc);
+    goto loop;
 
-    LOOP: {
+
+    loop: {
         if (this->instructions.empty()) {
-            goto LOOP;
+            goto loop;
         }
     }
 
-    ADD: {
-        goto LOOP;
+    inc: {
+        goto loop;
     };
 
     CREATE_TX: {
