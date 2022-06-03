@@ -7,8 +7,8 @@ mod tests {
     }
 }
 
-
 pub mod instructions {
+    #[derive(PartialEq, Debug)]
     pub enum Instructions {
         deploy_structure,
         get_balance,
@@ -20,6 +20,6 @@ pub mod instructions {
         burn_structure_tokens,
         get_structure_info,
         create_wallet,
-        wallet_listen
+        wallet_listen,
     }
 }
