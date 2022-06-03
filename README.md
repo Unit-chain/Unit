@@ -35,3 +35,4 @@
 |025	|i_storage_store|stores key : value		 									|
 |026	|create 		|create contract 											|
 |027	|destruct 		|destruct contract and returns all holdings to their holders|
+|028	|jump 			|jumps to instruction <num> in stack						|
