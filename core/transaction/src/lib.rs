@@ -178,6 +178,13 @@ pub mod transaction {
             hasher.update(format!("{}", hex::encode(one_hash)));
             format!("{}", hex::encode(hasher.finalize()))
         }
+        pub fn len(&self) -> usize {
+            let mut count: usize = 0;
+            for _ in format!("{}", self).chars() {
+                count += 1;
+            }
+            count
+        }
         // fn sign(&self, )
     }
     pub fn deserialize_transaction(transaction: String) -> Transaction {
