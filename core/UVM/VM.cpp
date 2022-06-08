@@ -26,9 +26,9 @@ void VM::run() {
         goto loop;
     };
 
-    CREATE_TX: {
-
-    };
+//    CREATE_TX: {
+//
+//    };
 }
 
 void VM::popInstruction() {

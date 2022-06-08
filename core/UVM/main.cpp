@@ -1,11 +1,19 @@
+#include <assert.h>
+#include <string.h>
+#include "rocksdb/db.h"
 #include <iostream>
-#include "VM.h"
-#include <cassert>
 
-int main() {
-    VM vm = VM();
-    test: {};
-    vm.pushInstruction(&&test);
-    vm.run();
+#if defined(OS_WIN)
+std::string kDBPath = "C:\\Windows\\TEMP\\rocksdb_simple_example";
+#else
+std::string kDBPath = "/tmp/testdb";
+#endif
+
+int main(){
+    rocksdb::DB* db;
+    rocksdb::Options options;
+    options.create_if_missing = true;
+    rocksdb::Status status = rocksdb::DB::Open(options, kDBPath, &db);
+    assert(status.ok());
     return 0;
 }

@@ -5,9 +5,15 @@
 //#ifndef UVM_TXMANAGER_H
 //#define UVM_TXMANAGER_H
 //#include <cassert>
-//#include "rocksdb/db.h"
 //#include "string"
-//#define DATABASE_PATH "/tmp/DB"
+//
+//#if defined(OS_WIN)
+//std::string kDBPath = "C:\\Windows\\TEMP\\rocksdb_simple_example";
+//#else
+//std::string kDBPath = "/tmp/rocksdb_simple_example";
+//#endif
+//
+//#include "rocksdb/db.h"
 //
 //class TXManager {
 //public:
