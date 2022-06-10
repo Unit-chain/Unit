@@ -22,6 +22,10 @@ void VM::run() {
         }
     }
 
+//    swap: {
+//        auto ptrB = std::move(ptrA);
+//    };
+
     inc: {
         goto loop;
     };

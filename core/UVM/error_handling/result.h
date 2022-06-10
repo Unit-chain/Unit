@@ -6,9 +6,9 @@
 #define UVM_RESULT_H
 
 template <class T>
-class result {
+class Result {
 public:
-    explicit result(T value);
+    explicit Result(T value);
     bool isPresent();
     T get_value();
 
@@ -17,17 +17,17 @@ protected:
 };
 
 template<class T>
-result<T>::result(T value) {
+Result<T>::Result(T value) {
     this->val = value;
 }
 
 template<class T>
-bool result<T>::isPresent() {
+bool Result<T>::isPresent() {
     return val != nullptr;
 }
 
 template<class T>
-T result<T>::get_value() {
+T Result<T>::get_value() {
     return this->val;
 }
 

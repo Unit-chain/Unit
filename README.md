@@ -3,6 +3,10 @@
 - [ ] VM
 - [ ] GPU counting Proof of Knowledge
 
+# Dependencies
+- rocksdb
+- nlohmann_json
+
 # VM Opcodes
 
 |hex num|name   		|note   													|
