@@ -9,7 +9,7 @@ template <class T>
 class Result {
 public:
     explicit Result(T value);
-    bool isPresent();
+    bool ok();
     T get_value();
 
 protected:
@@ -22,7 +22,7 @@ Result<T>::Result(T value) {
 }
 
 template<class T>
-bool Result<T>::isPresent() {
+bool Result<T>::ok() {
     return val != nullptr;
 }
 
