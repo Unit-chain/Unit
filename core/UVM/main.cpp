@@ -8,6 +8,7 @@
 #include "vector"
 #include "Blockchain_core/Crypto/kec256.h"
 #include "Blockchain_core/Hex.h"
+#include "Blockchain_core/Transaction.h"
 
 using ROCKSDB_NAMESPACE::ColumnFamilyDescriptor;
 using ROCKSDB_NAMESPACE::ColumnFamilyHandle;
@@ -22,11 +23,16 @@ int main(){
 //    std::string key2 = "test_key";
 //    std::string value = "test_value";
 //    std::string fetched_value;
-//    if (status.ok()) status = db->Put(rocksdb::WriteOptions(), key2, value);
+//    status = db->Put(rocksdb::WriteOptions(), "key1", value);
+//    status = db->Get(rocksdb::ReadOptions(), "key1", &fetched_value);
+//    std::cout << fetched_value;
 //    delete db;
 
-    std::string val = "1";
-    std::cout << kec256::getHash(val, val.length());
-
+    std::map<std::string, std::string> map = {{"name", "unit"}, {"value", "1"}};
+    Transaction tx = Transaction("g2px1", "gosha", 0, map, "0");
+    tx.set_current_date();
+    tx.generate_tx_hash();
+    std::cout << tx << std::endl << tx.hash;
+    
     return 0;
 }

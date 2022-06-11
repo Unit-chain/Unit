@@ -73,6 +73,6 @@ public:
 //        Block::transactions = transactions;
 //    }
 
-    friend std::ostream& operator<< (std::ostream &out, const Block &point);
+    friend std::ostream& operator<< (std::ostream &out, const Block &block);
 };
 #endif //UVM_BLOCK_H

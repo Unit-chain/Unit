@@ -17,7 +17,7 @@
 //}
 //
 //std::ostream &operator<<(std::ostream &out, const Block &block) {
-//    out << "Block(" << block.hash << ", " << block.prev_hash << ", " << block.net_version << ", " << block.index << ")";
+//    return out << "Block{" << block.hash << ", " << block.prev_hash << ", " << block.net_version << ", " << block.index << "}";
 //}
 //
 //Block::~Block() {}
