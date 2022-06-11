@@ -2,20 +2,13 @@
 // Created by Kirill Zhukov on 11.06.2022.
 //
 
-#ifndef UVM_KECCAK256_H
-#define UVM_KECCAK256_H
-
-#include <cstddef>
-#include <cstdint>
-#include "vector"
+#ifndef UVM_KEC256_H
+#define UVM_KEC256_H
 #include "iostream"
+#include "vector"
+#include "../Hex.h"
 
-
-/*
- * Computes the Keccak-256 hash of a sequence of bytes. The hash value is 32 bytes long.
- * Provides just one static method.
- */
-class Keccak256 final {
+class kec256 {
 public:
     static constexpr int HASH_LEN = 32;
     static std::string getHash(std::string& str, int len);
@@ -28,4 +21,5 @@ private:
     static const unsigned char ROTATION[5][5]; //    Keccak256() = delete; Not instantiable
 };
 
-#endif //UVM_KECCAK256_H
+
+#endif //UVM_KEC256_H

@@ -2,17 +2,12 @@
 // Created by Kirill Zhukov on 11.06.2022.
 //
 
-#include "Keccak256.h"
-#include "../Hex.h"
+#include "kec256.h"
 
-using std::uint8_t;
-using std::uint64_t;
-
-
-std::string Keccak256::getHash(std::string& str, int len) {
+std::string kec256::getHash(std::string& str, int len) {
 //    assert((str.empty() || len == 0) && hashResult != nullptr);
     uint64_t state[5][5] = {};
-    std::vector<std::byte> msg = Keccak256::getBytes(str);
+    std::vector<std::byte> msg = kec256::getBytes(str);
     uint8_t hashResult[HASH_LEN];
 
     // XOR each message byte into the state, and absorb full blocks
@@ -46,8 +41,7 @@ std::string Keccak256::getHash(std::string& str, int len) {
     return bytes_to_hex(hashResult);
 }
 
-
-void Keccak256::absorb(uint64_t state[5][5]) {
+void kec256::absorb(uint64_t state[5][5]) {
     uint64_t (*a)[5] = state;
     uint8_t r = 1;  // LFSR
     for (int i = 0; i < NUM_ROUNDS; i++) {
@@ -84,8 +78,7 @@ void Keccak256::absorb(uint64_t state[5][5]) {
     }
 }
 
-// Static initializers
-const unsigned char Keccak256::ROTATION[5][5] = {
+const unsigned char kec256::ROTATION[5][5] = {
         { 0, 36,  3, 41, 18},
         { 1, 44, 10, 45,  2},
         {62,  6, 43, 15, 61},
@@ -93,7 +86,7 @@ const unsigned char Keccak256::ROTATION[5][5] = {
         {27, 20, 39,  8, 14},
 };
 
-std::vector<std::byte> Keccak256::getBytes(const std::string &s) {
+std::vector<std::byte> kec256::getBytes(const std::string &s) {
     std::vector<std::byte> bytes;
     bytes.reserve(std::size(s));
     std::transform(std::begin(s), std::end(s), std::back_inserter(bytes), [](char const &c){
@@ -102,7 +95,6 @@ std::vector<std::byte> Keccak256::getBytes(const std::string &s) {
     return bytes;
 }
 
-inline uint64_t Keccak256::rotl64(uint64_t x, int i) {
+inline uint64_t kec256::rotl64(uint64_t x, int i) {
     return (x << i) | (x >> (64 - i));
 }
-

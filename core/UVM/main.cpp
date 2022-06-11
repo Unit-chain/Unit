@@ -6,9 +6,8 @@
 
 #include <thread>
 #include "vector"
-#include "Blockchain_core/Crypto/Keccak256.h"
+#include "Blockchain_core/Crypto/kec256.h"
 #include "Blockchain_core/Hex.h"
-#include "Blockchain_core/Crypto/Keccak256.h"
 
 using ROCKSDB_NAMESPACE::ColumnFamilyDescriptor;
 using ROCKSDB_NAMESPACE::ColumnFamilyHandle;
@@ -27,7 +26,7 @@ int main(){
 //    delete db;
 
     std::string val = "1";
-    std::cout << Keccak256::getHash(val, val.length());
+    std::cout << kec256::getHash(val, val.length());
 
     return 0;
 }
