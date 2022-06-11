@@ -5,13 +5,10 @@
 #ifndef UVM_KECCAK256_H
 #define UVM_KECCAK256_H
 
-#pragma once
-
 #include <cstddef>
 #include <cstdint>
 #include "vector"
 #include "iostream"
-#include "algorithm"
 
 
 /*
@@ -21,7 +18,7 @@
 class Keccak256 final {
 public:
     static constexpr int HASH_LEN = 32;
-    static std::string  getHash(std::string& str, int len);
+    static std::string getHash(std::string& str, int len);
 private:
     static void absorb(std::uint64_t state[5][5]);
     static std::vector<std::byte> getBytes(std::string const &s);
