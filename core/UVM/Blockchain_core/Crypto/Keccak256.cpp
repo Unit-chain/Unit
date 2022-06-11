@@ -84,11 +84,6 @@ void Keccak256::absorb(uint64_t state[5][5]) {
     }
 }
 
-
-uint64_t Keccak256::rotl64(uint64_t x, int i) {
-    return ((0U + x) << i) | (x >> ((64 - i) & 63));
-}
-
 // Static initializers
 const unsigned char Keccak256::ROTATION[5][5] = {
         { 0, 36,  3, 41, 18},
@@ -106,3 +101,8 @@ std::vector<std::byte> Keccak256::getBytes(const std::string &s) {
     });
     return bytes;
 }
+
+inline uint64_t Keccak256::rotl64(uint64_t x, int i) {
+    return (x << i) | (x >> (64 - i));
+}
+

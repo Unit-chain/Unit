@@ -6,7 +6,6 @@
 #define UVM_HEX_H
 #include "iostream"
 #include <sstream>
-
 inline std::string string_to_hex(std::string &value_to_hex) {
     std::stringstream stream;
     for (const auto &item : value_to_hex) {
