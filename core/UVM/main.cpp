@@ -30,9 +30,7 @@ int main(){
 
     std::map<std::string, std::string> map = {{"name", "unit"}, {"value", "1"}};
     Transaction tx = Transaction("g2px1", "gosha", 0, map, "0");
-    tx.set_current_date();
     tx.generate_tx_hash();
     std::cout << tx << std::endl << tx.hash;
-    
     return 0;
 }

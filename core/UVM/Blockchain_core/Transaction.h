@@ -30,7 +30,7 @@ public:
     std::string from;
     std::string to;
     uint64_t type;
-    uint64_t date;
+    uint64_t date = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     std::map<std::string, std::string> extra_data {{"name", nullptr}, {"value", nullptr}};
     std::string hash;
     std::string previous_hash;
