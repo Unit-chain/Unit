@@ -4,7 +4,7 @@
 
 #include "kec256.h"
 
-std::string kec256::getHash(std::string& str, int len) {
+std::string kec256::getHash(std::string& str, size_t len) {
 //    assert((str.empty() || len == 0) && hashResult != nullptr);
     uint64_t state[5][5] = {};
     std::vector<std::byte> msg = kec256::getBytes(str);

@@ -5,7 +5,6 @@
 #include <string>
 #include <map>
 #include "Transaction.h"
-#include "format"
 #include "Crypto/kec256.h"
 
 Transaction::Transaction() {}
@@ -14,45 +13,45 @@ Transaction::~Transaction() {}
 
 const std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> &
 Transaction::getFrom() const {
-    return from;
+    return this->from;
 }
 
 void
 Transaction::setFrom(const std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> &from) {
-    Transaction::from = from;
+    this->from = from;
 }
 
 const std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> &Transaction::getTo() const {
-    return to;
+    return this->to;
 }
 
 void
 Transaction::setTo(const std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> &to) {
-    Transaction::to = to;
+    this->to = to;
 }
 
 uint64_t Transaction::getType() const {
-    return type;
+    return this->type;
 }
 
 void Transaction::setType(uint64_t type) {
-    Transaction::type = type;
+    this->type = type;
 }
 
 uint64_t Transaction::getDate() const {
-    return date;
+    return this->date;
 }
 
 void Transaction::setDate(uint64_t date) {
-    Transaction::date = date;
+    this->date = date;
 }
 
 const std::__1::map<std::string, std::string> &Transaction::getExtraData() const {
-    return extra_data;
+    return this->extra_data;
 }
 
 void Transaction::setExtraData(const std::__1::map<std::string, std::string> &extraData) {
-    extra_data = extraData;
+    this->extra_data = extraData;
 }
 
 void Transaction::generate_tx_hash() {
@@ -61,48 +60,9 @@ void Transaction::generate_tx_hash() {
     this->hash = kec256::getHash(tx_hash, tx_hash.length());
 }
 
-bool Transaction::operator==(const Transaction &rhs) const {
-    return from == rhs.from &&
-           to == rhs.to &&
-           type == rhs.type &&
-           date == rhs.date &&
-           extra_data == rhs.extra_data &&
-           hash == rhs.hash &&
-           previous_hash == rhs.previous_hash;
-}
-
-bool Transaction::operator!=(const Transaction &rhs) const {
-    return !(rhs == *this);
-}
-
-Transaction::Transaction(const std::string &from, const std::string &to, uint64_t type,
-                         const std::map<std::string, std::string> &extraData, const std::string &previousHash,
-                         uint64_t date) {
-    this->from = from;
-    this->to = to;
-    this->type = type;
-    this->extra_data = extraData;
-    this->previous_hash = previousHash;
-    this->date = date;
-//    std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
-}
-
-Transaction::Transaction(const std::string &from, const std::string &to, uint64_t type,
-                         const std::map<std::string, std::string> &extraData, const std::string &hash,
-                         const std::string &previousHash, uint64_t date) {
-    this->from = from;
-    this->to = to;
-    this->type = type;
-    this->extra_data = extraData;
-    this->hash = hash;
-    this->previous_hash = previousHash;
-    this->date = date;
-}
-
-
 std::ostream &operator<<(std::ostream &out, const Transaction &transaction) {
     std::map<std::string, std::string> extra_map = transaction.extra_data;
-    return out << "Transaction{" << transaction.from << ", " << transaction.to << ", " << transaction.type << ", " << transaction.date << ", " << extra_map["name"] << ", " << extra_map["value"] << ", " << transaction.previous_hash <<  "}";
+    return out << "{\"" << transaction.from << "\", \"" << transaction.to << "\", " << transaction.type << ", " << transaction.date << ", \"" << extra_map["name"] << "\", \"" << extra_map["value"] << "\", \"" << transaction.previous_hash << "\", " << transaction.amount <<  "}";
 }
 
 std::string Transaction::to_string() {
@@ -115,24 +75,90 @@ void Transaction::set_current_date() {
     this->date = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
-Transaction::Transaction(const std::string &from, const std::string &to, uint64_t type,
-                         const std::map<std::string, std::string> &extraData, const std::string &hash,
-                         const std::string &previousHash) : from(from), to(to), type(type), extra_data(extraData),
-                                                            hash(hash), previous_hash(previousHash) {
-    this->from = from;
-    this->to = to;
-    this->type = type;
-    this->extra_data = extraData;
+const std::string &Transaction::getHash() const {
+    return this->hash;
+}
+
+void Transaction::setHash(const std::string &hash) {
     this->hash = hash;
+}
+
+const std::string &Transaction::getPreviousHash() const {
+    return this->previous_hash;
+}
+
+void Transaction::setPreviousHash(const std::string &previousHash) {
     this->previous_hash = previousHash;
 }
 
+double Transaction::getAmount() const {
+    return this->amount;
+}
+
+void Transaction::setAmount(double amount) {
+    this->amount = amount;
+}
+
+bool Transaction::operator==(const Transaction &rhs) const {
+    return from == rhs.from &&
+            this->to == rhs.to &&
+            this->type == rhs.type &&
+            this->date == rhs.date &&
+            this->extra_data == rhs.extra_data &&
+            this->hash == rhs.hash &&
+            this->previous_hash == rhs.previous_hash &&
+            this->amount == rhs.amount;
+}
+
+bool Transaction::operator!=(const Transaction &rhs) const {
+    return !(rhs == *this);
+}
+
 Transaction::Transaction(const std::string &from, const std::string &to, uint64_t type,
-                         const std::map<std::string, std::string> &extraData, const std::string &previousHash) : from(
-        from), to(to), type(type), extra_data(extraData), previous_hash(previousHash) {
+                         const std::map<std::string, std::string> &extraData, const std::string &previousHash,
+                         double amount) : from(from), to(to), type(type), extra_data(extraData),
+                                            previous_hash(previousHash), amount(amount) {
     this->from = from;
     this->to = to;
     this->type = type;
     this->extra_data = extraData;
     this->previous_hash = previousHash;
+    this->amount = amount;
+}
+
+Transaction::Transaction(const std::string &from, const std::string &to, uint64_t type, uint64_t date,
+                         const std::map<std::string, std::string> &extraData, const std::string &previousHash,
+                         double amount) : from(from), to(to), type(type), date(date), extra_data(extraData),
+                                            previous_hash(previousHash), amount(amount) {
+    this->from = from;
+    this->to = to;
+    this->type = type;
+    this->date = date;
+    this->extra_data = extraData;
+    this->previous_hash = previousHash;
+    this->amount = amount;
+}
+
+Transaction::Transaction(const std::string &from, const std::string &to, uint64_t type, uint64_t date,
+                         const std::map<std::string, std::string> &extraData, const std::string &hash,
+                         const std::string &previousHash, double amount) : from(from), to(to), type(type), date(date),
+                                                                             extra_data(extraData), hash(hash),
+                                                                             previous_hash(previousHash),
+                                                                             amount(amount) {
+    this->from = from;
+    this->to = to;
+    this->type = type;
+    this->date = date;
+    this->extra_data = extraData;
+    this->hash = hash;
+    this->previous_hash = previousHash;
+    this->amount = amount;
+}
+
+double Transaction::getFee() const {
+    return this->fee;
+}
+
+void Transaction::setFee(double fee) {
+    this->fee = fee;
 }

@@ -11,7 +11,7 @@
 class kec256 {
 public:
     static constexpr int HASH_LEN = 32;
-    static std::string getHash(std::string& str, int len);
+    static std::string getHash(std::string& str, size_t len);
 private:
     static void absorb(std::uint64_t state[5][5]);
     static std::vector<std::byte> getBytes(std::string const &s);

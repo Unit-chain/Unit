@@ -13,18 +13,16 @@
 class Transaction {
 public:
     Transaction();
-    Transaction(const std::string &from, const std::string &to, uint64_t type,
-                const std::map<std::string, std::string> &extraData, const std::string &previousHash, uint64_t date);
-    Transaction(const std::string &from, const std::string &to, uint64_t type,
-                const std::map<std::string, std::string> &extraData, const std::string &hash,
-                const std::string &previousHash, uint64_t date);
 
     Transaction(const std::string &from, const std::string &to, uint64_t type,
-                const std::map<std::string, std::string> &extraData, const std::string &hash,
-                const std::string &previousHash);
+                const std::map<std::string, std::string> &extraData, const std::string &previousHash, double amount);
 
-    Transaction(const std::string &from, const std::string &to, uint64_t type,
-                const std::map<std::string, std::string> &extraData, const std::string &previousHash);
+    Transaction(const std::string &from, const std::string &to, uint64_t type, uint64_t date,
+                const std::map<std::string, std::string> &extraData, const std::string &previousHash, double amount);
+
+    Transaction(const std::string &from, const std::string &to, uint64_t type, uint64_t date,
+                const std::map<std::string, std::string> &extraData, const std::string &hash,
+                const std::string &previousHash, double amount);
 
     virtual ~Transaction();
     std::string from;
@@ -34,7 +32,11 @@ public:
     std::map<std::string, std::string> extra_data {{"name", nullptr}, {"value", nullptr}};
     std::string hash;
     std::string previous_hash;
+    double amount;
+    double fee; // in subunits; 1 unit = 100000 subunits;
 
+
+    //  getters and setters
     [[nodiscard]] const std::string &getFrom() const;
     void setFrom(const std::string &from);
     [[nodiscard]] const std::string &getTo() const;
@@ -45,14 +47,25 @@ public:
     void setDate(uint64_t date);
     [[nodiscard]] const std::map<std::string, std::string> &getExtraData() const;
     void setExtraData(const std::map<std::string, std::string> &extraData);
+    [[nodiscard]] const std::string &getHash() const;
+    void setHash(const std::string &hash);
+    [[nodiscard]] const std::string &getPreviousHash() const;
+    void setPreviousHash(const std::string &previousHash);
+    [[nodiscard]] double getAmount() const;
+    void setAmount(double amount);
+    [[nodiscard]] double getFee() const;
+    void setFee(double fee);
+
+    //  custom functions
     void generate_tx_hash(); // getting serializing value and make hashed it twice
     friend std::ostream& operator<< (std::ostream &out, const Transaction &transaction);
     std::string to_string();
     void set_current_date();
 
+    //  boolean operators
     bool operator==(const Transaction &rhs) const;
-
     bool operator!=(const Transaction &rhs) const;
+
 protected:
 };
 

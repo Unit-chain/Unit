@@ -9,6 +9,7 @@
 #include "Blockchain_core/Crypto/kec256.h"
 #include "Blockchain_core/Hex.h"
 #include "Blockchain_core/Transaction.h"
+#include "Blockchain_core/Block.h"
 
 using ROCKSDB_NAMESPACE::ColumnFamilyDescriptor;
 using ROCKSDB_NAMESPACE::ColumnFamilyHandle;
@@ -29,8 +30,13 @@ int main(){
 //    delete db;
 
     std::map<std::string, std::string> map = {{"name", "unit"}, {"value", "1"}};
-    Transaction tx = Transaction("g2px1", "gosha", 0, map, "0");
+    Transaction tx = Transaction("g2px1", "gosha", 1,  map, "0", 1000);
     tx.generate_tx_hash();
-    std::cout << tx << std::endl << tx.hash;
+    std::cout << "Transaction: " << tx << std::endl << tx.hash << std::endl;
+    Block block = Block(0, 1, "0");
+    block.push_tx(tx);
+    block.set_current_date();
+    block.generate_hash();
+    std::cout << "Block: " << block << std::endl << block.hash;
     return 0;
 }
