@@ -4,16 +4,20 @@
 
 #ifndef UVM_RESULT_H
 #define UVM_RESULT_H
+#include "string"
 
 template <class T>
 class Result {
 public:
     explicit Result(T value);
+    explicit Result(T value, const std::string& message);
     bool ok();
     T get_value();
+    std::string get_message();
 
 protected:
     T val;
+    std::string message;
 };
 
 template<class T>
@@ -29,6 +33,17 @@ bool Result<T>::ok() {
 template<class T>
 T Result<T>::get_value() {
     return this->val;
+}
+
+template<class T>
+Result<T>::Result(T value, const std::string& message) {
+    this->val = value;
+    this->message;
+}
+
+template<class T>
+std::string Result<T>::get_message() {
+    return this->message;
 }
 
 

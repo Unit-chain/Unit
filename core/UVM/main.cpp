@@ -6,10 +6,7 @@
 
 #include <thread>
 #include "vector"
-#include "Blockchain_core/Crypto/kec256.h"
-#include "Blockchain_core/Hex.h"
-#include "Blockchain_core/Transaction.h"
-#include "Blockchain_core/Block.h"
+#include "Blockchain_core/Wallet/WalletAccount.h"
 
 using ROCKSDB_NAMESPACE::ColumnFamilyDescriptor;
 using ROCKSDB_NAMESPACE::ColumnFamilyHandle;
@@ -29,25 +26,11 @@ int main(){
 //    std::cout << fetched_value;
 //    delete db;
 
-    std::map<std::string, std::string> map = {{"name", "unit"}, {"value", "1"}};
-    Transaction tx = Transaction("g2px1", "gosha", 1,  map, "0", 1000);
-    tx.generate_tx_hash();
-    std::cout << "Transaction 0 : " << tx << std::endl << tx.hash << std::endl;
-    std::cout << tx.to_json_string() << std::endl;
-
-
-    Transaction tx1 = Transaction("gosha", "g2px1", 1,  map, "0", 1000);
-    tx1.generate_tx_hash();
-    std::cout << "Transaction 1 : " << tx1 << std::endl << tx1.hash << std::endl;
-    std::cout << tx1.to_json_string() << std::endl;
-
-
-    Block block = Block(0, 1, "0");
-    block.push_tx(tx);
-    block.push_tx(tx1);
-    block.set_current_date();
-    block.generate_hash();
-    std::cout << "Block: " << block << std::endl << block.hash << std::endl;
-    std::cout << block.to_json_string() << std::endl << block.to_json_with_tx_hash_only();
+    WalletAccount walletAccount;
+    walletAccount.setAmount(1000);
+    walletAccount.setAddress("g2px1");
+    std::map<std::string, double> tokens = {{"carrot", 10}, {"meat", 100}};
+    walletAccount.setNonDefaultBalances(tokens);
+    std::cout << walletAccount;
     return 0;
 }
