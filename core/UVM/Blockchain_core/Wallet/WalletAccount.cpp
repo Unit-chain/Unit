@@ -51,7 +51,9 @@ std::ostream &operator<<(std::ostream &out, const WalletAccount &walletAccount) 
 
 
 std::string WalletAccount::to_json_string() {
-    return std::string();
+    std::ostringstream string_stream;
+    string_stream << *this;
+    return string_stream.str();
 }
 
 bool WalletAccount::operator==(const WalletAccount &rhs) const {

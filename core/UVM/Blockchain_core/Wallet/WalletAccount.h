@@ -9,6 +9,7 @@
 #include "map"
 #include "sstream"
 #include "vector"
+#include <nlohmann/json.hpp>
 
 class WalletAccount {
 public:

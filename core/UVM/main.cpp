@@ -31,6 +31,12 @@ int main(){
     walletAccount.setAddress("g2px1");
     std::map<std::string, double> tokens = {{"carrot", 10}, {"meat", 100}};
     walletAccount.setNonDefaultBalances(tokens);
-    std::cout << walletAccount;
+    std::string wall = walletAccount.to_json_string();
+    std::cout << wall << std::endl;
+    nlohmann::json js = nlohmann::json::parse(wall);
+    std::cout << js["tokens_balance"] << std::endl;
+    js["tokens_balance"][2]["beer"] = 1000;
+    std::cout << js << std::endl << js["tokens_balance"].size();
+
     return 0;
 }

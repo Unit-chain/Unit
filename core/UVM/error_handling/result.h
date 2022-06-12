@@ -38,7 +38,7 @@ T Result<T>::get_value() {
 template<class T>
 Result<T>::Result(T value, const std::string& message) {
     this->val = value;
-    this->message;
+    this->message = message;
 }
 
 template<class T>

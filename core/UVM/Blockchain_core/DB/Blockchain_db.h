@@ -4,7 +4,7 @@
 
 #ifndef UVM_BLOCKCHAIN_DB_H
 #define UVM_BLOCKCHAIN_DB_H
-#include "rocksdb/db.h"
+//#include "rocksdb/db.h"
 #include "rocksdb/utilities/transaction.h"
 #include "rocksdb/utilities/transaction_db.h"
 #include "cassert"
@@ -13,6 +13,7 @@
 #include "../../ENV/env.h"
 #include "../../error_handling/Result.h"
 #include "../Block.h"
+#include "../Wallet/WalletAccount.h"
 
 class Blockchain_db {
 public:
