@@ -29,14 +29,13 @@ public:
     Block(uint64_t date, uint64_t index, uint16_t netVersion, const std::string &hash, const std::string &prevHash,
           const std::vector<Transaction> &transactions);
 
-    uint64_t date = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    uint64_t date = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     uint64_t index;
     uint16_t net_version;
     std::string hash;
     std::string prev_hash;
     std::vector<Transaction> transactions;
 
-    std::string previous_block_num();
     void generate_hash();
     void push_tx(Transaction &tx);
     void set_current_date();
@@ -55,5 +54,9 @@ public:
     void setTransactions(const std::vector<Transaction> &transactions);
     friend std::ostream& operator<< (std::ostream &out, const Block &block);
     std::string to_string();
+    std::string to_json_string();
+    std::string to_json_with_tx_hash_only();
+private:
+    std::string previous_block_num();
 };
 #endif //UVM_BLOCK_H

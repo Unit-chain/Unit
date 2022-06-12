@@ -61,6 +61,7 @@ public:
     friend std::ostream& operator<< (std::ostream &out, const Transaction &transaction);
     std::string to_string();
     void set_current_date();
+    std::string to_json_string();
 
     //  boolean operators
     bool operator==(const Transaction &rhs) const;

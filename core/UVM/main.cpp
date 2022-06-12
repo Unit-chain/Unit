@@ -33,14 +33,21 @@ int main(){
     Transaction tx = Transaction("g2px1", "gosha", 1,  map, "0", 1000);
     tx.generate_tx_hash();
     std::cout << "Transaction 0 : " << tx << std::endl << tx.hash << std::endl;
+    std::cout << tx.to_json_string() << std::endl;
+
+
     Transaction tx1 = Transaction("gosha", "g2px1", 1,  map, "0", 1000);
     tx1.generate_tx_hash();
     std::cout << "Transaction 1 : " << tx1 << std::endl << tx1.hash << std::endl;
+    std::cout << tx1.to_json_string() << std::endl;
+
+
     Block block = Block(0, 1, "0");
     block.push_tx(tx);
     block.push_tx(tx1);
     block.set_current_date();
     block.generate_hash();
-    std::cout << "Block: " << block << std::endl << block.hash;
+    std::cout << "Block: " << block << std::endl << block.hash << std::endl;
+    std::cout << block.to_json_string() << std::endl << block.to_json_with_tx_hash_only();
     return 0;
 }

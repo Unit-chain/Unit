@@ -24,7 +24,7 @@ std::ostream &operator<<(std::ostream &out, const Block &block) {
         }
         all_tx_to_string.append(tx.to_string()).append(", ");
     }
-    return out << "{\"" << block.prev_hash << "\", " << block.net_version << ", \"" << block.index << "\", " << block.date << ", \"" << all_tx_to_string <<"\"}";
+    return out << "{\"" << block.prev_hash << "\", " << block.net_version << ", \"" << block.index << "\", " << block.date << ", [" << all_tx_to_string <<"]}";
 }
 
 Block::~Block() {}
@@ -143,6 +143,34 @@ Block::Block(uint64_t date, uint64_t index, uint16_t netVersion, const std::stri
     this->hash = hash;
     this->prev_hash = prevHash;
     this->transactions = transactions;
+}
+
+std::string Block::to_json_string() {
+    std::string all_tx_to_json_string;
+    for (Transaction tx : this->transactions) {
+        if (tx == this->transactions[this->transactions.size()-1]) {
+            all_tx_to_json_string.append(tx.to_json_string());
+            break;
+        }
+        all_tx_to_json_string.append(tx.to_json_string()).append(", ");
+    }
+    std::ostringstream string_stream;
+    string_stream << R"({"hash":")" << this->hash << R"(", "prev_hash":")" << this->prev_hash << R"(", "net_version":")" << this->net_version << R"(", "index":)" << this->index << R"(, "date":)" << this->date << R"(, "transactions": [)" << all_tx_to_json_string <<"]}";
+    return string_stream.str();
+}
+
+std::string Block::to_json_with_tx_hash_only() {
+    std::string all_tx_to_json_string;
+    for (Transaction tx : this->transactions) {
+        if (tx == this->transactions[this->transactions.size()-1]) {
+            all_tx_to_json_string.append("\"").append(tx.hash).append("\"");
+            break;
+        }
+        all_tx_to_json_string.append("\"").append(tx.hash).append("\", ");
+    }
+    std::ostringstream string_stream;
+    string_stream << R"({"hash":")" << this->hash << R"(", "prev_hash":")" << this->prev_hash << R"(", "net_version":")" << this->net_version << R"(", "index":)" << this->index << R"(, "date":)" << this->date << R"(, "transactions": [)" << all_tx_to_json_string <<"]}";
+    return string_stream.str();
 }
 
 

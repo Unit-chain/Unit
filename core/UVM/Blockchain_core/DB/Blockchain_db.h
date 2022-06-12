@@ -4,11 +4,13 @@
 
 #ifndef UVM_BLOCKCHAIN_DB_H
 #define UVM_BLOCKCHAIN_DB_H
-#include "../../ENV/env.h"
 #include "rocksdb/db.h"
 #include "cassert"
-#include "Unit_CF.h"
 #include "vector"
+#include "Unit_CF.h"
+#include "../../ENV/env.h"
+#include "../../error_handling/Result.h"
+#include "../Block.h"
 
 template<class T>
 class Blockchain_db {
@@ -26,7 +28,7 @@ public:
                                                                    rocksdb::ColumnFamilyDescriptor("tx", rocksdb::ColumnFamilyOptions()),
                                                                    rocksdb::ColumnFamilyDescriptor("height", rocksdb::ColumnFamilyOptions()),
                                                                    rocksdb::ColumnFamilyDescriptor("accountBalance", rocksdb::ColumnFamilyOptions())};
-
+    Result<std::string> push_block(Block &block);
 };
 
 #endif //UVM_BLOCKCHAIN_DB_H
