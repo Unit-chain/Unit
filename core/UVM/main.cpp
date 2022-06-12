@@ -32,9 +32,13 @@ int main(){
     std::map<std::string, std::string> map = {{"name", "unit"}, {"value", "1"}};
     Transaction tx = Transaction("g2px1", "gosha", 1,  map, "0", 1000);
     tx.generate_tx_hash();
-    std::cout << "Transaction: " << tx << std::endl << tx.hash << std::endl;
+    std::cout << "Transaction 0 : " << tx << std::endl << tx.hash << std::endl;
+    Transaction tx1 = Transaction("gosha", "g2px1", 1,  map, "0", 1000);
+    tx1.generate_tx_hash();
+    std::cout << "Transaction 1 : " << tx1 << std::endl << tx1.hash << std::endl;
     Block block = Block(0, 1, "0");
     block.push_tx(tx);
+    block.push_tx(tx1);
     block.set_current_date();
     block.generate_hash();
     std::cout << "Block: " << block << std::endl << block.hash;

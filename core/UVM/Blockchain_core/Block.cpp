@@ -18,9 +18,13 @@
 std::ostream &operator<<(std::ostream &out, const Block &block) {
     std::string all_tx_to_string;
     for (Transaction tx : block.transactions) {
-        all_tx_to_string.append(tx.to_string());
-    } //<< block.hash << "\", \""
-    return out << "{\"" << block.prev_hash << "\", \"" << block.net_version << "\", \"" << block.index << "\", \"" << block.date << "\", \"" << all_tx_to_string <<"\"}";
+        if (tx == block.transactions[block.transactions.size()-1]) {
+            all_tx_to_string.append(tx.to_string());
+            break;
+        }
+        all_tx_to_string.append(tx.to_string()).append(", ");
+    }
+    return out << "{\"" << block.prev_hash << "\", " << block.net_version << ", \"" << block.index << "\", " << block.date << ", \"" << all_tx_to_string <<"\"}";
 }
 
 Block::~Block() {}
