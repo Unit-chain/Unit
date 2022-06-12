@@ -36,15 +36,12 @@ Result<bool> Blockchain_db::push_transaction(Transaction &transaction) {
     rocksdb::DB* db;
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::Status status = rocksdb::DB::Open(rocksdb::DBOptions(), kDBPath, this->columnFamilies, &handles, &db);
-//    status = db->Put(rocksdb::WriteOptions(), columnFamilies[2].name, rocksdb::Slice(transaction.hash), rocksdb::Slice(transaction.to_json_string()));
-//    delete db;
-//    return Result<bool>(status.ok());
 
     // pushing tx
     status = db->Put(rocksdb::WriteOptions(), handles[2], rocksdb::Slice(transaction.hash), rocksdb::Slice(transaction.to_json_string()));
-//
-//
-//    // getting account balance
+    if (!status.ok()) return Result<bool>(false, "unexpected error");
+
+    // getting account balance
     std::string wallet_json;
     status = db->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.to), &wallet_json);
     if (status.IsNotFound()) {
@@ -55,7 +52,7 @@ Result<bool> Blockchain_db::push_transaction(Transaction &transaction) {
             // if default transaction - set balance
             walletAccount.setAmount(transaction.amount);
         } else {
-//          // else set tokens balance
+            // else set tokens balance
             std::string token_address;
             status = db->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.extra_data["name"]), &token_address);
             if (status.IsNotFound()) return Result<bool>(false, "token doesn't exist");
@@ -103,10 +100,59 @@ Result<bool> Blockchain_db::push_transaction_vector(std::vector<Transaction> &tr
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::Status status = rocksdb::DB::Open(rocksdb::DBOptions(), kDBPath, this->columnFamilies, &handles, &db);
     for (Transaction transaction : transactions) {
-        status = db->Put(rocksdb::WriteOptions(), columnFamilies[2].name, rocksdb::Slice(transaction.hash), rocksdb::Slice(transaction.to_json_string()));
+        // pushing tx
+        status = db->Put(rocksdb::WriteOptions(), handles[2], rocksdb::Slice(transaction.hash), rocksdb::Slice(transaction.to_json_string()));
+        if (!status.ok()) return Result<bool>(false, "unexpected error");
+
+        // getting account balance
+        std::string wallet_json;
+        status = db->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.to), &wallet_json);
+        if (status.IsNotFound()) {
+            // creating account if not found
+            WalletAccount walletAccount;
+            walletAccount.setAddress(transaction.to);
+            if (transaction.type == 0) {
+                // if default transaction - set balance
+                walletAccount.setAmount(transaction.amount);
+            } else {
+                // else set tokens balance
+                std::string token_address;
+                status = db->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.extra_data["name"]), &token_address);
+                if (status.IsNotFound()) return Result<bool>(false, "token doesn't exist");
+                std::map<std::string, std::string> token_balance = {{token_address, transaction.extra_data["value"]}};
+                walletAccount.setNonDefaultBalances(token_balance);
+            }
+            status = db->Put(rocksdb::WriteOptions(), handles[4], rocksdb::Slice(transaction.to), rocksdb::Slice(walletAccount.to_json_string()));
+            return Result<bool>(true);
+        }
+
+        // if account exists - need to set balance
+        nlohmann::json wallet_js = nlohmann::json::parse(wallet_json);
+        if (transaction.type == 0) {
+            // set units balances
+            wallet_js["amount"] = transaction.amount;
+        } else {
+            std::string token_address;
+            status = db->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.extra_data["name"]), &token_address);
+            if (status.IsNotFound()) {
+                return Result<bool>(false, "token doesn't exist");
+            }
+            bool flag = false;
+            for (nlohmann::json::iterator it = wallet_js["tokens_balance"].begin(); it != wallet_js["tokens_balance"].end(); ++it) {
+                if (it.value().contains(transaction.extra_data["name"])) { // if user already has balance in current tokens
+                    flag = true;
+                    it.value()[transaction.extra_data["name"]] += transaction.extra_data["value"];
+                }
+            }
+
+            if (!flag) { // if user doesn't have balance in current tokens
+                wallet_js["tokens_balance"][wallet_js["tokens_balance"].size()][transaction.extra_data["name"]] = transaction.extra_data["value"];
+            }
+        }
+        status = db->Put(rocksdb::WriteOptions(), handles[4], rocksdb::Slice(wallet_js["address"]), rocksdb::Slice(to_string(wallet_js))); // putting
     }
-    delete db;
-    return Result<bool>(status.ok());
+    delete db; // deleting rocksdb pointer
+    return Result<bool>(true);
 }
 
 
