@@ -29,7 +29,7 @@ int main(){
     WalletAccount walletAccount;
     walletAccount.setAmount(1000);
     walletAccount.setAddress("g2px1");
-    std::map<std::string, double> tokens = {{"carrot", 10}, {"meat", 100}};
+    std::map<std::string, std::string> tokens = {{"carrot", "10"}, {"meat", "100"}};
     walletAccount.setNonDefaultBalances(tokens);
     std::string wall = walletAccount.to_json_string();
     std::cout << wall << std::endl;

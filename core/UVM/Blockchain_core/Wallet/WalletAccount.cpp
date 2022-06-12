@@ -20,18 +20,18 @@ void WalletAccount::setAmount(double amount) {
     WalletAccount::amount = amount;
 }
 
-const std::map<std::string, double> &WalletAccount::getNonDefaultBalances() const {
+const std::map<std::string, std::string> &WalletAccount::getNonDefaultBalances() const {
     return non_default_balances;
 }
 
-void WalletAccount::setNonDefaultBalances(const std::map<std::string, double> &nonDefaultBalances) {
+void WalletAccount::setNonDefaultBalances(const std::map<std::string, std::string> &nonDefaultBalances) {
     non_default_balances = nonDefaultBalances;
 }
 
 std::ostream &operator<<(std::ostream &out, const WalletAccount &walletAccount) {
-    std::map<std::string, double> extra_map = walletAccount.non_default_balances;
+    std::map<std::string, std::string> extra_map = walletAccount.non_default_balances;
     std::vector<std::string> key;
-    std::vector<double> value;
+    std::vector<std::string> value;
     for (auto & it : extra_map) {
         key.push_back(it.first);
         value.push_back(it.second);
@@ -42,7 +42,7 @@ std::ostream &operator<<(std::ostream &out, const WalletAccount &walletAccount) 
         .append("{\"")
         .append(key[i])
         .append("\":")
-        .append(std::to_string(value[i]))
+        .append(value[i])
         .append((i == key.size() - 1) ? "}" : "},");
     }
 

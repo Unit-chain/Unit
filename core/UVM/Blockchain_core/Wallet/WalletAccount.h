@@ -15,15 +15,15 @@ class WalletAccount {
 public:
     std::string address;
     double amount;
-    std::map<std::string, double> non_default_balances;
+    std::map<std::string, std::string> non_default_balances;
 
     // getters & setters
     [[nodiscard]] const std::string &getAddress() const;
     void setAddress(const std::string &address);
     [[nodiscard]] double getAmount() const;
     void setAmount(double amount);
-    [[nodiscard]] const std::map<std::string, double> &getNonDefaultBalances() const;
-    void setNonDefaultBalances(const std::map<std::string, double> &nonDefaultBalances);
+    [[nodiscard]] const std::map<std::string, std::string> &getNonDefaultBalances() const;
+    void setNonDefaultBalances(const std::map<std::string, std::string> &nonDefaultBalances);
 
     //bool operators
     bool operator==(const WalletAccount &rhs) const;
