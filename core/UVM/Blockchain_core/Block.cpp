@@ -3,7 +3,6 @@
 //
 
 #include "Block.h"
-#include "../TXManager.h"
 
 //std::string Block::previous_block_num() {
 //    rocksdb::Status s = TXManager::openDB_RO();

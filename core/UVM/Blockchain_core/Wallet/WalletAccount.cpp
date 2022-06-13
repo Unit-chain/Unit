@@ -46,7 +46,7 @@ std::ostream &operator<<(std::ostream &out, const WalletAccount &walletAccount) 
         .append((i == key.size() - 1) ? "}" : "},");
     }
 
-    return out << R"({"address":")" << walletAccount.address <<  R"(", "amount":")" << walletAccount.amount <<  R"(", "tokens_balance":[)" << serialized_token_balances << "]}";
+    return out << R"({"address":")" << walletAccount.address <<  R"(", "amount":)" << walletAccount.amount <<  R"(, "tokens_balance":[)" << serialized_token_balances << "]}";
 }
 
 

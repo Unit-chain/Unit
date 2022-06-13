@@ -1,0 +1,35 @@
+//
+// Created by Kirill Zhukov on 12.06.2022.
+//
+
+#include "Blockchain_db.h"
+
+Result<bool> Blockchain_db::start_node_db() {
+    rocksdb::Options options;
+    options.create_if_missing = true;
+    options.error_if_exists = false;
+    options.create_missing_column_families = true;
+    options.IncreaseParallelism(cpus);
+    options.OptimizeLevelStyleCompaction();
+    rocksdb::DB* db;
+    rocksdb::Status status = rocksdb::DB::Open(options, kDBPath, &db);
+
+    for (const auto & columnFamiliesName : columnFamiliesNames) { // creating column families
+        rocksdb::ColumnFamilyHandle* cf;
+        std::cout << "Creating column families: " << columnFamiliesName << std::endl;
+        status = db->CreateColumnFamily(rocksdb::ColumnFamilyOptions(), columnFamiliesName, &cf);
+        db->DestroyColumnFamilyHandle(cf); // delete ptr
+    }
+    delete db;
+    std::vector<rocksdb::ColumnFamilyHandle*> handles;
+    status = rocksdb::DB::Open(rocksdb::DBOptions(), kDBPath, this->columnFamilies, &handles, &db);
+    for (auto handle : handles) {
+        status = db->DestroyColumnFamilyHandle(handle);
+        std::cout << "Destructing column families handler status: " << status.ok() << std::endl;
+    }
+    delete db;
+    return (status.ok()) ? Result<bool>(true) : Result<bool>(status.ok(), "column families already exists");
+}
+
+
+

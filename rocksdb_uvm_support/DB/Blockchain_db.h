@@ -9,10 +9,8 @@
 #include "rocksdb/options.h"
 #include "cassert"
 #include "vector"
-#include "iterator"
-#include "../../error_handling/Result.h"
-#include "../Block.h"
-#include "../Wallet/WalletAccount.h"
+#include "iostream"
+#include "../error_handling/Result.h"
 /// utility structures
 #if defined(OS_WIN)
 #include <Windows.h>
@@ -50,9 +48,6 @@ public:
                                                                                 rocksdb::ColumnFamilyDescriptor(ROCKSDB_NAMESPACE::kDefaultColumnFamilyName, rocksdb::ColumnFamilyOptions())
     };
     const std::vector<std::string> columnFamiliesNames = {"blockTX", "addressContracts", "tx", "height", "accountBalance"};
-    Result<bool> push_block(Block &block);
-    Result<bool> push_transaction(Transaction &transaction);
-    Result<bool> push_transaction_vector(std::vector<Transaction> &transactions);
 };
 
 #endif //UVM_BLOCKCHAIN_DB_H

@@ -9,9 +9,7 @@
 #include "vector"
 #include "sstream"
 #include "Transaction.h"
-#include "rocksdb/db.h"
 #include "Crypto/kec256.h"
-//#include "../ENV/env.h"
 
 class Block {
 public:
