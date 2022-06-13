@@ -63,3 +63,21 @@ bool WalletAccount::operator==(const WalletAccount &rhs) const {
 bool WalletAccount::operator!=(const WalletAccount &rhs) const {
     return !(rhs == *this);
 }
+
+nlohmann::json WalletAccount::subtract_unit_balance(nlohmann::json &account, double value) {
+    // sender's balance
+    double balance_amount = account["amount"];
+    account["amount"] = balance_amount - value; // subtracting value
+    return account;
+}
+
+nlohmann::json WalletAccount::increase_unit_balance(nlohmann::json &account, double value) {
+    // sender's balance
+    double balance_amount = account["amount"];
+    account["amount"] = balance_amount + value; // subtracting value
+    return account;
+}
+
+//void WalletAccount::serialize_from_json(std::string &account) {
+//
+//}

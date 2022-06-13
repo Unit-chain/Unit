@@ -32,6 +32,9 @@ public:
     friend std::ostream& operator<< (std::ostream &out, const WalletAccount &transaction);
 
     std::string to_json_string();
+    void serialize_from_json(std::string &account);
+    static nlohmann::json subtract_unit_balance(nlohmann::json &account, double value);
+    static nlohmann::json increase_unit_balance(nlohmann::json &account, double value);
 };
 
 

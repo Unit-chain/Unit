@@ -29,9 +29,10 @@ public:
     std::string to;
     uint64_t type;
     uint64_t date = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    std::map<std::string, std::string> extra_data {{"name", nullptr}, {"value", nullptr}};
+    std::map<std::string, std::string> extra_data {{"name", nullptr}, {"value", nullptr}, {"bytecode", nullptr}};
     std::string hash;
     std::string previous_hash;
+//    std::string byte_code;
     double amount;
     double fee; // in subunits; 1 unit = 100000 subunits;
 
@@ -55,6 +56,10 @@ public:
     void setAmount(double amount);
     [[nodiscard]] double getFee() const;
     void setFee(double fee);
+
+    const std::string &getByteCode() const;
+
+    void setByteCode(const std::string &byteCode);
 
     //  custom functions
     void generate_tx_hash(); // getting serializing value and make hashed it twice

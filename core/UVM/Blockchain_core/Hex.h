@@ -22,4 +22,15 @@ inline std::string bytes_to_hex(uint8_t value_to_hex[32]) {
     }
     return stream.str();
 }
+
+inline std::string hex_to_ascii(std::string &hex){
+    int len = hex.length();
+    std::string newString;
+    for(int i = 0; i < len; i += 2) {
+        std::string byte = hex.substr(i,2);
+        char chr = (char) (int)strtol(byte.c_str(), nullptr, 16);
+        newString.push_back(chr);
+    }
+    return newString;
+}
 #endif //UVM_HEX_H
