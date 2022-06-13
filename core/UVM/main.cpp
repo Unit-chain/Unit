@@ -36,27 +36,30 @@ int main(){
 //    std::cout << result.ok() << std::endl;
 
 
-//    std::map<std::string, std::string> map = {{"name", "carrot"}, {"value", "100"}};
-//    Transaction tx = Transaction("g2px1", "gosha", 1,  map, "0", 0);
-//    tx.generate_tx_hash();
-//    std::cout << "Transaction: " << tx << std::endl << tx.hash << std::endl;
-//    Blockchain_db blockchainDb = Blockchain_db();
-//    Result<bool> result = blockchainDb.push_transaction(tx);
-//    std::cout << result.ok() << std::endl;
-
-
-    rocksdb::Options options;
-    options.create_if_missing = true;
-    options.error_if_exists = false;
-    options.create_missing_column_families = true;
-    options.IncreaseParallelism(cpus);
-    options.OptimizeLevelStyleCompaction();
-    rocksdb::DB* db;
+//    std::map<std::string, std::string> map = {{"name", "carrot"}, {"value", "1000000"}};
+    std::map<std::string, std::string> map = {{"name", "unit"}, {"value", "0"}};
+    Transaction tx = Transaction("g2px1", "gosha", 0,  map, "0", 100);
+//    Transaction tx = Transaction("genesis", "g2px1", 1,  map, "0",0);
+    tx.generate_tx_hash();
+    std::cout << "Transaction: " << tx << std::endl << tx.hash << std::endl;
     Blockchain_db blockchainDb = Blockchain_db();
-    std::vector<rocksdb::ColumnFamilyHandle*> handles;
-    rocksdb::Status status = rocksdb::DB::Open(rocksdb::DBOptions(), kDBPath, blockchainDb.columnFamilies, &handles, &db);
-    std::string value;
-    db->Get(rocksdb::ReadOptions(), handles[5], rocksdb::Slice("gosha"), &value);
-    std::cout << value;
+    Result<bool> result = blockchainDb.push_transaction(tx);
+
+
+//    rocksdb::Options options;
+//    options.create_if_missing = true;
+//    options.error_if_exists = false;
+//    options.create_missing_column_families = true;
+//    options.IncreaseParallelism(cpus);
+//    options.OptimizeLevelStyleCompaction();
+//    rocksdb::DB* db;
+//    Blockchain_db blockchainDb = Blockchain_db();
+//    std::vector<rocksdb::ColumnFamilyHandle*> handles;
+//    rocksdb::Status status = rocksdb::DB::Open(rocksdb::DBOptions(), kDBPath, blockchainDb.columnFamilies, &handles, &db);
+//    std::string value;
+//    db->Get(rocksdb::ReadOptions(), handles[5], rocksdb::Slice("gosha"), &value);
+//    std::cout << "Gosha: " << value << std::endl;
+//    db->Get(rocksdb::ReadOptions(), handles[5], rocksdb::Slice("g2px1"), &value);
+//    std::cout << "Kirill: " << value << std::endl;
     return 0;
 }
