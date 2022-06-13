@@ -1,7 +1,7 @@
 # Installing
-1. Firstly install `rocksdb` library
-2. Secondly install `nlohmann_json` library
-3. Thirdly build with cmake program in `rocksdb_uvm_support`:
+1. Firstly, install `rocksdb` library
+2. Secondly, install `nlohmann_json` library
+3. Thirdly, build with cmake program in `rocksdb_uvm_support`:
 	1. `cd rocksdb_uvm_support`
 	2. `mkdir build`
 	3. `cd build`
