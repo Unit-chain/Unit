@@ -1,14 +1,14 @@
 # Installing
-1. Firstly install `rocksdb` library
-2. Secondly install `nlohmann_json` library
-3. Thirdly build with cmake program in `rocksdb_uvm_support`:
+1. Firstly, install `rocksdb` library
+2. Secondly, install `nlohmann_json` library
+3. Thirdly, build with cmake program in `rocksdb_uvm_support`:
 	1. `cd rocksdb_uvm_support`
 	2. `mkdir build`
 	3. `cd build`
 	4. `cmake ..`
 	5. `make`
 4. After building, need to run it:  `./rocksdb_uvm_support`. It will create column families which UVM needed
-5. After creating column families - need to build `UVM`. 
+5. After column families were created - need to build `UVM`. 
 
 # ToDo:
 - [ ] Pseudonymous
