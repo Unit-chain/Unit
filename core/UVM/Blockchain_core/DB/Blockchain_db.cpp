@@ -79,6 +79,9 @@ Result<bool> Blockchain_db::push_transaction(Transaction &transaction) {
             std::string bytecode = parsed_tx["extradata"]["bytecode"];
             nlohmann::json token_info = nlohmann::json::parse(hex_to_ascii(bytecode));
             std::string token_name = nlohmann::to_string(token_info["name"]);
+            token_name.erase(
+                    std::remove(token_name.begin(), token_name.end(), '\"'),
+                    token_name.end());
             delete db;
             Result<bool> result = this->create_new_token(token_name, token_info["supply"], transaction.from, bytecode, transaction);
             if (!result.ok()) {
@@ -123,7 +126,7 @@ Result<bool> Blockchain_db::push_transaction(Transaction &transaction) {
 
     // if account exists - need to set balance
     nlohmann::json wallet_js = nlohmann::json::parse(wallet_json);
-    if (transaction.type == 0) {
+    if (transaction.type == UNIT_TRANSFER) {
         // set units balances
         std::string balance = to_string(wallet_js["amount"]);
         double d_balance = std::stod(balance) + transaction.amount;
@@ -138,6 +141,9 @@ Result<bool> Blockchain_db::push_transaction(Transaction &transaction) {
         std::string bytecode = parsed_tx["extradata"]["bytecode"];
         nlohmann::json token_info = nlohmann::json::parse(hex_to_ascii(bytecode));
         std::string token_name = nlohmann::to_string(token_info["name"]);
+        token_name.erase(
+                std::remove(token_name.begin(), token_name.end(), '\"'),
+                token_name.end());
         delete db;
         Result<bool> result = this->create_new_token(token_name, token_info["supply"], transaction.from, bytecode, transaction);
         if (!result.ok()) {
@@ -148,12 +154,13 @@ Result<bool> Blockchain_db::push_transaction(Transaction &transaction) {
             return Result<bool>(false, result.get_message());
         }
         transaction.setTo(result.getSupportingResult());
+        status = rocksdb::DB::Open(options, kDBPath, this->columnFamilies, &handles, &db);
     } else {
         std::string token_address;
         status = db->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.extra_data["name"]), &token_address);
-//        if (status.IsNotFound()) {
-//            return Result<bool>(false, "token doesn't exist");
-//        }
+        if (!token_address.empty()) {
+            return Result<bool>(false, "token doesn't exist");
+        }
         bool flag = false;
         for (nlohmann::json::iterator it = wallet_js["tokens_balance"].begin(); it != wallet_js["tokens_balance"].end(); ++it) {
             if (it.value().contains(transaction.extra_data["name"])) { // if user already has balance in current tokens
@@ -168,8 +175,8 @@ Result<bool> Blockchain_db::push_transaction(Transaction &transaction) {
         // sender's balance
         for (nlohmann::json::iterator it = sender_wallet_js["tokens_balance"].begin(); it != sender_wallet_js["tokens_balance"].end(); ++it) {
             if (it.value().contains(transaction.extra_data["name"])) { // if user already has balance in current tokens
-                std::string balance = it.value()[transaction.extra_data["name"]];
-                balance = std::to_string(std::stod(balance) - std::stod(transaction.extra_data["value"]));
+                double balance = it.value()[transaction.extra_data["name"]];
+                balance = balance - std::stod(transaction.extra_data["value"]);
                 it.value()[transaction.extra_data["name"]] = balance;
             }
         }
@@ -177,13 +184,18 @@ Result<bool> Blockchain_db::push_transaction(Transaction &transaction) {
         status = db->Put(rocksdb::WriteOptions(), handles[4], rocksdb::Slice(sender_addr), rocksdb::Slice(to_string(sender_wallet_js))); // putting
         //end manipulating with sender's balance
 
-
         if (!flag) { // if user doesn't have balance in current tokens
             wallet_js["tokens_balance"][wallet_js["tokens_balance"].size()][transaction.extra_data["name"]] = transaction.extra_data["value"];
         }
     }
-    status = rocksdb::DB::Open(options, kDBPath, this->columnFamilies, &handles, &db);
     transaction.generate_tx_hash();
+    if (transaction.type > 1) {
+        std::string token;
+        db->Get(rocksdb::ReadOptions(), handles[1], rocksdb::Slice(transaction.extra_data["name"]), &token);
+        nlohmann::json token_json = nlohmann::json::parse(token);
+        token_json["transactions"].push_back(transaction.hash);
+        status = db->Put(rocksdb::WriteOptions(), handles[1], rocksdb::Slice(transaction.extra_data["name"]), rocksdb::Slice(to_string(token_json))); // putting
+    }
     // pushing tx
     status = db->Put(rocksdb::WriteOptions(), handles[2], rocksdb::Slice(transaction.hash), rocksdb::Slice(transaction.to_json_string()));
     if (!status.ok()) {
@@ -211,12 +223,12 @@ Result<bool> Blockchain_db::create_new_token(std::string &name, double supply, s
     rocksdb::Status status = rocksdb::DB::Open(options, kDBPath, this->columnFamilies, &handles, &token_db);
     std::string token_from_db;
     status = token_db->Get(rocksdb::ReadOptions(), handles[1], rocksdb::Slice(name), &token_from_db);
-    if (!status.IsNotFound()) {
+    if (!token_from_db.empty()) {
+        std::cout << "token found" << std::endl;
         for (auto handle : handles) {
             status = token_db->DestroyColumnFamilyHandle(handle);
         }
         delete token_db;
-        std::cout << "tut" << std::endl;
         return Result(false, "already exist"); // check if token already exists
     }
     std::vector<std::string> txs = {transaction.hash};
@@ -225,6 +237,7 @@ Result<bool> Blockchain_db::create_new_token(std::string &name, double supply, s
 //    token.setTransactionsInToken(txs);
     status = token_db->Put(rocksdb::WriteOptions(), handles[1], rocksdb::Slice(token.name), rocksdb::Slice(token.to_json_string())); // putting
     if (!status.ok()) {
+        std::cout << "token put" << std::endl;
         for (auto handle : handles) {
             status = token_db->DestroyColumnFamilyHandle(handle);
         }
@@ -233,10 +246,12 @@ Result<bool> Blockchain_db::create_new_token(std::string &name, double supply, s
     }
     std::string wallet_json;
     status = token_db->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(creator), &wallet_json);
+    std::cout << wallet_json << std::endl;
     nlohmann::json sender_wallet_js = nlohmann::json::parse(wallet_json);
     sender_wallet_js["tokens_balance"][sender_wallet_js["tokens_balance"].size()][name] = supply;
-
+    std::cout << sender_wallet_js << std::endl;
     if (!status.ok()) {
+        std::cout << "wallet js" << std::endl;
         for (auto handle : handles) {
             status = token_db->DestroyColumnFamilyHandle(handle);
         }
@@ -244,7 +259,7 @@ Result<bool> Blockchain_db::create_new_token(std::string &name, double supply, s
         return Result(false, "unexpected error");
     }
 
-    status = token_db->Put(rocksdb::WriteOptions(), handles[4], rocksdb::Slice(creator), rocksdb::Slice(sender_wallet_js));
+    status = token_db->Put(rocksdb::WriteOptions(), handles[4], rocksdb::Slice(creator), rocksdb::Slice(to_string(sender_wallet_js)));
     if (!status.ok()) {
         for (auto handle : handles) {
             status = token_db->DestroyColumnFamilyHandle(handle);

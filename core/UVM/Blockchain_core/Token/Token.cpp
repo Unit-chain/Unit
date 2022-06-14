@@ -37,7 +37,7 @@ std::ostream &operator<<(std::ostream &out, const Token &token) {
         }
         all_tx_to_string.append("\"").append(tx).append("\", ");
     }
-    return out << R"({"name":")"  << token.name << R"(", "bytecode":")" << token.bytecode << R"(", "token_hash":")" << token.token_hash << R"(", "supply":)" << std::fixed << token.supply << R"(", "date":)" << std::fixed << token.date << R"(, "transactions":)" <<  "[" << all_tx_to_string <<"]}";
+    return out << R"({"name":")"  << token.name << R"(", "bytecode":")" << token.bytecode << R"(", "token_hash":")" << token.token_hash << R"(", "supply":)" << std::fixed << token.supply << R"(, "date":)" << std::fixed << token.date << R"(, "transactions":)" <<  "[" << all_tx_to_string <<"]}";
 }
 
 
@@ -118,6 +118,6 @@ void Token::setTransactionsInToken(const std::vector<std::string> &transactionsI
 
 std::string Token::to_json_without_txs() const {
     std::ostringstream stringstream;
-    stringstream << R"({"name":")"  << this->name << R"(", "bytecode":")" << this->bytecode << R"(", "token_hash":")" << this->token_hash << R"(", "supply":)" << std::fixed << this->supply << R"(", "date":)" << std::fixed << this->date << "}";
+    stringstream << R"({"name":")"  << this->name << R"(", "bytecode":")" << this->bytecode << R"(", "token_hash":")" << this->token_hash << R"(", "supply":)" << std::fixed << this->supply << R"(, "date":)" << std::fixed << this->date << "}";
     return stringstream.str();
 }

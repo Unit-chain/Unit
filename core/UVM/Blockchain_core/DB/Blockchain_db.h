@@ -10,6 +10,7 @@
 #include "cassert"
 #include "vector"
 #include "iterator"
+#include "algorithm"
 #include "../../error_handling/Result.h"
 #include "../Block.h"
 #include "../Wallet/WalletAccount.h"
