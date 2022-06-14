@@ -9,8 +9,8 @@
 VM::VM() {}
 VM::~VM() {}
 
-void VM::generate_block(Block *current, const bool *lock) {
-    std::cout << "start to generate blocks";
+void VM::generate_block(Block *current, bool *lock) {
+    std::cout << "start to generate blocks" << std::endl;
     add: {
         if (*lock) {
             goto add;
@@ -26,7 +26,7 @@ void VM::generate_block(Block *current, const bool *lock) {
 
     generate: {
         *current = Block(1);
-        sleep(1000*10); // 1000 millisecond * 10 = 10 seconds
+        std::this_thread::sleep_for(std::chrono::milliseconds(10000)); // 1000 millisecond * 10 = 10 seconds
         goto add;
     };
 }
@@ -48,37 +48,32 @@ bool VM::push_transaction(std::string &transaction) {
     return true;
 }
 
-void foo() {
-    std::cout << "test" << std::endl;
-}
-
 void VM::run() {
 //    std::thread thread(foo);
     std::thread th(&VM::generate_block, &currentblock, &block_lock);
-    std::cout << "test" << std::endl;
     loop: { // later need to check an instructions stack
-        if (this->transactions_deque.empty()) {
-            goto loop;
-        } else {
-            goto create_tx;
-        }
-    };
+    if (this->transactions_deque.empty()) {
+        goto loop;
+    } else {
+        goto create_tx;
+    }
+};
 
     create_tx: {
-        this->block_lock = true;
-        Transaction transaction = this->transactions_deque.front();
-        currentblock.push_tx(transaction);
-        this->transactions_deque.pop_front();
-        this->block_lock = false;
-        goto loop;
-    };
+    this->block_lock = true;
+    Transaction transaction = this->transactions_deque.front();
+    currentblock.push_tx(transaction);
+    this->transactions_deque.pop_front();
+    this->block_lock = false;
+    goto loop;
+};
 
 //    swap: {
 //        auto ptrB = std::move(ptrA);
 //    };
     inc: {
-        goto loop;
-    };
+    goto loop;
+};
 }
 
 void VM::popInstruction() {

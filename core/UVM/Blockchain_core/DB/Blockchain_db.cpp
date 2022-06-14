@@ -34,6 +34,7 @@
 //}
 
 Result<bool> Blockchain_db::push_block(Block &block) {
+    Result<bool> result = this->get_block_height();
     rocksdb::Options options;
     options.create_if_missing = false;
     options.error_if_exists = false;
@@ -42,7 +43,6 @@ Result<bool> Blockchain_db::push_block(Block &block) {
     rocksdb::DB* db;
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::Status status = rocksdb::DB::Open(rocksdb::DBOptions(), kDBPath, this->columnFamilies, &handles, &db);
-    Result<bool> result = this->get_block_height();
     if (result.getSupportingResult().empty()) {
         block.setIndex(0);
         block.setPrevHash("0");
@@ -50,7 +50,11 @@ Result<bool> Blockchain_db::push_block(Block &block) {
         nlohmann::json block_json = nlohmann::json::parse(result.getSupportingResult());
         uint64_t index = block_json["index"];
         block.setIndex(index);
-        block.setPrevHash(to_string(block_json["hash"]));
+        std::string previous_hash = to_string(block_json["hash"]);
+        previous_hash.erase(
+                std::remove(previous_hash.begin(), previous_hash.end(), '\"'),
+                previous_hash.end());
+        block.setPrevHash(previous_hash);
     }
     block.generate_hash();
     std::cout << block.to_json_with_tx_hash_only() << std::endl;
@@ -275,7 +279,7 @@ Result<bool> Blockchain_db::get_block_height() {
             status = db->DestroyColumnFamilyHandle(handle);
         }
         delete db;
-        return Result<bool>(true, "block not found", "null");
+        return Result<bool>(true, "block not found", "");
     }
     for (auto handle : handles) {
         status = db->DestroyColumnFamilyHandle(handle);

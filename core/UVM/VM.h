@@ -29,7 +29,7 @@ private:
     std::stack<void*> instructions;
     Block currentblock;
     bool block_lock = false;
-    static void generate_block(Block *current, const bool *lock);
+    static void generate_block(Block *current, bool *lock);
 };
 
 
