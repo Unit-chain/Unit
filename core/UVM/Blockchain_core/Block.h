@@ -16,14 +16,13 @@ public:
     Block(){}
 
     virtual ~Block();
-
+    Block(uint16_t netVersion);
     Block(uint64_t index, uint16_t netVersion, const std::string &prevHash,
           const std::vector<Transaction> &transactions);
     Block(uint64_t index, uint16_t netVersion, const std::string &prevHash);
     Block(uint64_t date, uint64_t index, uint16_t netVersion, const std::string &prevHash);
     Block(uint64_t date, uint64_t index, uint16_t netVersion, const std::string &prevHash,
           const std::vector<Transaction> &transactions);
-
     Block(uint64_t date, uint64_t index, uint16_t netVersion, const std::string &hash, const std::string &prevHash,
           const std::vector<Transaction> &transactions);
 

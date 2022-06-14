@@ -172,4 +172,8 @@ std::string Block::to_json_with_tx_hash_only() {
     return string_stream.str();
 }
 
+Block::Block(uint16_t netVersion) : net_version(netVersion) {
+    this->net_version = netVersion;
+}
+
 

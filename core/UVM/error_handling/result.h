@@ -19,7 +19,7 @@ public:
     T get_value();
     std::string get_message();
 
-    const std::string &getSupportingResult() const;
+    [[nodiscard]] std::string &getSupportingResult();
 
     void setSupportingResult(const std::string &supportingResult);
 
@@ -57,7 +57,7 @@ std::string Result<T>::get_message() {
 }
 
 template<class T>
-const std::string &Result<T>::getSupportingResult() const {
+std::string &Result<T>::getSupportingResult() {
     return supporting_result;
 }
 

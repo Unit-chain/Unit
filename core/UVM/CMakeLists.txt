@@ -3,7 +3,16 @@ project(UVM)
 
 set(CMAKE_CXX_STANDARD 17)
 
-include_directories("/usr/local/lib")
+if(UNIX AND NOT APPLE)
+    set(LINUX TRUE)
+endif()
+
+if(LINUX)
+    message(STATUS ">>> Linux found")
+    include_directories("/usr/local/lib") # need to find rocksdb lib
+endif()
+
+
 find_package(RocksDB REQUIRED) # add rocksdb library to interact with RocksDB
 find_package(nlohmann_json 3.2.0 REQUIRED) # adding library for JSON
 

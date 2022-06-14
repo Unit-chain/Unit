@@ -10,11 +10,15 @@
 #include "Blockchain_core/DB/Blockchain_db.h"
 #include "Blockchain_core/Token/Token.h"
 
+#include "VM.h"
+
 using ROCKSDB_NAMESPACE::ColumnFamilyDescriptor;
 using ROCKSDB_NAMESPACE::ColumnFamilyHandle;
 using ROCKSDB_NAMESPACE::ColumnFamilyOptions;
 
 int main(){
+    VM vm = VM();
+    vm.run();
 //    rocksdb::DB* db;
 //    rocksdb::Options options;
 //    options.create_if_missing = true;
@@ -47,10 +51,12 @@ int main(){
 //    Transaction tx = Transaction("genesis", "g2px1", 0,  map, "0",1000000);
 //    Transaction tx = Transaction("g2px1", "gosha", 2,  map, "0", 0);
 //    Transaction tx = Transaction("g2px1", "gosha", 0,  map, "0", 10);
+//    Transaction tx = Transaction("gosha", "g2px1", 0,  map, "0", 2040);
 //    tx.generate_tx_hash();
 //    std::cout << "Transaction: " << tx << std::endl << tx.hash << std::endl;
 //    std::cout << tx.to_json_string() << std::endl;
 //    Blockchain_db blockchainDb = Blockchain_db();
+//    std::cout << blockchainDb.validate_sender_balance(tx) << std::endl;
 //    Result<bool> result = blockchainDb.push_transaction(tx);
 //    std::cout << result.get_message() << std::endl;
 
@@ -72,5 +78,8 @@ int main(){
 //    std::cout << "Gosha: " << value << std::endl;
 //    db->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice("g2px1"), &value);
 //    std::cout << "Kirill: " << value << std::endl;
+//    Blockchain_db blockchainDb1 = Blockchain_db();
+//    std::string username = "gosha";
+//    std::cout << blockchainDb1.get_balance(username).getSupportingResult() << std::endl;
     return 0;
 }
