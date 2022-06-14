@@ -9,23 +9,23 @@
 VM::VM() {}
 VM::~VM() {}
 
-void VM::generate_block() {
+void VM::generate_block(Block *current, const bool *lock) {
     std::cout << "start to generate blocks";
     add: {
-        if (this->block_lock) {
+        if (*lock) {
             goto add;
         } else {
             Blockchain_db blockchainDb = Blockchain_db();
-            for (auto it : currentblock.transactions) {
+            for (auto it : current->transactions) {
                 blockchainDb.push_transaction(it);
             }
-            blockchainDb.push_block(currentblock);
+            blockchainDb.push_block(*current);
             goto generate;
         }
     };
 
     generate: {
-        currentblock = Block(1);
+        *current = Block(1);
         sleep(1000*10); // 1000 millisecond * 10 = 10 seconds
         goto add;
     };
@@ -53,11 +53,8 @@ void foo() {
 }
 
 void VM::run() {
-//    this->instructionsReferences.push_back(&&loop);
-//    this->instructionsReferences.push_back(&&inc);
-
-    std::thread thr(generate_block());
-    thr.detach();
+//    std::thread thread(foo);
+    std::thread th(&VM::generate_block, &currentblock, &block_lock);
     std::cout << "test" << std::endl;
     loop: { // later need to check an instructions stack
         if (this->transactions_deque.empty()) {

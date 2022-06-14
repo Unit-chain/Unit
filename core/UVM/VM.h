@@ -8,6 +8,7 @@
 #include "vector"
 #include "thread"
 #include "string"
+#include <functional>
 #include "nlohmann/json.hpp"
 #include "Blockchain_core/Transaction.h"
 #include "Blockchain_core/DB/Blockchain_db.h"
@@ -28,8 +29,7 @@ private:
     std::stack<void*> instructions;
     Block currentblock;
     bool block_lock = false;
-
-    [[noreturn]] void generate_block();
+    static void generate_block(Block *current, const bool *lock);
 };
 
 
