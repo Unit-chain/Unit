@@ -5,6 +5,7 @@
 #include "Blockchain_db.h"
 
 Result<bool> Blockchain_db::start_node_db() {
+    std::cout << "test" << std::endl;
     rocksdb::Options options;
     options.create_if_missing = true;
     options.error_if_exists = false;

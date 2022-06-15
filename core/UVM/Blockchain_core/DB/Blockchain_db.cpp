@@ -49,7 +49,7 @@ Result<bool> Blockchain_db::push_block(Block &block) {
     } else {
         nlohmann::json block_json = nlohmann::json::parse(result.getSupportingResult());
         uint64_t index = block_json["index"];
-        block.setIndex(index);
+        block.setIndex(index + 1);
         std::string previous_hash = to_string(block_json["hash"]);
         previous_hash.erase(
                 std::remove(previous_hash.begin(), previous_hash.end(), '\"'),
