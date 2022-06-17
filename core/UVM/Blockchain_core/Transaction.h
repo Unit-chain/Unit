@@ -32,7 +32,6 @@ public:
     std::map<std::string, std::string> extra_data {{"name", nullptr}, {"value", nullptr}, {"bytecode", nullptr}};
     std::string hash;
     std::string previous_hash;
-//    std::string byte_code;
     double amount;
     double fee; // in subunits; 1 unit = 100000 subunits;
 
@@ -56,10 +55,6 @@ public:
     void setAmount(double amount);
     [[nodiscard]] double getFee() const;
     void setFee(double fee);
-
-    const std::string &getByteCode() const;
-
-    void setByteCode(const std::string &byteCode);
 
     //  custom functions
     void generate_tx_hash(); // getting serializing value and make hashed it twice

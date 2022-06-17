@@ -11,11 +11,9 @@ add_executable(rocksdb_uvm_support main.cpp DB/Blockchain_db.cpp DB/Blockchain_d
 
 if(LINUX)
     message(STATUS ">>> Linux found")
-    find_library(ROCKS_DB_PATH rocksdb)
-    # add_library(librocksdb SHARED IMPORTED)
-    # set_property(TARGET librocksdb PROPERTY IMPORTED_LOCATION "/usr/lib/librocksdb.so")
-    # target_link_libraries(${PROJECT_NAME} librocksdb)
-    target_link_libraries(${PROJECT_NAME} rocksdb)
+    include_directories(/usr/local/lib) # need to find rocksdb lib
+    set(ROCKSDB_SHARED_LIB /usr/local/lib/librocksdb.so)
+    target_link_libraries(${PROJECT_NAME} ${ROCKSDB_SHARED_LIB})
 elseif(APPLE)
     find_package(RocksDB REQUIRED) # add rocksdb library to interact with RocksDB
     find_package(nlohmann_json 3.2.0 REQUIRED) # adding library for JSON
