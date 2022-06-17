@@ -8,7 +8,8 @@
 #include "vector"
 #include "thread"
 #include "string"
-#include <functional>
+#include "functional"
+#include "stack"
 #include "nlohmann/json.hpp"
 #include "Blockchain_core/Transaction.h"
 #include "Blockchain_core/DB/Blockchain_db.h"
@@ -17,7 +18,8 @@ class VM {
 public:
     VM();
     virtual ~VM();
-    void run();
+
+    [[noreturn]] void run();
     void popInstruction();
     bool pushInstruction(void* instruction);
     bool push_transaction(std::string &transaction);
@@ -29,7 +31,8 @@ private:
     std::stack<void*> instructions;
     Block currentblock;
     bool block_lock = false;
-    static void generate_block(Block *current, bool *lock);
+
+    [[noreturn]] static void generate_block(Block *current, bool *lock);
 };
 
 

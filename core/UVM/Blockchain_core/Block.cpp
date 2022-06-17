@@ -61,7 +61,7 @@ uint16_t Block::getNetVersion() const {
 }
 
 void Block::setNetVersion(uint16_t netVersion) {
-    net_version = netVersion;
+   this->net_version = netVersion;
 }
 
 const std::string &Block::getHash() const {

@@ -11,24 +11,24 @@ Transaction::Transaction() {}
 
 Transaction::~Transaction() {}
 
-const std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> &
-Transaction::getFrom() const {
-    return this->from;
-}
-
-void
-Transaction::setFrom(const std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> &from) {
-    this->from = from;
-}
-
-const std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> &Transaction::getTo() const {
-    return this->to;
-}
-
-void
-Transaction::setTo(const std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> &to) {
-    this->to = to;
-}
+//const std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> &
+//Transaction::getFrom() const {
+//    return this->from;
+//}
+//
+//void
+//Transaction::setFrom(const std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> &from) {
+//    this->from = from;
+//}
+//
+//const std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> &Transaction::getTo() const {
+//    return this->to;
+//}
+//
+//void
+//Transaction::setTo(const std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> &to) {
+//    this->to = to;
+//}
 
 uint64_t Transaction::getType() const {
     return this->type;
@@ -46,13 +46,13 @@ void Transaction::setDate(uint64_t date) {
     this->date = date;
 }
 
-const std::__1::map<std::string, std::string> &Transaction::getExtraData() const {
-    return this->extra_data;
-}
+//const std::__1::map<std::string, std::string> &Transaction::getExtraData() const {
+//    return this->extra_data;
+//}
 
-void Transaction::setExtraData(const std::__1::map<std::string, std::string> &extraData) {
-    this->extra_data = extraData;
-}
+//void Transaction::setExtraData(const std::__1::map<std::string, std::string> &extraData) {
+//    this->extra_data = extraData;
+//}
 
 void Transaction::generate_tx_hash() {
     std::string tx_as_str = this->to_string();
@@ -168,6 +168,30 @@ std::string Transaction::to_json_string() {
     std::map<std::string, std::string> extra_map = this->extra_data;
     string_stream << R"({"hash":")" << this->hash << R"(", "from":")" << this->from << R"(", "to":")" << this->to << R"(", "type":)" << this->type << R"(, "date":)" << this->date << R"(, "extradata":{)" << R"("name":")" << extra_map["name"] << R"(", "value":")" << extra_map["value"] << R"(", "bytecode":")" << extra_map["bytecode"] << "\"}" << R"(, "sign":")" << this->previous_hash << R"(", "hash":")" << this->hash  << R"(", "amount":)"  << std::fixed << this->amount <<  "}";
     return string_stream.str();
+}
+
+const std::string &Transaction::getFrom() const {
+    return this->from;
+}
+
+void Transaction::setFrom(const std::string &from) {
+    this->from = from;
+}
+
+const std::string &Transaction::getTo() const {
+    return this->to;
+}
+
+void Transaction::setTo(const std::string &to) {
+    this->to = to;
+}
+
+const std::map<std::string, std::string> &Transaction::getExtraData() const {
+    return this->extra_data;
+}
+
+void Transaction::setExtraData(const std::map<std::string, std::string> &extraData) {
+    this->extra_data = extraData;
 }
 
 //const std::string &Transaction::getByteCode() const {

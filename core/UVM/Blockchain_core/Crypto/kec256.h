@@ -6,6 +6,7 @@
 #define UVM_KEC256_H
 #include "iostream"
 #include "vector"
+#include "algorithm"
 #include "../Hex.h"
 
 class kec256 {
