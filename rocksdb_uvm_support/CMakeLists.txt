@@ -19,4 +19,3 @@ elseif(APPLE)
     find_package(nlohmann_json 3.2.0 REQUIRED) # adding library for JSON
     target_link_libraries(${PROJECT_NAME} RocksDB::rocksdb)
 endif()
-

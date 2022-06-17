@@ -28,7 +28,7 @@ public:
 
     uint64_t date = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     uint64_t index;
-    uint16_t net_version;
+    uint16_t net_version = 1;
     std::string hash;
     std::string prev_hash;
     std::vector<Transaction> transactions;

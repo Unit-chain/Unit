@@ -12,6 +12,11 @@ Result<bool> Blockchain_db::start_node_db() {
     options.create_missing_column_families = true;
     options.IncreaseParallelism(cpus);
     options.OptimizeLevelStyleCompaction();
+    options.bottommost_compression = rocksdb::kLZ4Compression;
+    options.compression = rocksdb::kLZ4Compression;
+    options.max_background_jobs = cpus;
+    options.delete_obsolete_files_period_micros = 300000000;
+    options.keep_log_file_num = 5;
     rocksdb::DB* db;
     rocksdb::Status status = rocksdb::DB::Open(options, kDBPath, &db);
 

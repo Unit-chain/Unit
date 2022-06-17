@@ -3,35 +3,6 @@
 //
 
 #include "Blockchain_db.h"
-/*
-    it'll be deprecate in future versions
-*/
-//Result<bool> Blockchain_db::start_node_db() {
-//    rocksdb::Options options;
-//    options.create_if_missing = true;
-//    options.error_if_exists = false;
-//    options.create_missing_column_families = true;
-//    options.IncreaseParallelism(cpus);
-//    options.OptimizeLevelStyleCompaction();
-//    rocksdb::DB* db;
-//    rocksdb::Status status = rocksdb::DB::Open(options, kDBPath, &db);
-//
-//    for (const auto & columnFamiliesName : columnFamiliesNames) { // creating column families
-//        rocksdb::ColumnFamilyHandle* cf;
-//        std::cout << "Creating column families: " << columnFamiliesName << std::endl;
-//        status = db->CreateColumnFamily(rocksdb::ColumnFamilyOptions(), columnFamiliesName, &cf);
-//        db->DestroyColumnFamilyHandle(cf); // delete ptr
-//    }
-//    delete db;
-//    std::vector<rocksdb::ColumnFamilyHandle*> handles;
-//    status = rocksdb::DB::Open(rocksdb::DBOptions(), kDBPath, this->columnFamilies, &handles, &db);
-//    for (auto handle : handles) {
-//        status = db->DestroyColumnFamilyHandle(handle);
-//        std::cout << "Destructing column families handler status: " << status.ok() << std::endl;
-//    }
-//    delete db;
-//    return (status.ok()) ? Result<bool>(true) : Result<bool>(status.ok(), "column families already exists");
-//}
 
 Result<bool> Blockchain_db::push_block(Block &block) {
     Result<bool> result = this->get_block_height();
@@ -40,11 +11,16 @@ Result<bool> Blockchain_db::push_block(Block &block) {
     options.error_if_exists = false;
     options.IncreaseParallelism(cpus);
     options.OptimizeLevelStyleCompaction();
+    options.bottommost_compression = rocksdb::kLZ4Compression;
+    options.compression = rocksdb::kLZ4Compression;
+    options.max_background_jobs = cpus;
+    options.delete_obsolete_files_period_micros = 1;
+    options.keep_log_file_num = 5;
     rocksdb::DB* db;
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::Status status = rocksdb::DB::Open(rocksdb::DBOptions(), kDBPath, this->columnFamilies, &handles, &db);
     if (result.getSupportingResult().empty()) {
-        block.setIndex(0);
+        block.setIndex(1);
         block.setPrevHash("0");
     } else {
         nlohmann::json block_json = nlohmann::json::parse(result.getSupportingResult());
@@ -74,6 +50,11 @@ Result<bool> Blockchain_db::push_transaction(Transaction &transaction) {
     options.compression = rocksdb::kSnappyCompression;
     options.IncreaseParallelism(cpus);
     options.OptimizeLevelStyleCompaction();
+    options.bottommost_compression = rocksdb::kLZ4Compression;
+    options.compression = rocksdb::kLZ4Compression;
+    options.max_background_jobs = cpus;
+    options.delete_obsolete_files_period_micros = 300000000;
+    options.keep_log_file_num = 5;
     rocksdb::DB* db;
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::Status status = rocksdb::DB::Open(options, kDBPath, this->columnFamilies, &handles, &db);
@@ -86,7 +67,7 @@ Result<bool> Blockchain_db::push_transaction(Transaction &transaction) {
     std::string wallet_json;
     status = db->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.to), &wallet_json);
     if (status.IsNotFound()) {
-        std::cout << "not found" << std::endl;
+//        std::cout << "not found" << std::endl;
         // creating account if not found
         WalletAccount walletAccount;
         walletAccount.setAddress(transaction.to);
@@ -210,6 +191,11 @@ Result<bool> Blockchain_db::create_new_token(std::string &name, double supply, s
     options.error_if_exists = false;
     options.IncreaseParallelism(cpus);
     options.OptimizeLevelStyleCompaction();
+    options.bottommost_compression = rocksdb::kLZ4Compression;
+    options.compression = rocksdb::kLZ4Compression;
+    options.max_background_jobs = cpus;
+    options.delete_obsolete_files_period_micros = 300000000;
+    options.keep_log_file_num = 5;
     rocksdb::DB* token_db;
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::Status status = rocksdb::DB::Open(options, kDBPath, this->columnFamilies, &handles, &token_db);
@@ -228,7 +214,7 @@ Result<bool> Blockchain_db::create_new_token(std::string &name, double supply, s
 //    token.setTransactionsInToken(txs);
     status = token_db->Put(rocksdb::WriteOptions(), handles[1], rocksdb::Slice(token.name), rocksdb::Slice(token.to_json_string())); // putting
     if (!status.ok()) {
-        std::cout << "token put" << std::endl;
+//        std::cout << "token put" << std::endl;
         for (auto handle : handles) {
             status = token_db->DestroyColumnFamilyHandle(handle);
         }
@@ -237,12 +223,12 @@ Result<bool> Blockchain_db::create_new_token(std::string &name, double supply, s
     }
     std::string wallet_json;
     status = token_db->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(creator), &wallet_json);
-    std::cout << wallet_json << std::endl;
+//    std::cout << wallet_json << std::endl;
     nlohmann::json sender_wallet_js = nlohmann::json::parse(wallet_json);
     sender_wallet_js["tokens_balance"][sender_wallet_js["tokens_balance"].size()][name] = supply;
-    std::cout << sender_wallet_js << std::endl;
+//    std::cout << sender_wallet_js << std::endl;
     if (!status.ok()) {
-        std::cout << "wallet js" << std::endl;
+//        std::cout << "wallet js" << std::endl;
         for (auto handle : handles) {
             status = token_db->DestroyColumnFamilyHandle(handle);
         }
@@ -258,7 +244,6 @@ Result<bool> Blockchain_db::create_new_token(std::string &name, double supply, s
         delete token_db;
         return Result(false, "unexpected error");
     }
-    std::cout << "OK!!!" << std::endl;
     return Result(true, "null", token.token_hash);
 }
 
@@ -269,6 +254,11 @@ Result<bool> Blockchain_db::get_block_height() {
     options.compression = rocksdb::kSnappyCompression;
     options.IncreaseParallelism(cpus);
     options.OptimizeLevelStyleCompaction();
+    options.bottommost_compression = rocksdb::kLZ4Compression;
+    options.compression = rocksdb::kLZ4Compression;
+    options.max_background_jobs = cpus;
+    options.delete_obsolete_files_period_micros = 1;
+    options.keep_log_file_num = 5;
     rocksdb::DB* db;
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::Status status = rocksdb::DB::OpenForReadOnly(options, kDBPath, this->columnFamilies, &handles, &db);
@@ -292,7 +282,13 @@ Result<bool> Blockchain_db::get_balance(std::string &address) {
     rocksdb::Options options;
     options.create_if_missing = false;
     options.error_if_exists = false;
-    options.compression = rocksdb::kSnappyCompression;
+    options.bottommost_compression = rocksdb::kLZ4Compression;
+    options.compression = rocksdb::kLZ4Compression;
+    options.keep_log_file_num = 5;
+    options.max_open_files = 10;
+    options.max_background_jobs = cpus/2;
+    options.max_subcompactions = cpus/2;
+    options.delete_obsolete_files_period_micros = 300000000;
     rocksdb::DB* db;
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::Status status = rocksdb::DB::OpenForReadOnly(options, kDBPath, this->columnFamilies, &handles, &db);
@@ -318,9 +314,13 @@ bool Blockchain_db::validate_sender_balance(Transaction &transaction) {
     rocksdb::Options options;
     options.create_if_missing = false;
     options.error_if_exists = false;
-    options.compression = rocksdb::kSnappyCompression;
     options.IncreaseParallelism(cpus);
     options.OptimizeLevelStyleCompaction();
+    options.bottommost_compression = rocksdb::kLZ4Compression;
+    options.compression = rocksdb::kLZ4Compression;
+    options.max_background_jobs = cpus;
+    options.delete_obsolete_files_period_micros = 300000000;
+    options.keep_log_file_num = 5;
     rocksdb::DB* db;
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::Status status = rocksdb::DB::Open(options, kDBPath, this->columnFamilies, &handles, &db);
@@ -378,4 +378,3 @@ bool Blockchain_db::validate_sender_balance(Transaction &transaction) {
         return true;
     }
 }
-

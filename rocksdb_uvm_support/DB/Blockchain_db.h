@@ -11,7 +11,6 @@
 #include "vector"
 #include "iostream"
 #include "../error_handling/Result.h"
-/// utility structures
 #if defined(OS_WIN)
 #include <Windows.h>
     static std::string kDBPath = "C:\\Windows\\TEMP\\unit";
@@ -22,8 +21,6 @@
 #else
     #include <unistd.h>
     #include <thread>
-//    static std::string kDBPath = "/Users/kirillzhukov/Documents/unit_db";
-//    const char DBPath[] = "/Users/kirillzhukov/Documents/unit_db";
     static std::string kDBPath = "/tmp/unit_db/";
     const char DBPath[] = "/tmp/unit_db/";
     const int cpus = (int) std::thread::hardware_concurrency();

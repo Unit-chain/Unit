@@ -11,7 +11,6 @@ VM::~VM() {}
 
 [[noreturn]] void VM::generate_block(Block *current, bool *lock) {
     std::cout << "start to generate blocks" << std::endl;
-    std::cout << *lock << std::endl;
     add: {
         if (*lock) {
             goto add;
