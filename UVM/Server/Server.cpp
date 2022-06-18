@@ -94,12 +94,12 @@ void http_connection::process_request() {
             try {
                 json = nlohmann::json::parse(request_.body());
                 std::string instruction = json["instruction"];
-                std::cout << "\nInstruction: " << instruction << "\n";
                 nlohmann::json data = json["data"];
+                std::string fixer = data["from"];
+
                 int type = data["type"];
                 // TYPE 0
                 if (type == 0) {
-//                    std::cout << "type = 0 (unit transfer)\n";
                     // Checking first condition:
                     // nullptr when no amount
                     fl = (data["amount"] != nullptr &&
@@ -107,9 +107,8 @@ void http_connection::process_request() {
                           data["from"] != nullptr &&
                           ((std::string)data["to"] != (std::string)data["from"]) &&
                           (int)data["amount"] != 0);
-                std::string tx = to_string(data);
-                std::cout << tx << std::endl;
-                this->push_transaction(tx);
+                std::string tx = data.dump(0);
+                bool transaction_push = this->push_transaction(tx);
                 // TYPE 1
                 } else if (type == 1) {
                     std::cout << "type = 1 (token transfer)\n";
@@ -219,8 +218,7 @@ void http_connection::check_deadline() {
 
 // "Loop" forever accepting new connections.
 void http_server(tcp::acceptor &acceptor, tcp::socket &socket, std::deque<Transaction> *tx_deque) {
-    acceptor.async_accept(socket,
-                          [&](beast::error_code ec) {
+    acceptor.async_accept(socket,[&, tx_deque](beast::error_code ec) {
                               if (!ec)
                                   std::make_shared<http_connection>(std::move(socket))->start(tx_deque); // start - http_connection
                               http_server(acceptor, socket, tx_deque);

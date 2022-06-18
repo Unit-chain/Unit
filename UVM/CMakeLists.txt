@@ -16,12 +16,9 @@ add_executable(${PROJECT_NAME} main.cpp VM.cpp VM.h TXManager.cpp TXManager.h Op
 
 if(LINUX)
     message(STATUS ">>> Linux found")
-    find_package(Boost)
     include_directories(/usr/local/lib) # need to find rocksdb lib
     set(ROCKSDB_SHARED_LIB /usr/local/lib/librocksdb.so)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread") # https://stackoverflow.com/questions/34143265/undefined-reference-to-symbol-pthread-createglibc-2-2-5
     target_link_libraries(${PROJECT_NAME} ${ROCKSDB_SHARED_LIB})
-    target_link_libraries(${PROJECT_NAME} Boost::boost)
 elseif(APPLE)
     find_package(RocksDB REQUIRED) # add rocksdb library to interact with RocksDB
     find_package(nlohmann_json 3.2.0 REQUIRED) # adding library for JSON
@@ -32,7 +29,7 @@ elseif(WIN)
     # do for windows compilation
 endif()
 
-# target_link_libraries(${PROJECT_NAME} nlohmann_json)
-# add_executable(main main.cpp error_handling/Result.h Blockchain_core/Block.cpp Blockchain_core/Block.h ENV/env.h Blockchain_core/Transaction.cpp Blockchain_core/Transaction.h Blockchain_core/Crypto/kec256.cpp Blockchain_core/Crypto/kec256.h Blockchain_core/Hex.h Blockchain_core/Crypto/kec256.cpp Blockchain_core/Crypto/kec256.h)
-# add_executable(untitled11 main.cpp)
-# target_link_libraries(${PROJECT_NAME} Boost::boost)
+#target_link_libraries(${PROJECT_NAME} nlohmann_json)
+#add_executable(main main.cpp error_handling/Result.h Blockchain_core/Block.cpp Blockchain_core/Block.h ENV/env.h Blockchain_core/Transaction.cpp Blockchain_core/Transaction.h Blockchain_core/Crypto/kec256.cpp Blockchain_core/Crypto/kec256.h Blockchain_core/Hex.h Blockchain_core/Crypto/kec256.cpp Blockchain_core/Crypto/kec256.h)
+#add_executable(untitled11 main.cpp)
+#target_link_libraries(${PROJECT_NAME} Boost::boost)

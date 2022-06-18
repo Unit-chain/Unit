@@ -69,6 +69,8 @@ Result<bool> Blockchain_db::push_transaction(Transaction &transaction) {
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::Status status = rocksdb::DB::Open(options, kDBPath, this->columnFamilies, &handles, &db);
 
+    std::cout << transaction << std::endl;
+
     // sender's balance
     std::string sender_balance;
     status = db->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.from), &sender_balance);
