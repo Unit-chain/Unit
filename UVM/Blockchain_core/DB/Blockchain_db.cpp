@@ -4,8 +4,8 @@
 
 #include "Blockchain_db.h"
 
-Result<bool> Blockchain_db::push_block(Block block) {
-    Result<bool> result = this->get_block_height();
+Result<bool> Blockchain_db::push_block(Block block,  Result<bool> &res) {
+//    Result<bool> result = this->get_block_height();
     rocksdb::Options options;
     options.create_if_missing = false;
     options.error_if_exists = false;
@@ -20,11 +20,11 @@ Result<bool> Blockchain_db::push_block(Block block) {
     rocksdb::DB* db;
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::Status status = rocksdb::DB::Open(rocksdb::DBOptions(), kDBPath, this->columnFamilies, &handles, &db);
-    if (result.getSupportingResult().empty()) {
+    if (res.getSupportingResult().empty()) {
         block.setIndex(1);
         block.setPrevHash("0");
     } else {
-        nlohmann::json block_json = nlohmann::json::parse(result.getSupportingResult());
+        nlohmann::json block_json = nlohmann::json::parse(res.getSupportingResult());
         uint64_t index = block_json["index"];
         block.setIndex(index + 1);
         std::string previous_hash = to_string(block_json["hash"]);

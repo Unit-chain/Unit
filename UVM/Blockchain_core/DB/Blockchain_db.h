@@ -55,7 +55,7 @@ public:
     };
     bool validate_sender_balance(Transaction &transaction);
     const std::vector<std::string> columnFamiliesNames = {"blockTX", "addressContracts", "tx", "height", "accountBalance"};
-    Result<bool> push_block(Block block);
+    Result<bool> push_block(Block block, Result<bool> &res);
     Result<bool> push_transaction(Transaction &transaction);
     Result<bool> create_new_token(std::string &name, double supply, std::string &creator, std::string bytecode, Transaction &transaction);
     Result<bool> get_balance(std::string &address);

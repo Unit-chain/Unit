@@ -4,8 +4,8 @@
 #include "Server/Server.h"
 
 int main(){
-//    VM vm = VM();
-//    vm.run();
-    Server::start_server();
+    VM vm = VM();
+    vm.run();
+//    Server::start_server();
     return 0;
 }

@@ -16,40 +16,30 @@ VM::~VM() {}
             goto add;
         } else {
             Blockchain_db blockchainDb = Blockchain_db();
+            Result<bool> result = blockchainDb.get_block_height();
+            nlohmann::json block_json = nlohmann::json::parse(result.getSupportingResult());
+            uint64_t index = block_json["index"];
             for (auto it : current->transactions) {
+                it.setBlockId(index);
                 blockchainDb.push_transaction(it);
             }
-            blockchainDb.push_block(*current);
+            blockchainDb.push_block(*current, result);
             goto generate;
         }
     };
 
     generate: {
         *current = Block(1);
-//        std::this_thread::sleep_for(std::chrono::milliseconds(10000)); // 1000 millisecond * 10 = 10 seconds
+        std::this_thread::sleep_for(std::chrono::milliseconds(10000)); // 1000 millisecond * 10 = 10 seconds
         goto add;
     };
 }
 
-bool VM::push_transaction(std::string &transaction) {
-    nlohmann::json transaction_json;
-    try {
-        transaction_json = nlohmann::json::parse(transaction);
-    } catch (std::exception &e) {
-        return false;
-    }
-    if  (!transaction_json.contains("extradata") || !transaction_json["extradata"].contains("name") || !transaction_json["extradata"].contains("value") || !transaction_json["extradata"].contains("bytecode")) return false;
-    if  (transaction_json["extradata"]["name"].empty() || transaction_json["extradata"]["value"].empty() || transaction_json["extradata"]["bytecode"].empty()) return false;
-    std::map<std::string, std::string> map = {{"name", to_string(transaction_json["extradata"]["name"])}, {"value", to_string(transaction_json["extradata"]["value"])}, {"bytecode", to_string(transaction_json["extradata"]["bytecode"])}};
-    Transaction tx = Transaction(to_string(transaction_json["from"]), to_string(transaction_json["to"]), transaction_json["type"],  map, "0", transaction_json["amount"]);
-    Blockchain_db blockchainDb = Blockchain_db();
-    if (!blockchainDb.validate_sender_balance(tx)) return false;
-    this->transactions_deque.push_back(tx);
-    return true;
-}
-
 [[noreturn]] void VM::run() {
+    std::cout << &transactions_deque << std::endl;
     std::thread th(VM::generate_block, &currentblock, &block_lock);
+    th.detach();
+    std::thread server_th(Server::start_server, &transactions_deque);
     loop: { // later need to check an instructions stack
         if (this->transactions_deque.empty()) {
             goto loop;

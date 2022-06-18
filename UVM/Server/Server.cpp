@@ -15,7 +15,25 @@ namespace my_program_state {
     }
 }
 
-void http_connection::start() {
+bool http_connection::push_transaction(std::string &transaction) {
+    nlohmann::json transaction_json;
+    try {
+        transaction_json = nlohmann::json::parse(transaction);
+    } catch (std::exception &e) {
+        return false;
+    }
+    if  (!transaction_json.contains("extradata") || !transaction_json["extradata"].contains("name") || !transaction_json["extradata"].contains("value") || !transaction_json["extradata"].contains("bytecode")) return false;
+    if  (transaction_json["extradata"]["name"].empty() || transaction_json["extradata"]["value"].empty() || transaction_json["extradata"]["bytecode"].empty()) return false;
+    std::map<std::string, std::string> map = {{"name", to_string(transaction_json["extradata"]["name"])}, {"value", to_string(transaction_json["extradata"]["value"])}, {"bytecode", to_string(transaction_json["extradata"]["bytecode"])}};
+    Transaction tx = Transaction(to_string(transaction_json["from"]), to_string(transaction_json["to"]), transaction_json["type"],  map, "0", transaction_json["amount"]);
+    Blockchain_db blockchainDb = Blockchain_db();
+    if (!blockchainDb.validate_sender_balance(tx)) return false;
+    this->tx_deque->push_back(tx);
+    return true;
+}
+
+void http_connection::start(std::deque<Transaction> *deque) {
+    this->tx_deque = deque;
     read_request();
     check_deadline();
 }
@@ -28,8 +46,7 @@ void http_connection::read_request() {
             buffer_,
             request_,
             [self](beast::error_code ec,
-                   std::size_t bytes_transferred)
-            {
+                   std::size_t bytes_transferred){
                 boost::ignore_unused(bytes_transferred);
                 if (!ec)
                     self->process_request();
@@ -80,10 +97,9 @@ void http_connection::process_request() {
                 std::cout << "\nInstruction: " << instruction << "\n";
                 nlohmann::json data = json["data"];
                 int type = data["type"];
-                std::cout << type << std::endl;
                 // TYPE 0
                 if (type == 0) {
-                    std::cout << "type = 0 (unit transfer)\n";
+//                    std::cout << "type = 0 (unit transfer)\n";
                     // Checking first condition:
                     // nullptr when no amount
                     fl = (data["amount"] != nullptr &&
@@ -91,6 +107,9 @@ void http_connection::process_request() {
                           data["from"] != nullptr &&
                           ((std::string)data["to"] != (std::string)data["from"]) &&
                           (int)data["amount"] != 0);
+                std::string tx = to_string(data);
+                std::cout << tx << std::endl;
+                this->push_transaction(tx);
                 // TYPE 1
                 } else if (type == 1) {
                     std::cout << "type = 1 (token transfer)\n";
@@ -121,9 +140,9 @@ void http_connection::process_request() {
                 beast::ostream(response_.body()) << to_string(out);
                 break;
             }
-            std::cout << "\nFlag is " << fl << "\n";
+//            std::cout << "\nFlag is " << fl << "\n";
             response_.result(http::status::ok);
-            std::cout << json["data"] << std::endl;
+//            std::cout << json["data"] << std::endl;
             break;
         default:
             // We return responses indicating an error if
@@ -199,16 +218,16 @@ void http_connection::check_deadline() {
 }
 
 // "Loop" forever accepting new connections.
-void http_server(tcp::acceptor &acceptor, tcp::socket &socket) {
+void http_server(tcp::acceptor &acceptor, tcp::socket &socket, std::deque<Transaction> *tx_deque) {
     acceptor.async_accept(socket,
                           [&](beast::error_code ec) {
                               if (!ec)
-                                  std::make_shared<http_connection>(std::move(socket))->start();
-                              http_server(acceptor, socket);
+                                  std::make_shared<http_connection>(std::move(socket))->start(tx_deque); // start - http_connection
+                              http_server(acceptor, socket, tx_deque);
                           });
 }
 
-int Server::start_server() {
+int Server::start_server(std::deque<Transaction> *tx_deque) {
     try {
         std::string ip_address = LOCAL_IP;
         auto const address = net::ip::make_address(ip_address);
@@ -216,7 +235,7 @@ int Server::start_server() {
         net::io_context ioc{1};
         tcp::acceptor acceptor{ioc, {address, port}};
         tcp::socket socket{ioc};
-        http_server(acceptor, socket);
+        http_server(acceptor, socket, tx_deque);
         std::cout << "Server has been started" << std::endl;
         ioc.run();
     } catch (std::exception const &e) {

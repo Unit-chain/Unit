@@ -14,6 +14,9 @@
 #include <ctime>
 #include <iostream>
 #include <memory>
+#include "deque"
+#include "../Blockchain_core/Transaction.h"
+#include "../Blockchain_core/DB/Blockchain_db.h"
 #include <string>
 #include "nlohmann/json.hpp"
 #include "../Blockchain_core/Hex.h"
@@ -31,9 +34,10 @@ class http_connection : public std::enable_shared_from_this<http_connection>{
 public:
     explicit http_connection(tcp::socket socket):socket_(std::move(socket)){}
     // Initiate the asynchronous operations associated with the connection.
-    void start();
+    void start(std::deque<Transaction> *deque);
 
 private:
+    std::deque<Transaction> *tx_deque;
     // The socket for the currently connected client.
     tcp::socket socket_;
     // The buffer for performing reads.
@@ -50,11 +54,12 @@ private:
     void create_response();
     void write_response();
     void check_deadline();
+    bool push_transaction(std::string &transaction);
 };
 
 class Server {
 public:
-    static int start_server();
+    static int start_server(std::deque<Transaction> *tx_deque);
 };
 
 
