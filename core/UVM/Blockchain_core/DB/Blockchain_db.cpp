@@ -16,6 +16,7 @@ Result<bool> Blockchain_db::push_block(Block &block) {
     options.max_background_jobs = cpus;
     options.delete_obsolete_files_period_micros = 1;
     options.keep_log_file_num = 5;
+    options.recycle_log_file_num = true;
     rocksdb::DB* db;
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::Status status = rocksdb::DB::Open(rocksdb::DBOptions(), kDBPath, this->columnFamilies, &handles, &db);
@@ -33,13 +34,22 @@ Result<bool> Blockchain_db::push_block(Block &block) {
         block.setPrevHash(previous_hash);
     }
     block.generate_hash();
+    if (block.getIndex() % 100 == 0) {
+        rocksdb::Slice begin("0");
+        rocksdb::Slice end(block.getHash());
+        rocksdb::CompactRangeOptions options;
+        status = db->CompactRange(options, &begin, &end);
+        status = db->FlushWAL(true);
+    }
     std::cout << block.to_json_with_tx_hash_only() << std::endl;
     status = db->Put(rocksdb::WriteOptions(), handles[0], rocksdb::Slice(block.hash), rocksdb::Slice(block.to_json_with_tx_hash_only()));
     status = db->Put(rocksdb::WriteOptions(), handles[3], rocksdb::Slice("current"), rocksdb::Slice(block.to_json_with_tx_hash_only()));
     for (auto handle : handles) {
         status = db->DestroyColumnFamilyHandle(handle);
+        handle = nullptr;
     }
     delete db;
+    db = nullptr;
     return Result<bool>(status.ok());
 }
 
@@ -267,14 +277,18 @@ Result<bool> Blockchain_db::get_block_height() {
     if (height.empty()) {
         for (auto handle : handles) {
             status = db->DestroyColumnFamilyHandle(handle);
+            handle = nullptr;
         }
         delete db;
+        db = nullptr;
         return Result<bool>(true, "block not found", "");
     }
     for (auto handle : handles) {
         status = db->DestroyColumnFamilyHandle(handle);
+        handle = nullptr;
     }
     delete db;
+    db = nullptr;
     return Result<bool>(true, "null", height);
 }
 

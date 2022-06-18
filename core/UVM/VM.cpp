@@ -26,7 +26,7 @@ VM::~VM() {}
 
     generate: {
         *current = Block(1);
-        std::this_thread::sleep_for(std::chrono::milliseconds(10000)); // 1000 millisecond * 10 = 10 seconds
+//        std::this_thread::sleep_for(std::chrono::milliseconds(10000)); // 1000 millisecond * 10 = 10 seconds
         goto add;
     };
 }
