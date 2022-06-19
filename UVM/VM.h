@@ -10,6 +10,7 @@
 #include "string"
 #include "functional"
 #include "stack"
+#include "iterator"
 #include "nlohmann/json.hpp"
 #include "Blockchain_core/Transaction.h"
 #include "Blockchain_core/DB/Blockchain_db.h"

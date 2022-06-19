@@ -24,8 +24,28 @@ bool http_connection::push_transaction(std::string &transaction) {
     }
     if  (!transaction_json.contains("extradata") || !transaction_json["extradata"].contains("name") || !transaction_json["extradata"].contains("value") || !transaction_json["extradata"].contains("bytecode")) return false;
     if  (transaction_json["extradata"]["name"].empty() || transaction_json["extradata"]["value"].empty() || transaction_json["extradata"]["bytecode"].empty()) return false;
-    std::map<std::string, std::string> map = {{"name", to_string(transaction_json["extradata"]["name"])}, {"value", to_string(transaction_json["extradata"]["value"])}, {"bytecode", to_string(transaction_json["extradata"]["bytecode"])}};
-    Transaction tx = Transaction(to_string(transaction_json["from"]), to_string(transaction_json["to"]), transaction_json["type"],  map, "0", transaction_json["amount"]);
+    std::string extradata_name = to_string(transaction_json["extradata"]["name"]);
+    std::string extradata_value = to_string(transaction_json["extradata"]["value"]);
+    std::string extradata_bytecode = to_string(transaction_json["extradata"]["bytecode"]);
+    extradata_name.erase(
+            std::remove(extradata_name.begin(), extradata_name.end(), '\"'),
+            extradata_name.end());
+    extradata_value.erase(
+            std::remove(extradata_value.begin(), extradata_value.end(), '\"'),
+            extradata_value.end());
+    extradata_bytecode.erase(
+            std::remove(extradata_bytecode.begin(), extradata_bytecode.end(), '\"'),
+            extradata_bytecode.end());
+    std::map<std::string, std::string> map = {{"name", extradata_name}, {"value", to_string(transaction_json["extradata"]["value"])}, {"bytecode", extradata_bytecode}};
+    std::string from = to_string(transaction_json["from"]);
+    std::string to = to_string(transaction_json["to"]);
+    from.erase(
+            std::remove(from.begin(), from.end(), '\"'),
+            from.end());
+    to.erase(
+            std::remove(to.begin(), to.end(), '\"'),
+            to.end());
+    Transaction tx = Transaction(from, to, transaction_json["type"],  map, "0", transaction_json["amount"]);
     Blockchain_db blockchainDb = Blockchain_db();
     if (!blockchainDb.validate_sender_balance(tx)) return false;
     this->tx_deque->push_back(tx);

@@ -10,7 +10,7 @@ VM::VM() {}
 VM::~VM() {}
 
 [[noreturn]] void VM::generate_block(Block *current, bool *lock) {
-    std::cout << "start to generate blocks" << std::endl;
+    std::cout << "Starting 'block generator'" << std::endl;
     add: {
         if (*lock) {
             goto add;
@@ -19,9 +19,14 @@ VM::~VM() {}
             Result<bool> result = blockchainDb.get_block_height();
             nlohmann::json block_json = nlohmann::json::parse(result.getSupportingResult());
             uint64_t index = block_json["index"];
-            for (auto it : current->transactions) {
+            for (Transaction &it : current->transactions) {
                 it.setBlockId(index);
-                blockchainDb.push_transaction(it);
+                Result<bool> res = blockchainDb.push_transaction(it);
+                if(res.get_value()) {
+                    it.setHash(res.getSupportingResult());
+                } else {
+                    current->transactions.erase(std::remove(current->transactions.begin(), current->transactions.end(), it), current->transactions.end());
+                }
             }
             blockchainDb.push_block(*current, result);
             goto generate;
@@ -36,7 +41,6 @@ VM::~VM() {}
 }
 
 [[noreturn]] void VM::run() {
-    std::cout << &transactions_deque << std::endl;
     std::thread th(VM::generate_block, &currentblock, &block_lock);
     th.detach();
     std::thread server_th(Server::start_server, &transactions_deque);

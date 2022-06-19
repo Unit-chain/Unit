@@ -41,19 +41,18 @@ Result<bool> Blockchain_db::push_block(Block block,  Result<bool> &res) {
         status = db->CompactRange(options, &begin, &end);
         status = db->FlushWAL(true);
     }
-    std::cout << block.to_json_with_tx_hash_only() << std::endl;
+    std::cout << "block #" << block.getIndex() << ": " << block.to_json_with_tx_hash_only() << std::endl;
     status = db->Put(rocksdb::WriteOptions(), handles[0], rocksdb::Slice(block.hash), rocksdb::Slice(block.to_json_with_tx_hash_only()));
     status = db->Put(rocksdb::WriteOptions(), handles[3], rocksdb::Slice("current"), rocksdb::Slice(block.to_json_with_tx_hash_only()));
     for (auto handle : handles) {
         status = db->DestroyColumnFamilyHandle(handle);
-        handle = nullptr;
     }
     delete db;
     db = nullptr;
     return Result<bool>(status.ok());
 }
 
-Result<bool> Blockchain_db::push_transaction(Transaction &transaction) {
+Result<bool> Blockchain_db::push_transaction(Transaction transaction) {
     rocksdb::Options options;
     options.create_if_missing = false;
     options.error_if_exists = false;
@@ -69,13 +68,11 @@ Result<bool> Blockchain_db::push_transaction(Transaction &transaction) {
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::Status status = rocksdb::DB::Open(options, kDBPath, this->columnFamilies, &handles, &db);
 
-    std::cout << transaction << std::endl;
-
     // sender's balance
     std::string sender_balance;
     status = db->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.from), &sender_balance);
     nlohmann::json sender_wallet_js = nlohmann::json::parse(sender_balance);
-    // getting account balance
+//     getting account balance
     std::string wallet_json;
     status = db->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.to), &wallet_json);
     if (status.IsNotFound()) {
@@ -104,6 +101,7 @@ Result<bool> Blockchain_db::push_transaction(Transaction &transaction) {
                 return Result<bool>(false, result.get_message());
             }
             transaction.setTo(result.getSupportingResult());
+            status = rocksdb::DB::Open(options, kDBPath, this->columnFamilies, &handles, &db);
         } else {
             // else set tokens balance
             std::string token_address;
@@ -118,12 +116,12 @@ Result<bool> Blockchain_db::push_transaction(Transaction &transaction) {
             std::map<std::string, std::string> token_balance = {{token_address, transaction.extra_data["value"]}};
             walletAccount.setNonDefaultBalances(token_balance);
         }
-        status = rocksdb::DB::Open(options, kDBPath, this->columnFamilies, &handles, &db);
         status = db->Put(rocksdb::WriteOptions(), handles[4], rocksdb::Slice(transaction.to), rocksdb::Slice(walletAccount.to_json_string()));
         for (auto handle : handles) {
             status = db->DestroyColumnFamilyHandle(handle);
         }
-        return Result<bool>(true);
+        delete db;
+        return Result<bool>(true, "null", transaction.hash);
     }
 
     // if account exists - need to set balance
@@ -194,7 +192,7 @@ Result<bool> Blockchain_db::push_transaction(Transaction &transaction) {
         status = db->DestroyColumnFamilyHandle(handle);
     }
     delete db; // deleting rocksdb pointer
-    return Result<bool>(true);
+    return Result<bool>(true, "null", transaction.hash);
 }
 
 Result<bool> Blockchain_db::create_new_token(std::string &name, double supply, std::string &creator, std::string bytecode, Transaction &transaction) {
