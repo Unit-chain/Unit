@@ -11,7 +11,7 @@ Result<bool> Blockchain_db::push_block(Block block,  Result<bool> &res) {
     options.error_if_exists = false;
     options.IncreaseParallelism(cpus);
     options.OptimizeLevelStyleCompaction();
-    options.bottommost_compression = rocksdb::kLZ4Compression;
+    options.bottommost_compression = rocksdb::kZSTD;
     options.compression = rocksdb::kLZ4Compression;
     options.max_background_jobs = cpus;
     options.delete_obsolete_files_period_micros = 1;
@@ -59,7 +59,7 @@ Result<bool> Blockchain_db::push_transaction(Transaction transaction) {
     options.compression = rocksdb::kSnappyCompression;
     options.IncreaseParallelism(cpus);
     options.OptimizeLevelStyleCompaction();
-    options.bottommost_compression = rocksdb::kLZ4Compression;
+    options.bottommost_compression = rocksdb::kZSTD;
     options.compression = rocksdb::kLZ4Compression;
     options.max_background_jobs = cpus;
     options.delete_obsolete_files_period_micros = 300000000;
@@ -68,10 +68,7 @@ Result<bool> Blockchain_db::push_transaction(Transaction transaction) {
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::Status status = rocksdb::DB::Open(options, kDBPath, this->columnFamilies, &handles, &db);
 
-    // sender's balance
-    std::string sender_balance;
-    status = db->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.from), &sender_balance);
-    nlohmann::json sender_wallet_js = nlohmann::json::parse(sender_balance);
+    std::cout << transaction << std::endl;
 //     getting account balance
     std::string wallet_json;
     status = db->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.to), &wallet_json);
@@ -201,7 +198,7 @@ Result<bool> Blockchain_db::create_new_token(std::string &name, double supply, s
     options.error_if_exists = false;
     options.IncreaseParallelism(cpus);
     options.OptimizeLevelStyleCompaction();
-    options.bottommost_compression = rocksdb::kLZ4Compression;
+    options.bottommost_compression = rocksdb::kZSTD;
     options.compression = rocksdb::kLZ4Compression;
     options.max_background_jobs = cpus;
     options.delete_obsolete_files_period_micros = 300000000;
@@ -264,7 +261,7 @@ Result<bool> Blockchain_db::get_block_height() {
     options.compression = rocksdb::kSnappyCompression;
     options.IncreaseParallelism(cpus);
     options.OptimizeLevelStyleCompaction();
-    options.bottommost_compression = rocksdb::kLZ4Compression;
+    options.bottommost_compression = rocksdb::kZSTD;
     options.compression = rocksdb::kLZ4Compression;
     options.max_background_jobs = cpus;
     options.delete_obsolete_files_period_micros = 1;
@@ -296,7 +293,7 @@ Result<bool> Blockchain_db::get_balance(std::string &address) {
     rocksdb::Options options;
     options.create_if_missing = false;
     options.error_if_exists = false;
-    options.bottommost_compression = rocksdb::kLZ4Compression;
+    options.bottommost_compression = rocksdb::kZSTD;
     options.compression = rocksdb::kLZ4Compression;
     options.keep_log_file_num = 5;
     options.max_open_files = 10;
@@ -330,7 +327,7 @@ bool Blockchain_db::validate_sender_balance(Transaction &transaction) {
     options.error_if_exists = false;
     options.IncreaseParallelism(cpus);
     options.OptimizeLevelStyleCompaction();
-    options.bottommost_compression = rocksdb::kLZ4Compression;
+    options.bottommost_compression = rocksdb::kZSTD;
     options.compression = rocksdb::kLZ4Compression;
     options.max_background_jobs = cpus;
     options.delete_obsolete_files_period_micros = 300000000;

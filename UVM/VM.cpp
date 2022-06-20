@@ -17,8 +17,17 @@ VM::~VM() {}
         } else {
             Blockchain_db blockchainDb = Blockchain_db();
             Result<bool> result = blockchainDb.get_block_height();
-            nlohmann::json block_json = nlohmann::json::parse(result.getSupportingResult());
+            nlohmann::json block_json = nlohmann::json::parse((result.getSupportingResult().empty() ? R"({"index": 1})" : result.getSupportingResult()));
             uint64_t index = block_json["index"];
+
+//            std::map<std::string, std::string> map = {{"name", "unit"}, {"value", "0"}, {"bytecode", "null"}};
+//            Transaction tx = Transaction("genesis", "g2px1", 0,  map, "0", 350000);
+//            Transaction tx1 = Transaction("genesis", "teo", 0,  map, "0", 350000);
+//            Transaction tx2 = Transaction("genesis", "sunaked", 0,  map, "0", 350000);
+//            current->transactions.push_back(tx);
+//            current->transactions.push_back(tx1);
+//            current->transactions.push_back(tx2);
+
             for (Transaction &it : current->transactions) {
                 it.setBlockId(index);
                 Result<bool> res = blockchainDb.push_transaction(it);
@@ -27,6 +36,7 @@ VM::~VM() {}
                 } else {
                     current->transactions.erase(std::remove(current->transactions.begin(), current->transactions.end(), it), current->transactions.end());
                 }
+                std::cout << it.to_json_string() << std::endl;
             }
             blockchainDb.push_block(*current, result);
             goto generate;
@@ -44,6 +54,7 @@ VM::~VM() {}
     std::thread th(VM::generate_block, &currentblock, &block_lock);
     th.detach();
     std::thread server_th(Server::start_server, &transactions_deque);
+    server_th.detach();
     loop: { // later need to check an instructions stack
         if (this->transactions_deque.empty()) {
             goto loop;

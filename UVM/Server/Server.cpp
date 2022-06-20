@@ -80,7 +80,7 @@ bool http_connection::valid_token_name(const std::string &token_name) {
 // Determine what needs to be done with the request message.
 void http_connection::process_request() {
     response_.version(request_.version());
-    response_.keep_alive(false);
+    response_.keep_alive(true);
     std::string string_body_test;
     nlohmann::json json;
     bool fl = false;
@@ -158,7 +158,7 @@ void http_connection::process_request() {
                 name.erase(std::remove(name.begin(), name.end(), '\"'),name.end());
                 Result<bool> result = blockchainDb.get_balance(name);
                 response_.set(http::field::body, result.getSupportingResult());
-                beast::ostream(response_.body()) << result.getSupportingResult();
+                beast::ostream(response_.body()) << R"({"balance": )" << result.getSupportingResult() << "}";
             };
 
             response_.result(http::status::ok);

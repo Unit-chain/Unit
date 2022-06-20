@@ -19,7 +19,6 @@
 #include "nlohmann/json.hpp"
 #include "../Blockchain_core/Transaction.h"
 #include "../Blockchain_core/DB/Blockchain_db.h"
-
 #include "../Blockchain_core/Hex.h"
 
 #define LOCAL_IP "127.0.0.1"
