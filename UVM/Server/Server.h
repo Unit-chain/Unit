@@ -52,6 +52,7 @@ private:
     static bool valid_token_name(const std::string &token_name);
     void process_request();
     void create_response();
+    void create_json_response();
     void write_response();
     void check_deadline();
     bool push_transaction(std::string &transaction);

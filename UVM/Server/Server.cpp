@@ -87,7 +87,7 @@ void http_connection::process_request() {
     switch (request_.method()) {
         case http::verb::get:
             response_.result(http::status::ok);
-            response_.set(http::field::server, "Beast");
+            response_.set(http::field::server, "Unit");
             this->create_response();
             break;
         case http::verb::post:
@@ -110,34 +110,44 @@ void http_connection::process_request() {
              * if type == 2, we need to check if extradata's bytecode can be parsed to json(try-catch) and contains fields: supply and name (DONE)
              *
              * */
-            response_.set(http::field::content_type, "text/plain");
+            response_.set(http::field::content_type, "application/json");
+            response_.set(http::field::server, "Unit");
             try {
                 json = nlohmann::json::parse(request_.body());
                 std::string instruction = json["instruction"];
                 nlohmann::json data = json["data"];
-                std::string fixer = data["from"];
+
+                if (instruction == "i_balance") {
+                    goto i_balance;
+                }
 
                 int type = data["type"];
                 // TYPE 0
                 if (type == 0) {
                     // Checking first condition:
                     // nullptr when no amount
-                    fl = (data["amount"] != nullptr &&
+                    if((data["amount"] != nullptr &&
                           data["to"] != nullptr &&
                           data["from"] != nullptr &&
                           ((std::string)data["to"] != (std::string)data["from"]) &&
-                          (int)data["amount"] != 0);
-                std::string tx = data.dump(0);
-                bool transaction_push = this->push_transaction(tx);
-                // TYPE 1
+                          (int)data["amount"] != 0)) {
+                        std::string tx = data.dump(0);
+                        bool transaction_push = this->push_transaction(tx);
+                        beast::ostream(response_.body()) << ((transaction_push) ? "true" : "false");
+                    }
+                    // TYPE 1
                 } else if (type == 1) {
                     std::cout << "type = 1 (token transfer)\n";
                     // Checking second condition:
-                    fl = (data["extradata"]["value"] != nullptr &&
+                    if((data["extradata"]["value"] != nullptr &&
                           data["amount"] != nullptr &&
                           (int)data["extradata"]["value"] == (int)data["amount"] &&
-                          valid_token_name(data["extradata"]["name"])); // valid_token_name - is in progress
-                // TYPE 2
+                          valid_token_name(data["extradata"]["name"]))) {
+                        std::string tx = data.dump(0);
+                        bool transaction_push = this->push_transaction(tx);
+                        beast::ostream(response_.body()) << ((transaction_push) ? "true" : "false");
+                    }
+                    // TYPE 2
                 } else if (type == 2) {
                     std::cout << "type = 2 (create token)\n";
                     std::string bytecode = data["extradata"]["bytecode"];
@@ -147,7 +157,9 @@ void http_connection::process_request() {
                     std::string name = tmp["name"];
                     int supply = tmp["supply"];
                     std::cout << "name = " << name << "\tsupply = " << supply << "\n";
-                    fl = true;
+                    std::string tx = data.dump(0);
+                    bool transaction_push = this->push_transaction(tx);
+                    beast::ostream(response_.body()) << ((transaction_push) ? "true" : "false");
                 } else {
                     std::cout << "type = Unknown\n";
                 }
@@ -155,13 +167,20 @@ void http_connection::process_request() {
                 response_.result(http::status::not_found);
                 nlohmann::json out = {{"Error", "true"},
                                       {"Result", e.what()}};
-                std::cout << "Error out_json: " << to_string(out) << "\n";
                 beast::ostream(response_.body()) << to_string(out);
                 break;
             }
-//            std::cout << "\nFlag is " << fl << "\n";
+
+            i_balance: {
+                Blockchain_db blockchainDb = Blockchain_db();
+                std::string name = to_string(json["data"]["name"]);
+                name.erase(std::remove(name.begin(), name.end(), '\"'),name.end());
+                Result<bool> result = blockchainDb.get_balance(name);
+                response_.set(http::field::body, result.getSupportingResult());
+                beast::ostream(response_.body()) << result.getSupportingResult();
+            };
+
             response_.result(http::status::ok);
-//            std::cout << json["data"] << std::endl;
             break;
         default:
             // We return responses indicating an error if
@@ -174,7 +193,6 @@ void http_connection::process_request() {
                     << "'";
             break;
     }
-
     write_response();
 }
 
@@ -211,6 +229,10 @@ void http_connection::create_response() {
     }
 }
 
+//void http_connection::create_json_response() {
+//    response_.result(ht)
+//}
+
 // Asynchronously transmit the response message.
 void http_connection::write_response() {
     auto self = shared_from_this();
@@ -239,10 +261,10 @@ void http_connection::check_deadline() {
 // "Loop" forever accepting new connections.
 void http_server(tcp::acceptor &acceptor, tcp::socket &socket, std::deque<Transaction> *tx_deque) {
     acceptor.async_accept(socket,[&, tx_deque](beast::error_code ec) {
-                              if (!ec)
-                                  std::make_shared<http_connection>(std::move(socket))->start(tx_deque); // start - http_connection
-                              http_server(acceptor, socket, tx_deque);
-                          });
+        if (!ec)
+            std::make_shared<http_connection>(std::move(socket))->start(tx_deque); // start - http_connection
+        http_server(acceptor, socket, tx_deque);
+    });
 }
 
 int Server::start_server(std::deque<Transaction> *tx_deque) {
