@@ -91,25 +91,6 @@ void http_connection::process_request() {
             this->create_response();
             break;
         case http::verb::post:
-            /*
-             * {
-             * instruction:
-             * data: {
-             *         type:
-             *         ...
-             *         }
-             * }
-             *
-             *
-             * type 0 = unit transfer
-             * type 1 = token transfer
-             * type 2 = create token
-             * -----------------------
-             * if type == 0, we need to check if transaction's field "to" not equals to field "from" and "amount" not 0 or null (DONE)
-             * if type == 1, we need to check if extradata is valid for transferring tokens: name equals to token name and value equals to amount of transffering tokens (DONE)
-             * if type == 2, we need to check if extradata's bytecode can be parsed to json(try-catch) and contains fields: supply and name (DONE)
-             *
-             * */
             response_.set(http::field::content_type, "application/json");
             response_.set(http::field::server, "Unit");
             try {

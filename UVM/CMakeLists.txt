@@ -16,9 +16,12 @@ add_executable(${PROJECT_NAME} main.cpp VM.cpp VM.h TXManager.cpp TXManager.h Op
 
 if(LINUX)
     message(STATUS ">>> Linux found")
+    find_package(Boost)
     include_directories(/usr/local/lib) # need to find rocksdb lib
     set(ROCKSDB_SHARED_LIB /usr/local/lib/librocksdb.so)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
     target_link_libraries(${PROJECT_NAME} ${ROCKSDB_SHARED_LIB})
+    target_link_libraries(${PROJECT_NAME} Boost::boost)
 elseif(APPLE)
     find_package(RocksDB REQUIRED) # add rocksdb library to interact with RocksDB
     find_package(nlohmann_json 3.2.0 REQUIRED) # adding library for JSON
