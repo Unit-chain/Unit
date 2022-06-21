@@ -13,6 +13,11 @@
 
 class WalletAccount {
 public:
+    WalletAccount();
+
+    WalletAccount(const std::string &address, double amount,
+                  const std::map<std::string, std::string> &nonDefaultBalances);
+
     std::string address;
     double amount;
     std::map<std::string, std::string> non_default_balances;

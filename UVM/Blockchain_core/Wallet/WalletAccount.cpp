@@ -78,6 +78,18 @@ nlohmann::json WalletAccount::increase_unit_balance(nlohmann::json &account, dou
     return account;
 }
 
+WalletAccount::WalletAccount(const std::string &address, double amount,
+                             const std::map<std::string, std::string> &nonDefaultBalances) : address(address),
+                                                                                             amount(amount),
+                                                                                             non_default_balances(
+                                                                                                     nonDefaultBalances) {
+    this->address = address;
+    this->amount = amount;
+    this->non_default_balances = nonDefaultBalances;
+}
+
+WalletAccount::WalletAccount() {}
+
 //void WalletAccount::serialize_from_json(std::string &account) {
 //
 //}

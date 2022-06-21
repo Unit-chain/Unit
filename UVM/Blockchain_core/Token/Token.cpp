@@ -89,6 +89,7 @@ Token::Token(const std::string &name, const std::string &bytecode, const std::st
     this->bytecode = bytecode;
     this->owner = owner;
     this->supply = supply;
+    this->generate_hash();
 }
 
 Token::Token(const std::string &name, const std::string &bytecode, const std::string &owner, double supply,

@@ -28,7 +28,7 @@
 #include <thread>
     static std::string kDBPath = "/tmp/unit_db/";
     const char DBPath[] = "/tmp/unit_db/";
-const int cpus = (int) std::thread::hardware_concurrency();
+    const int cpus = (int) std::thread::hardware_concurrency();
 #endif
 
 #define UNIT_TRANSFER 0
