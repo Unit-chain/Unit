@@ -73,7 +73,7 @@ std::optional<std::string> unit::DB::get_balance(std::string &address) {
     close_db(db, &handles);
     if (user.empty())
         return std::nullopt;
-    return *&user;
+    return user;
 }
 
 std::optional<std::string> unit::DB::create_new_token(Transaction *transaction) {
@@ -248,7 +248,6 @@ bool unit::DB::validate_sender_balance(Transaction &transaction) {
         close_db(db, &handles);
         return false;
     }
-
 
     if (transaction.type == UNIT_TRANSFER)
         goto unit_transfer;
