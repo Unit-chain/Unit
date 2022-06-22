@@ -8,7 +8,6 @@ rocksdb::Options unit::DB::get_db_options() {
     rocksdb::Options options;
     options.create_if_missing = false;
     options.error_if_exists = false;
-    options.compression = rocksdb::kSnappyCompression;
     options.IncreaseParallelism(cpuss);
     options.OptimizeLevelStyleCompaction();
     options.bottommost_compression = rocksdb::kZSTD;
