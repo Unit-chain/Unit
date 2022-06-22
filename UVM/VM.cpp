@@ -15,10 +15,10 @@ VM::~VM() {}
         if (*lock) {
             goto add;
         } else {
-            Blockchain_db blockchainDb = Blockchain_db();
-            Result<bool> result = blockchainDb.get_block_height();
-            nlohmann::json block_json = nlohmann::json::parse((result.getSupportingResult().empty() ? R"({"index": 1})" : result.getSupportingResult()));
-            uint64_t index = block_json["index"];
+            std::optional<std::string> op_block_height = unit::DB::get_block_height();
+            std::string block_index = (op_block_height.has_value()) ? op_block_height.value() : R"({"index": 1})";
+            nlohmann::json block_json = nlohmann::json::parse(block_index);
+            uint64_t index = block_json["index"].get<uint64_t>() + 1;
 
 //            std::map<std::string, std::string> map = {{"name", "unit"}, {"value", "0"}, {"bytecode", "null"}};
 //            Transaction tx = Transaction("genesis", "g2px1", 0,  map, "0", 350000);
@@ -30,15 +30,14 @@ VM::~VM() {}
 
             for (Transaction &it : current->transactions) {
                 it.setBlockId(index);
-                Result<bool> res = blockchainDb.push_transaction(it);
-                if(res.get_value()) {
-                    it.setHash(res.getSupportingResult());
-                } else {
+                if (!unit::DB::push_transaction(&it)) {
                     current->transactions.erase(std::remove(current->transactions.begin(), current->transactions.end(), it), current->transactions.end());
                 }
-                std::cout << it.to_json_string() << std::endl;
             }
-            blockchainDb.push_block(*current, result);
+
+            current->setIndex(index);
+            current->generate_hash();
+            unit::DB::push_block(*current);
             goto generate;
         }
     };
