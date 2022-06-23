@@ -22,6 +22,7 @@ bool http_connection::push_transaction(std::string &transaction) {
     } catch (std::exception &e) {
         return false;
     }
+<<<<<<< Updated upstream
     if  (!transaction_json.contains("extradata") || !transaction_json["extradata"].contains("name") || !transaction_json["extradata"].contains("value") || !transaction_json["extradata"].contains("bytecode")) return false;
     if  (transaction_json["extradata"]["name"].empty() || transaction_json["extradata"]["value"].empty() || transaction_json["extradata"]["bytecode"].empty()) return false;
     std::string extradata_name = to_string(transaction_json["extradata"]["name"]);
@@ -48,6 +49,22 @@ bool http_connection::push_transaction(std::string &transaction) {
     Transaction tx = Transaction(from, to, transaction_json["type"],  map, "0", transaction_json["amount"]);
     Blockchain_db blockchainDb = Blockchain_db();
     if (!blockchainDb.validate_sender_balance(tx)) return false;
+=======
+    if (!transaction_json.contains("extradata") || !transaction_json["extradata"].contains("name") || !transaction_json["extradata"].contains("value") || !transaction_json["extradata"].contains("bytecode"))
+        return false;
+    if (transaction_json["extradata"]["name"].empty() || transaction_json["extradata"]["value"].empty() || transaction_json["extradata"]["bytecode"].empty())
+        return false;
+    auto extradata_name = transaction_json["extradata"]["name"].get<std::string>();
+    auto  extradata_value = transaction_json["extradata"]["value"].get<std::string>();
+    auto  extradata_bytecode = transaction_json["extradata"]["bytecode"].get<std::string>();
+    std::map<std::string, std::string> map = {{"name", extradata_name}, {"value", transaction_json["extradata"]["value"].get<std::string>()}, {"bytecode", extradata_bytecode}};
+    auto  from = transaction_json["from"].get<std::string>();
+    auto  to = transaction_json["to"].get<std::string>();
+    Transaction tx = Transaction(from, to, transaction_json["type"].get<uint64_t>(), map, "0", transaction_json["amount"]);
+    if (!unit::DB::validate_sender_balance(tx))
+        return false;
+
+>>>>>>> Stashed changes
     this->tx_deque->push_back(tx);
     return true;
 }
@@ -73,17 +90,19 @@ void http_connection::read_request() {
             });
 }
 
-bool http_connection::valid_token_name(const std::string &token_name) {
-    return true;
-}
-
 // Determine what needs to be done with the request message.
 void http_connection::process_request() {
     response_.version(request_.version());
     response_.keep_alive(true);
     std::string string_body_test;
     nlohmann::json json;
+<<<<<<< Updated upstream
     bool fl = false;
+=======
+    response_.set(http::field::server, "Unit");
+    nlohmann::json data;
+    int type;
+>>>>>>> Stashed changes
     switch (request_.method()) {
         case http::verb::get:
             response_.result(http::status::ok);
@@ -95,6 +114,7 @@ void http_connection::process_request() {
             response_.set(http::field::server, "Unit");
             try {
                 json = nlohmann::json::parse(request_.body());
+<<<<<<< Updated upstream
                 std::string instruction = json["instruction"];
                 nlohmann::json data = json["data"];
 
@@ -141,9 +161,50 @@ void http_connection::process_request() {
                     std::string tx = data.dump(0);
                     bool transaction_push = this->push_transaction(tx);
                     beast::ostream(response_.body()) << ((transaction_push) ? "true" : "false");
+=======
+                this->matchInstruction(response_, json);
+                data = json["data"];
+                type = data["type"];
+            } catch (std::exception &e) {
+                response_.result(http::status::not_found);
+                nlohmann::json out = {{"Error", "true"},
+                                      {"Result", e.what()}};
+                beast::ostream(response_.body()) << to_string(out);
+                break;
+            }
+
+            // TYPE 0
+            if (type == 0) {
+                // Checking first condition:
+                // nullptr when no amount
+                if (!data["amount"].empty() &&
+                     !data["to"].empty() &&
+                     !data["from"].empty() && (data["to"].get<std::string>() != data["from"].get<std::string>()) && data["amount"] != 0) {
+
+                    std::string tx = data.dump();
+                    beast::ostream(response_.body()) << push_transaction(tx);
+                    goto end;
+                } else {
+                    beast::ostream(response_.body()) << "false";
+                    goto end;
+                }
+                // TYPE 1
+            } else if (type == 1) {
+                std::cout << "type = 1 (token transfer)\n";
+                // Checking second condition:
+                if (!data["extradata"]["value"].empty()&&
+                     !data["amount"].empty() &&
+                        (data["extradata"]["value"].get<int>() == data["amount"].get<int>()) &&
+                     !data["extradata"]["name"].empty()) {
+
+                    std::string tx = data.dump(0);
+                    beast::ostream(response_.body()) << push_transaction(tx);
+                    goto end;
+>>>>>>> Stashed changes
                 } else {
                     std::cout << "type = Unknown\n";
                 }
+<<<<<<< Updated upstream
             } catch (std::exception &e) {
                 response_.result(http::status::not_found);
                 nlohmann::json out = {{"Error", "true"},
@@ -160,6 +221,36 @@ void http_connection::process_request() {
                 response_.set(http::field::body, result.getSupportingResult());
                 beast::ostream(response_.body()) << R"({"balance": )" << result.getSupportingResult() << "}";
             };
+=======
+                // TYPE 2
+            } else if (type == 2) {
+                std::cout << "type = 2 (create token)\n";
+                std::string bytecode = data["extradata"]["bytecode"];
+                nlohmann::json tmp = nlohmann::json::parse(hex_to_ascii(bytecode));
+                // Checking third condition:
+                if (!tmp["name"].empty() && !tmp["supply"].empty()){
+                    std::cout << "name = " << tmp["name"] << "\tsupply = " << tmp["supply"] << "\n";
+                    std::string tx = data.dump(0);
+                    auto fl = push_transaction(tx);
+                    beast::ostream(response_.body()) << "push_transaction(tx)";
+                    goto end;
+                }
+
+            } else {
+                beast::ostream(response_.body()) << "false";
+                goto end;
+            }
+
+//            i_balance: {
+//                std::string name = json["data"]["name"].get<std::string>();
+//                std::optional<std::string> op_balance = unit::DB::get_balance(name);
+//                if (!op_balance.has_value())
+//                    beast::ostream(response_.body()) << R"({"balance": null})";
+//                else
+//                    beast::ostream(response_.body()) << R"({"balance": )" << op_balance.value() << "}";
+//                break;
+//            };
+>>>>>>> Stashed changes
 
             response_.result(http::status::ok);
             break;
@@ -175,6 +266,58 @@ void http_connection::process_request() {
             break;
     }
     write_response();
+}
+//enum instructions { i_balance,
+//    i_chainId,
+//    create,
+//    destruct
+//    };
+static std::map<std::string, http_connection::instructions> mapStringInstructions;
+void http_connection::initialize_instructions(){
+    mapStringInstructions["i_balance"] = instructions::i_balance;
+    mapStringInstructions["i_chainid"] = instructions::i_chainId;
+    mapStringInstructions["create"] = instructions::create;
+    mapStringInstructions["destruct"] = instructions::destruct;
+    std::cout<<"\ninstructions were initialized\n";
+    std::cout << "s_mapStringValues contains "
+         << mapStringInstructions.size()
+         << " entries." << std::endl;
+
+}
+void http_connection::matchInstruction(http::response<http::dynamic_body> response, nlohmann::json json){
+    auto instructionString = json["instruction"];
+    std::cout << "instructionString = " << instructionString << "\n";
+    auto instruction = mapStringInstructions[instructionString];
+    std::cout << "instruction = " << instruction << "\n";
+    switch (mapStringInstructions[json["instruction"]]) {
+        case i_balance:
+            std::cout << "i_balance match\n";
+            i_balance_(response, json);
+            break;
+
+        case i_chainId:
+            std::cout << "i_chainid match\n";
+            i_chainId_(response, json);
+            break;
+        default:
+            std::cout << "match instruction: no match\n";
+            break;
+    }
+}
+
+
+void http_connection::i_chainId_(http::response<http::dynamic_body> response, nlohmann::json json){
+    std::optional<std::string> height = unit::DB::get_block_height();
+    beast::ostream(response.body()) << R"({"balance": )" << height.value() << "  !!!!!!!!!!!TEST!!!!!!!!!}";
+}
+
+void http_connection::i_balance_(http::response<http::dynamic_body> response, nlohmann::json json){
+    auto name = json["data"]["name"].get<std::string>();
+    std::optional<std::string> op_balance = unit::DB::get_balance(name);
+    if (!op_balance.has_value())
+        beast::ostream(response.body()) << R"({"balance": null})";
+    else
+        beast::ostream(response.body()) << R"({"balance": )" << op_balance.value() << "}";
 }
 
 void http_connection::create_response() {
@@ -249,6 +392,7 @@ void http_server(tcp::acceptor &acceptor, tcp::socket &socket, std::deque<Transa
 }
 
 int Server::start_server(std::deque<Transaction> *tx_deque) {
+    http_connection::initialize_instructions();
     try {
         std::string ip_address = LOCAL_IP;
         auto const address = net::ip::make_address(ip_address);

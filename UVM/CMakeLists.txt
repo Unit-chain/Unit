@@ -12,7 +12,12 @@ else()
     set(APPLE TRUE)
 endif()
 
+<<<<<<< Updated upstream
 add_executable(${PROJECT_NAME} main.cpp VM.cpp VM.h TXManager.cpp TXManager.h Opcodes.h error_handling/Result.h Blockchain_core/Block.cpp Blockchain_core/Block.h Blockchain_core/Transaction.cpp Blockchain_core/Transaction.h Blockchain_core/Crypto/kec256.cpp Blockchain_core/Crypto/kec256.h ENV/env.h Blockchain_core/Hex.h Blockchain_core/DB/Blockchain_db.cpp Blockchain_core/DB/Blockchain_db.h Blockchain_core/Wallet/WalletAccount.cpp Blockchain_core/Wallet/WalletAccount.h Blockchain_core/Token/Token.cpp Blockchain_core/Token/Token.h error_handling/Optional.h Server/Server.cpp Server/Server.h Blockchain_core/DB/DB.cpp Blockchain_core/DB/DB.h Blockchain_core/DB/JSON_merger/JsonMergeOperator.cpp Blockchain_core/DB/JSON_merger/JsonMergeOperator.h)
+=======
+add_executable(${PROJECT_NAME} main.cpp VM.cpp VM.h TXManager.cpp TXManager.h Opcodes.h error_handling/Result.h Blockchain_core/Block.cpp Blockchain_core/Block.h Blockchain_core/Transaction.cpp Blockchain_core/Transaction.h Blockchain_core/Crypto/kec256.cpp Blockchain_core/Crypto/kec256.h ENV/env.h Blockchain_core/Hex.h Blockchain_core/Wallet/WalletAccount.cpp Blockchain_core/Wallet/WalletAccount.h Blockchain_core/Token/Token.cpp Blockchain_core/Token/Token.h error_handling/Optional.h Server/Server.cpp Server/Server.h Blockchain_core/DB/DB.cpp Blockchain_core/DB/DB.h)
+#Blockchain_core/DB/JSON_merger/JsonMergeOperator.cpp Blockchain_core/DB/JSON_merger/JsonMergeOperator.h
+>>>>>>> Stashed changes
 
 if(LINUX)
     message(STATUS ">>> Linux found")
