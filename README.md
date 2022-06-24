@@ -11,8 +11,11 @@
 5. After column families were created - need to build `UVM`. 
 
 # ToDo:
-- [ ] Pseudonymous
+- [ ] BIP32 & BIP44
+- [ ] ZK-STARK
+- [ ] DECENTRALIZATION
 - [ ] VM
+- [ ] Pseudonymous
 - [ ] GPU counting Proof of Knowledge
 
 # Dependencies

@@ -29,9 +29,9 @@
 #else
 #include <unistd.h>
 #include <thread>
-static std::string kDBPath = "/tmp/unit_db/";
-const char DBPath[] = "/tmp/unit_db/";
-const int cpus = (int) std::thread::hardware_concurrency();
+static std::string kkDBPath = "/tmp/unit_db/";
+//const char DBPath[] = "/tmp/unit_db/";
+const int cpuss = (int) std::thread::hardware_concurrency();
 #endif
 
 #define UNIT_TRANSFER 0
@@ -47,20 +47,21 @@ namespace unit {
                                                                              rocksdb::ColumnFamilyDescriptor("height", rocksdb::ColumnFamilyOptions()),
                                                                              rocksdb::ColumnFamilyDescriptor("accountBalance", rocksdb::ColumnFamilyOptions()),
                                                                              rocksdb::ColumnFamilyDescriptor(ROCKSDB_NAMESPACE::kDefaultColumnFamilyName, rocksdb::ColumnFamilyOptions())};
-        bool push_block();
-        static bool validate_sender_balance(rocksdb::DB* db, std::vector<rocksdb::ColumnFamilyHandle*> *handles, Transaction &transaction);
-        static bool push_transaction(rocksdb::DB* db, std::vector<rocksdb::ColumnFamilyHandle*> *handles, Transaction *transaction);
-        static std::optional<std::string> get_balance(rocksdb::DB* db, std::vector<rocksdb::ColumnFamilyHandle*> *handles, std::string &address);
-        static std::optional<std::string> get_block_height(rocksdb::DB* db, std::vector<rocksdb::ColumnFamilyHandle*> *handles);
-        static std::optional<std::string> get_token(rocksdb::DB* db, std::vector<rocksdb::ColumnFamilyHandle*> *handles, std::string &token_address);
-        static void create_wallet(rocksdb::DB* db, std::vector<rocksdb::ColumnFamilyHandle*> *handles, std::string &address);
-        std::vector<rocksdb::ColumnFamilyHandle*> open_database(rocksdb::DB* db);
-        std::vector<rocksdb::ColumnFamilyHandle*> open_read_only_database(rocksdb::DB* db);
+        static bool push_block(Block block);
+        static bool validate_sender_balance(Transaction &transaction);
+        static bool push_transaction(Transaction *transaction);
+        static std::optional<std::string> get_balance(std::string &address);
+        static std::optional<std::string> get_block_height();
+        static std::optional<std::string> get_token(std::string &token_address);
+        static void create_wallet(std::string &address);
+        static std::vector<rocksdb::ColumnFamilyHandle*> open_database(rocksdb::DB* db);
+        static std::vector<rocksdb::ColumnFamilyHandle*> open_read_only_database(rocksdb::DB* db);
         static void close_db(rocksdb::DB* db, std::vector<rocksdb::ColumnFamilyHandle*> *handles);
 
     private:
+        static std::vector<rocksdb::ColumnFamilyDescriptor> get_column_families();
         static rocksdb::Options get_db_options();
-        static std::optional<std::string> create_new_token(rocksdb::DB* db, std::vector<rocksdb::ColumnFamilyHandle*> *handles, Transaction *transaction);
+        static std::optional<std::string> create_new_token(Transaction *transaction);
         static inline void normalize_str(std::string *str) {
             str->erase(std::remove(str->begin(), str->end(), '\"'),str->end());
         }

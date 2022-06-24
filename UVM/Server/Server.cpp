@@ -18,6 +18,7 @@ namespace my_program_state
     }
 }
 
+
 bool http_connection::push_transaction(std::string &transaction)
 {
     nlohmann::json transaction_json;
@@ -33,6 +34,7 @@ bool http_connection::push_transaction(std::string &transaction)
         return false;
     if (transaction_json["extradata"]["name"].empty() || transaction_json["extradata"]["value"].empty() || transaction_json["extradata"]["bytecode"].empty())
         return false;
+
     auto extradata_name = transaction_json["extradata"]["name"].get<std::string>();
     auto extradata_value = transaction_json["extradata"]["value"].get<std::string>();
     auto extradata_bytecode = transaction_json["extradata"]["bytecode"].get<std::string>();
@@ -102,6 +104,7 @@ void http_connection::read_request()
 {
     auto self = shared_from_this();
     http::async_read(
+
         socket_,
         buffer_,
         request_,
@@ -112,6 +115,7 @@ void http_connection::read_request()
             if (!ec)
                 self->process_request();
         });
+
 }
 
 // Determine what needs to be done with the request message.
@@ -119,7 +123,6 @@ void http_connection::process_request()
 {
     response_.version(request_.version());
     response_.keep_alive(true);
-    std::string string_body_test;
     nlohmann::json json;
     response_.set(http::field::server, "Unit");
     nlohmann::json data;
@@ -160,6 +163,7 @@ void http_connection::process_request()
         else
         {
             bad_response(response_);
+
             break;
         }
 
@@ -178,6 +182,7 @@ void http_connection::process_request()
     }
     write_response();
 }
+
 
 static std::map<std::string, http_connection::instructions> mapStringInstructions;
 void http_connection::initialize_instructions()
@@ -277,9 +282,6 @@ void http_connection::create_response()
     }
 }
 
-// void http_connection::create_json_response() {
-//     response_.result(ht)
-// }
 
 // Asynchronously transmit the response message.
 void http_connection::write_response()
@@ -316,6 +318,7 @@ void http_server(tcp::acceptor &acceptor, tcp::socket &socket, std::deque<Transa
 {
     acceptor.async_accept(socket, [&, tx_deque](beast::error_code ec)
                           {
+
         if (!ec)
             std::make_shared<http_connection>(std::move(socket))->start(tx_deque); // start - http_connection
         http_server(acceptor, socket, tx_deque); });
