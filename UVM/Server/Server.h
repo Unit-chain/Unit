@@ -35,6 +35,18 @@ public:
     explicit http_connection(tcp::socket socket):socket_(std::move(socket)){}
     // Initiate the asynchronous operations associated with the connection.
     void start(std::deque<Transaction> *deque);
+    enum instructions { _false,
+        i_balance,
+        i_chainId,
+        create,
+        destruct
+    };
+//    static std::map<std::string, instructions> mapStringInstructions;
+    static void matchInstruction(const http::response<http::dynamic_body>, nlohmann::json);
+    static void initialize_instructions();
+
+
+
 
 private:
     std::deque<Transaction> *tx_deque;
@@ -48,15 +60,18 @@ private:
     http::response<http::dynamic_body> response_;
     // The timer for putting a deadline on connection processing.
     net::steady_timer deadline_{socket_.get_executor(), std::chrono::seconds(60)};
+    static void i_chainId_(http::response<http::dynamic_body>, nlohmann::json);
+    static void i_balance_(http::response<http::dynamic_body>, nlohmann::json);
     void read_request();
-    static bool valid_token_name(const std::string &token_name);
+//    static bool valid_token_name(const std::string &token_name);
     void process_request();
     void create_response();
-    void create_json_response();
+//    void create_json_response();
     void write_response();
     void check_deadline();
     bool push_transaction(std::string &transaction);
 };
+
 
 class Server {
 public:

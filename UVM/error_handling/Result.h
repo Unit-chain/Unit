@@ -15,10 +15,11 @@ public:
 
     Result(T val, const std::string &message, const std::string &supportingResult);
 
+    Result(T val, bool fl);
     bool ok();
     T get_value();
     std::string get_message();
-
+    bool get_fl();
     [[nodiscard]] std::string &getSupportingResult();
 
     void setSupportingResult(const std::string &supportingResult);
@@ -27,6 +28,7 @@ protected:
     T val;
     std::string message;
     std::string supporting_result;
+    bool fl;
 };
 
 template<class T>
@@ -36,7 +38,7 @@ Result<T>::Result(T value) {
 
 template<class T>
 bool Result<T>::ok() {
-    return !val;
+    return val;
 }
 
 
@@ -50,7 +52,15 @@ Result<T>::Result(T value, const std::string& message) {
     this->val = value;
     this->message = message;
 }
-
+template<class T>
+Result<T>::Result(T value, bool fl) {
+    this->val = value;
+    this->fl = fl;
+}
+template<class T>
+bool Result<T>::get_fl(){
+    return this->fl;
+}
 template<class T>
 std::string Result<T>::get_message() {
     return this->message;
