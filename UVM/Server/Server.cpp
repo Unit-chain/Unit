@@ -54,49 +54,44 @@ void http_connection::start(std::deque<Transaction> *deque)
     check_deadline();
 }
 
-Result<nlohmann::json> json_type_validator(int type, nlohmann::json data)
+nlohmann::json json_type_validator(int type, nlohmann::json data)
 {
     std::string bytecode;
     nlohmann::json tmp;
-    bool fl = false;
     nlohmann::json out;
     switch (type)
     {
     case 0:
         std::cout << "json_type_validator type 0\n";
-        fl = (!data["amount"].empty() &&
-              !data["to"].empty() &&
-              !data["from"].empty() && (data["to"].get<std::string>() != data["from"].get<std::string>()) && data["amount"] != 0);
-        std::cout << "fl = " << fl << "\n";
-        out = data;
+        if (!data["amount"].empty() &&
+            !data["to"].empty() &&
+            !data["from"].empty() && (data["to"].get<std::string>() != data["from"].get<std::string>()) && data["amount"] != 0)
+            out = data;
         break;
     case 1:
         std::cout << "json_type_validator type 1\n";
-        fl = (!data["extradata"]["value"].empty() &&
-              !data["amount"].empty() &&
-              (data["extradata"]["value"].get<int>() == data["amount"].get<int>()) &&
-              !data["extradata"]["name"].empty());
-        std::cout << "fl = " << fl << "\n";
-        out = data;
+        if (!data["extradata"]["value"].empty() &&
+            !data["amount"].empty() &&
+            (data["extradata"]["value"].get<int>() == data["amount"].get<int>()) &&
+            !data["extradata"]["name"].empty())
+            out = data;
         break;
     case 2:
         std::cout << "json_type_validator type 2\n";
         bytecode = data["extradata"]["bytecode"];
         tmp = nlohmann::json::parse(hex_to_ascii(bytecode));
-        fl = (!tmp["name"].empty() && !tmp["supply"].empty());
-        std::cout << "fl = " << fl << "\n";
-        out = tmp;
+        if (!tmp["name"].empty() && !tmp["supply"].empty())
+            out = tmp;
         break;
     default:
         std::cout << "json_type_validator invalid type\n";
-        std::cout << "fl = " << fl << "\n";
-        out = data;
+        out = out;
         break;
     }
-    return {out, fl};
+    return {out};
 }
 
-void bad_resposne(http::response<http::dynamic_body> response)
+void bad_response(http::response<http::dynamic_body> response)
 {
     std::cout << "type = Unknown\n";
     beast::ostream(response.body()) << "false";
@@ -129,7 +124,7 @@ void http_connection::process_request()
     response_.set(http::field::server, "Unit");
     nlohmann::json data;
     int type;
-    Result<nlohmann::json> in("", false);
+    nlohmann::json in;
     switch (request_.method())
     {
     case http::verb::get:
@@ -143,7 +138,7 @@ void http_connection::process_request()
         try
         {
             json = nlohmann::json::parse(request_.body());
-            this->matchInstruction(response_, json);
+            matchInstruction(response_, json);
             data = json["data"];
             type = data["type"];
         }
@@ -157,64 +152,16 @@ void http_connection::process_request()
         }
 
         in = json_type_validator(type, data);
-        if (in.get_fl())
+        if (!in.empty())
         {
-            std::string tx = in.get_value().dump();
-//            beast::ostream(response_.body()) << push_transaction(tx);
+            std::string tx = in.dump();
+            //            beast::ostream(response_.body()) << push_transaction(tx);
         }
         else
         {
-            bad_resposne(response_);
+            bad_response(response_);
             break;
         }
-
-        // TYPE 0
-        // if (type == 0)
-        // {
-        //     // Checking first condition:
-        //     // nullptr when no amount
-        //     if ()
-        //     {
-
-        //
-        //     else
-        //     {
-        //         bad_resposne(response_);
-        //         break;
-        //     }
-        //     // TYPE 1
-        // }
-        // else if (type == 1)
-        // {
-        //     std::cout << "type = 1 (token transfer)\n";
-        //     // Checking second condition:
-        //     if ()
-        //     {
-
-        //         std::string tx = data.dump(0);
-        //         beast::ostream(response_.body()) << push_transaction(tx);
-        //     }
-        //     else
-        //     {
-        //         bad_resposne(response_);
-        //         break;
-        //     }
-        //     // TYPE 2
-        // }
-        // else if (type == 2)
-        // {
-        //     // std::cout << "type = 2 (create token)\n";
-        //     // std::string bytecode = data["extradata"]["bytecode"];
-        //     // nlohmann::json tmp = nlohmann::json::parse(hex_to_ascii(bytecode));
-        //     // Checking third condition:
-        //     if ()
-        //     {
-        //         std::cout << "name = " << tmp["name"] << "\tsupply = " << tmp["supply"] << "\n";
-        //         std::string tx = data.dump(0);
-        //         auto fl = push_transaction(tx);
-        //         beast::ostream(response_.body()) << "push_transaction(tx)";
-        //     }
-        // }
 
         response_.result(http::status::ok);
         break;
