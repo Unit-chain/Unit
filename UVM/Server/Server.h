@@ -35,7 +35,8 @@ public:
     explicit http_connection(tcp::socket socket):socket_(std::move(socket)){}
     // Initiate the asynchronous operations associated with the connection.
     void start(std::deque<Transaction> *deque);
-    enum instructions { _false,
+    enum instructions {
+        _false,
         i_balance,
         i_chainId,
         create,
