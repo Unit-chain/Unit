@@ -39,11 +39,11 @@ public:
         _false,
         i_balance,
         i_chainId,
-        create,
-        destruct
+        i_destruct,
+        i_push_transaction
     };
 //    static std::map<std::string, instructions> mapStringInstructions;
-    static void matchInstruction(const http::response<http::dynamic_body>, nlohmann::json);
+    http_connection::instructions matchInstruction(nlohmann::json);
     static void initialize_instructions();
 
 
@@ -61,7 +61,7 @@ private:
     http::response<http::dynamic_body> response_;
     // The timer for putting a deadline on connection processing.
     net::steady_timer deadline_{socket_.get_executor(), std::chrono::seconds(60)};
-    static void i_chainId_(http::response<http::dynamic_body>, nlohmann::json);
+    static int i_chainId_(nlohmann::json);
     static void i_balance_(http::response<http::dynamic_body>, nlohmann::json);
     void read_request();
 //    static bool valid_token_name(const std::string &token_name);
@@ -70,7 +70,13 @@ private:
 //    void create_json_response();
     void write_response();
     void check_deadline();
-    bool push_transaction(std::string &transaction);
+    bool push_transaction(std::basic_string<char> transaction);
+
+    bool instruction_run(http_connection::instructions instruction, nlohmann::json json);
+
+    void bad_response(std::runtime_error e);
+
+    void good_response(std::string message);
 };
 
 
