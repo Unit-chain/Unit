@@ -45,8 +45,8 @@ SHA3::SHA3(Bits bits)
 
 /// restart
 void SHA3::reset() {
-    for (unsigned long long &i: m_hash)
-        i = 0;
+    for (size_t i = 0; i < StateSize; i++)
+        m_hash[i] = 0;
 
     m_numBytes = 0;
     m_bufferSize = 0;
