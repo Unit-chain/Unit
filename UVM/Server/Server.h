@@ -74,7 +74,7 @@ private:
 
     bool instruction_run(http_connection::instructions instruction, nlohmann::json json);
 
-    void bad_response(std::runtime_error e);
+    void bad_response(const std::runtime_error& e);
 
     void good_response(std::string message);
 };
