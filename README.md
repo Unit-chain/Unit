@@ -12,10 +12,10 @@
 
 # ToDo:
 - [ ] BIP32 & BIP44
+- [ ] Pseudonymous
 - [ ] ZK-STARK
 - [ ] DECENTRALIZATION
 - [ ] VM
-- [ ] Pseudonymous
 - [ ] GPU counting Proof of Knowledge
 
 # Dependencies
