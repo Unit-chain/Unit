@@ -61,8 +61,8 @@ private:
     http::response<http::dynamic_body> response_;
     // The timer for putting a deadline on connection processing.
     net::steady_timer deadline_{socket_.get_executor(), std::chrono::seconds(60)};
-    static int i_chainId_(nlohmann::json);
-    static void i_balance_(http::response<http::dynamic_body>, nlohmann::json);
+    int i_chainId_(nlohmann::json);
+    void i_balance_(nlohmann::json);
     void read_request();
 //    static bool valid_token_name(const std::string &token_name);
     void process_request();
@@ -70,7 +70,7 @@ private:
 //    void create_json_response();
     void write_response();
     void check_deadline();
-    bool push_transaction(std::basic_string<char> transaction);
+    bool push_transaction(std::string &transaction);
 
     bool instruction_run(http_connection::instructions instruction, nlohmann::json json);
 
