@@ -26,7 +26,7 @@ std::ostream &operator<<(std::ostream &out, const Block &block) {
     return out << "{\"" << block.prev_hash << "\", " << block.net_version << ", \"" << block.index << "\", " << block.date << ", [" << all_tx_to_string <<"]}";
 }
 
-Block::~Block() {}
+Block::~Block() = default;
 
 std::string Block::to_string() {
     std::ostringstream string_stream;
@@ -35,9 +35,21 @@ std::string Block::to_string() {
 }
 
 void Block::generate_hash() {
-    std::string block_string = this->to_string();
-    std::string first_hash = kec256::getHash(block_string, block_string.length());
-    this->hash = kec256::getHash(first_hash, first_hash.length());
+    if (this->transactions.empty()) {
+        std::ostringstream string_stream;
+        string_stream << R"({"index":)" << this->index << R"({, "prev_hash":")" << this->prev_hash << R"({", "timestamp":)" << this->date << "}";
+        std::string doubled_hash = sha3(sha3(string_stream.str()));
+        this->hash = doubled_hash;
+        return;
+    }
+
+    std::vector<std::string> leafs(this->transactions.size());
+    for (const Transaction& tx : this->transactions) {
+        leafs.emplace_back(tx.hash);
+    }
+
+    MerkleTree merkleTree = MerkleTree(leafs);
+    this->hash = merkleTree.get_root().value(); // it's guaranteed here that tree has root because transaction's vector is always !empty.
 }
 
 uint64_t Block::getDate() const {

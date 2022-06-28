@@ -10,6 +10,8 @@
 #include "sstream"
 #include "Transaction.h"
 #include "Crypto/Keccak/kec256.h"
+#include "Merkle/MerkleTree.h"
+#include "Crypto/SHA3/sha3.h"
 
 class Block {
 public:
@@ -54,6 +56,7 @@ public:
     std::string to_json_string();
     std::string to_json_with_tx_hash_only();
 private:
+    SHA3 sha3 = SHA3(SHA3::Bits256);
     std::string previous_block_num();
 };
 #endif //UVM_BLOCK_H

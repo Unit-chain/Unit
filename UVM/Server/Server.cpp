@@ -177,7 +177,7 @@ bool http_connection::instruction_run(http_connection::instructions instruction,
             i_balance_(json);
             return true;
         case i_push_transaction:
-            out = json_type_validator(json).get<std::string>();
+            out = json_type_validator(json).dump();
             good_response(push_transaction(out) ? "true" : "false");
             return true;
         case i_chainId:
