@@ -21,6 +21,7 @@
 # Dependencies
 - rocksdb
 - nlohmann_json
+- boost
 
 # VM Opcodes
 
