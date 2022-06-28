@@ -125,7 +125,7 @@ void http_connection::read_request() {
 }
 
 void http_connection::good_response(std::string message) {
-    nlohmann::json out = {{"Error",  "true"},
+    nlohmann::json out = {{"Error",  "false"},
                           {"Result", message}};
     beast::ostream(response_.body()) << to_string(out);
 }
