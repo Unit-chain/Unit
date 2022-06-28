@@ -189,6 +189,7 @@ bool http_connection::instruction_run(http_connection::instructions instruction,
         case i_destruct:
             return false;
     }
+    return false;
 }
 
 static std::map<std::string, http_connection::instructions> mapStringInstructions;
