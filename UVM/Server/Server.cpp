@@ -25,7 +25,7 @@ namespace my_program_state {
  * if type == 2, we need to check if extradata's bytecode can be parsed to json(try-catch) and contains fields: supply and name (DONE)
  */
 
-bool http_connection::push_transaction(std::basic_string<char> transaction) {
+bool http_connection::push_transaction(std::string &transaction) {
     nlohmann::json transaction_json;
     try {
         transaction_json = nlohmann::json::parse(transaction);
@@ -125,7 +125,7 @@ void http_connection::read_request() {
 }
 
 void http_connection::good_response(std::string message) {
-    nlohmann::json out = {{"Error",  "true"},
+    nlohmann::json out = {{"Error",  "false"},
                           {"Result", message}};
     beast::ostream(response_.body()) << to_string(out);
 }
@@ -169,17 +169,18 @@ void http_connection::process_request() {
 }
 
 bool http_connection::instruction_run(http_connection::instructions instruction, nlohmann::json json) {
+    std::string out;
     switch (instruction) {
         case _false:
             return false;
         case i_balance:
             if (json["data"]["name"].empty())
                 return false;
-            i_balance_(response_, json);
-            good_response("1");
+            i_balance_(json);
             return true;
         case i_push_transaction:
-            good_response(push_transaction(json_type_validator(json)) ? "true" : "false");
+            out = json_type_validator(json).dump();
+            good_response(push_transaction(out) ? "true" : "false");
             return true;
         case i_chainId:
             good_response(std::to_string(i_chainId_(json)));
@@ -204,22 +205,16 @@ http_connection::instructions http_connection::matchInstruction(nlohmann::json j
     if (json["instruction"].empty())
         return _false;
     auto instruction = mapStringInstructions[json["instruction"]]; //посмотреть как будет работать, если подать несуществующую инструкцию
-    std::cout << "instruction = " << instruction << "\n";
     switch (instruction) {
         case _false:
-            std::cout << "match instruction: no match, returning _false\n";
             return _false;
         case i_balance:
-            std::cout << "i_balance match\n";
             return i_balance;
         case i_chainId:
-            std::cout << "i_chainid match\n";
             return i_chainId;
         case i_push_transaction:
-            std::cout << "i_push_transaction match\n";
             return i_push_transaction;
         default:
-            std::cout << "unknown match instruction, returning _false\n";
             return _false;
     }
 }
@@ -229,14 +224,13 @@ int http_connection::i_chainId_(nlohmann::json json) {
     return 1000000l;
 }
 
-void http_connection::i_balance_(http::response<http::dynamic_body> response, nlohmann::json json) {
+void http_connection::i_balance_(nlohmann::json json) {
     std::string name = json["data"]["name"].get<std::string>();
-    std::cout << name;
     std::optional<std::string> op_balance = unit::DB::get_balance(name);
     if (!op_balance.has_value())
-        beast::ostream(response.body()) << R"({"balance": null})";
+        beast::ostream(response_.body()) << R"({"balance": null})";
     else
-        beast::ostream(response.body()) << R"({"balance": )" << op_balance.value() << "}";
+        beast::ostream(response_.body()) << R"({"balance": )" << op_balance.value() << "}";
 }
 
 void http_connection::create_response() {
