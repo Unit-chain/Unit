@@ -83,9 +83,7 @@ nlohmann::json json_type_validator(nlohmann::json json) {
             break;
         case 1:
             if (!data["extradata"]["value"].empty() &&
-                !data["amount"].empty() &&
-                (data["extradata"]["value"].get<int>() == data["amount"].get<int>()) &&
-                !data["extradata"]["name"].empty())
+                !data["amount"].empty() && !data["extradata"]["name"].empty())
                 out = data;
             break;
         case 2:
@@ -179,7 +177,7 @@ bool http_connection::instruction_run(http_connection::instructions instruction,
             i_balance_(json);
             return true;
         case i_push_transaction:
-            out = json_type_validator(json).dump();
+            out = json_type_validator(json).get<std::string>();
             good_response(push_transaction(out) ? "true" : "false");
             return true;
         case i_chainId:
@@ -188,7 +186,6 @@ bool http_connection::instruction_run(http_connection::instructions instruction,
         case i_destruct:
             return false;
     }
-    return false;
 }
 
 static std::map<std::string, http_connection::instructions> mapStringInstructions;
@@ -204,7 +201,7 @@ void http_connection::initialize_instructions() {
 http_connection::instructions http_connection::matchInstruction(nlohmann::json json) {
     if (json["instruction"].empty())
         return _false;
-    auto instruction = mapStringInstructions[json["instruction"]]; //посмотреть как будет работать, если подать несуществующую инструкцию
+    auto instruction = mapStringInstructions[json["instruction"]];
     switch (instruction) {
         case _false:
             return _false;

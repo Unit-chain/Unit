@@ -276,7 +276,6 @@ bool unit::DB::validate_sender_balance(Transaction *transaction) {
         if (!op_token.has_value())
             return false;
         transaction->setTo(op_token.value());
-        std::cout << "token_hash: " << op_token.value() << std::endl << "transaction: " << transaction->to_json_string() << std::endl;
         return true;
     };
 
