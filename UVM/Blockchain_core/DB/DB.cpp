@@ -172,22 +172,6 @@ bool unit::DB::push_transaction(Transaction *transaction) {
     };
 
     create_token: {
-//        nlohmann::json parsed_tx = nlohmann::json::parse(transaction->to_json_string());
-//        std::string bytecode = parsed_tx["extradata"]["bytecode"].dump();
-//        try {
-//            nlohmann::json bytecode_parser = nlohmann::json::parse(hex_to_ascii(bytecode));
-//        } catch (std::exception &e) {
-//            close_db(db, &handles);
-//            delete transaction;
-//            return false;
-//        }
-
-//        std::optional op_token = unit::DB::create_new_token(transaction);
-//        if (!op_token.has_value()) {
-//            close_db(db, &handles);
-//            delete transaction;
-//            return false;
-//        }
         status = db->Put(rocksdb::WriteOptions(), handles[2], rocksdb::Slice(transaction->hash), rocksdb::Slice(transaction->to_json_string()));
 
         close_db(db, &handles);

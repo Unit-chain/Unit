@@ -33,6 +33,9 @@ bool http_connection::push_transaction(std::string &transaction) {
     catch (std::exception &e) {
         return false;
     }
+
+    std::cout << transaction_json;
+
     if (!transaction_json.contains("extradata") || !transaction_json["extradata"].contains("name") ||
         !transaction_json["extradata"].contains("value") || !transaction_json["extradata"].contains("bytecode"))
         return false;
@@ -96,7 +99,7 @@ nlohmann::json json_type_validator(nlohmann::json json) {
             out = out;
             break;
     }
-    return {out};
+    return out;
 }
 
 void http_connection::bad_response(const std::runtime_error& e) {
