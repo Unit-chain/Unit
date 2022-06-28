@@ -1,7 +1,10 @@
 #include "VM.h"
-#include "boost/io/ios_state.hpp"
+#include "Blockchain_core/Crypto/SHA3/sha3.h"
+
 
 int main(){
-//    VM vm = VM();
-//    vm.run();
+    SHA3 sha3;
+    std::cout << sha3("test") << std::endl;
+    VM vm = VM();
+    vm.run();
 }

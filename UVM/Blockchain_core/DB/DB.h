@@ -48,7 +48,7 @@ namespace unit {
                                                                              rocksdb::ColumnFamilyDescriptor("accountBalance", rocksdb::ColumnFamilyOptions()),
                                                                              rocksdb::ColumnFamilyDescriptor(ROCKSDB_NAMESPACE::kDefaultColumnFamilyName, rocksdb::ColumnFamilyOptions())};
         static bool push_block(Block block);
-        static bool validate_sender_balance(Transaction &transaction);
+        static bool validate_sender_balance(Transaction *transaction);
         static bool push_transaction(Transaction *transaction);
         static std::optional<std::string> get_balance(std::string &address);
         static std::optional<std::string> get_block_height();

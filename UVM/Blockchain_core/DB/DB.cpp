@@ -139,12 +139,15 @@ std::optional<std::string> unit::DB::create_new_token(Transaction *transaction) 
 
 bool unit::DB::push_transaction(Transaction *transaction) {
     std::optional<std::string> op_recipient = unit::DB::get_balance(transaction->to);
+
+    if (!op_recipient.has_value())
+        unit::DB::create_wallet(transaction->to);
+
     rocksdb::DB *db;
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::Status status = rocksdb::DB::Open(unit::DB::get_db_options(), kkDBPath, unit::DB::get_column_families(), &handles, &db);
 
-    if (!op_recipient.has_value())
-        unit::DB::create_wallet(transaction->to);
+
 
     if (transaction->type == UNIT_TRANSFER)
         goto unit_transfer;
@@ -169,22 +172,22 @@ bool unit::DB::push_transaction(Transaction *transaction) {
     };
 
     create_token: {
-        nlohmann::json parsed_tx = nlohmann::json::parse(transaction->to_json_string());
-        std::string bytecode = parsed_tx["extradata"]["bytecode"].dump();
-        try {
-            nlohmann::json bytecode_parser = nlohmann::json::parse(hex_to_ascii(bytecode));
-        } catch (std::exception &e) {
-            close_db(db, &handles);
-            delete transaction;
-            return false;
-        }
+//        nlohmann::json parsed_tx = nlohmann::json::parse(transaction->to_json_string());
+//        std::string bytecode = parsed_tx["extradata"]["bytecode"].dump();
+//        try {
+//            nlohmann::json bytecode_parser = nlohmann::json::parse(hex_to_ascii(bytecode));
+//        } catch (std::exception &e) {
+//            close_db(db, &handles);
+//            delete transaction;
+//            return false;
+//        }
 
-        std::optional op_token = unit::DB::create_new_token(transaction);
-        if (!op_token.has_value()) {
-            close_db(db, &handles);
-            delete transaction;
-            return false;
-        }
+//        std::optional op_token = unit::DB::create_new_token(transaction);
+//        if (!op_token.has_value()) {
+//            close_db(db, &handles);
+//            delete transaction;
+//            return false;
+//        }
         status = db->Put(rocksdb::WriteOptions(), handles[2], rocksdb::Slice(transaction->hash), rocksdb::Slice(transaction->to_json_string()));
 
         close_db(db, &handles);
@@ -238,8 +241,8 @@ std::optional<std::string> unit::DB::get_token(std::string &token_address) {
     return token;
 }
 
-bool unit::DB::validate_sender_balance(Transaction &transaction) {
-    std::optional<std::string> op_sender = unit::DB::get_balance(transaction.from);
+bool unit::DB::validate_sender_balance(Transaction *transaction) {
+    std::optional<std::string> op_sender = unit::DB::get_balance(transaction->from);
     rocksdb::DB *db;
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::Status status = rocksdb::DB::Open(unit::DB::get_db_options(), kkDBPath, unit::DB::get_column_families(), &handles, &db);
@@ -249,32 +252,41 @@ bool unit::DB::validate_sender_balance(Transaction &transaction) {
         return false;
     }
 
-    if (transaction.type == UNIT_TRANSFER)
+    if (transaction->type == UNIT_TRANSFER)
         goto unit_transfer;
-    else if (transaction.type == CREATE_TOKEN) {
+    else if (transaction->type == CREATE_TOKEN) {
         close_db(db, &handles);
-        return true;
+        goto create_token;
     } else
         goto transfer_tokens;
 
     unit_transfer: {
         nlohmann::json parsed_wallet = nlohmann::json::parse(op_sender.value());
-        parsed_wallet["amount"] = parsed_wallet["amount"].get<double>() - transaction.amount;
-        status = db->Put(rocksdb::WriteOptions(), handles[4], rocksdb::Slice(transaction.from),rocksdb::Slice(parsed_wallet.dump()));
+        parsed_wallet["amount"] = parsed_wallet["amount"].get<double>() - transaction->amount;
+        status = db->Put(rocksdb::WriteOptions(), handles[4], rocksdb::Slice(transaction->from),rocksdb::Slice(parsed_wallet.dump()));
 
         close_db(db, &handles);
         if (!status.ok())
             return false;
         return true;
     };
+    
+    create_token: {
+        std::optional op_token = unit::DB::create_new_token(transaction);
+        if (!op_token.has_value())
+            return false;
+        transaction->setTo(op_token.value());
+        std::cout << "token_hash: " << op_token.value() << std::endl << "transaction: " << transaction->to_json_string() << std::endl;
+        return true;
+    };
 
     transfer_tokens: {
-        std::optional op_token = unit::DB::get_token(transaction.extra_data["name"]);
+        std::optional op_token = unit::DB::get_token(transaction->extra_data["name"]);
         nlohmann::json parsed_wallet = nlohmann::json::parse(op_sender.value());
         bool balance_in_token = false;
         for (nlohmann::json::iterator it = parsed_wallet["tokens_balance"].begin(); it != parsed_wallet["tokens_balance"].end(); ++it) {
-            if (it.value().contains(transaction.extra_data["name"])) { // if user already has balance in current tokens
-                it.value()[transaction.extra_data["name"]] = it.value()[transaction.extra_data["name"]].get<double>() - std::stod(transaction.extra_data["value"]);
+            if (it.value().contains(transaction->extra_data["name"])) { // if user already has balance in current tokens
+                it.value()[transaction->extra_data["name"]] = it.value()[transaction->extra_data["name"]].get<double>() - std::stod(transaction->extra_data["value"]);
                 balance_in_token = true;
             }
         }
@@ -284,7 +296,7 @@ bool unit::DB::validate_sender_balance(Transaction &transaction) {
             return false;
         }
 
-        status = db->Put(rocksdb::WriteOptions(), handles[4], rocksdb::Slice(transaction.from),rocksdb::Slice(parsed_wallet.dump()));
+        status = db->Put(rocksdb::WriteOptions(), handles[4], rocksdb::Slice(transaction->from),rocksdb::Slice(parsed_wallet.dump()));
 
         close_db(db, &handles);
         if (!status.ok())
