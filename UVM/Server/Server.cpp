@@ -58,7 +58,7 @@ bool http_connection::push_transaction(std::string &transaction) {
     nlohmann::json wallet = nlohmann::json::parse(op_balance.value());
     if(wallet["amount"].get<double>() < tx.amount)
         return false;
-    
+
     this->tx_deque->push_back(tx);
     return true;
 }

@@ -150,8 +150,6 @@ bool unit::DB::push_transaction(Transaction *transaction) {
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::Status status = rocksdb::DB::Open(unit::DB::get_db_options(), kkDBPath, unit::DB::get_column_families(), &handles, &db);
 
-
-
     if (transaction->type == UNIT_TRANSFER)
         goto unit_transfer;
     else if (transaction->type == CREATE_TOKEN)
@@ -161,7 +159,6 @@ bool unit::DB::push_transaction(Transaction *transaction) {
 
 
     unit_transfer: {
-        op_recipient = unit::DB::get_balance(transaction->to);
         nlohmann::json parsed_wallet = nlohmann::json::parse(op_recipient.value());
         parsed_wallet["amount"] = parsed_wallet["amount"].get<double>() + transaction->amount;
         status = db->Put(rocksdb::WriteOptions(), handles[2], rocksdb::Slice(transaction->hash), rocksdb::Slice(transaction->to_json_string()));
