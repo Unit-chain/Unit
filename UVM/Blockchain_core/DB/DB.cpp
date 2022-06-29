@@ -140,6 +140,9 @@ std::optional<std::string> unit::DB::create_new_token(Transaction *transaction) 
 bool unit::DB::push_transaction(Transaction *transaction) {
     std::optional<std::string> op_recipient = unit::DB::get_balance(transaction->to);
 
+    if(!unit::DB::validate_sender_balance(transaction))
+        return false;
+
     if (!op_recipient.has_value())
         unit::DB::create_wallet(transaction->to);
 

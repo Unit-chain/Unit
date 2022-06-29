@@ -34,8 +34,6 @@ bool http_connection::push_transaction(std::string &transaction) {
         return false;
     }
 
-    std::cout << transaction_json;
-
     if (!transaction_json.contains("extradata") || !transaction_json["extradata"].contains("name") ||
         !transaction_json["extradata"].contains("value") || !transaction_json["extradata"].contains("bytecode"))
         return false;
@@ -53,9 +51,14 @@ bool http_connection::push_transaction(std::string &transaction) {
     auto to = transaction_json["to"].get<std::string>();
     Transaction tx = Transaction(from, to, transaction_json["type"].get<uint64_t>(), map, "0",
                                  transaction_json["amount"]);
-    if (!unit::DB::validate_sender_balance(&tx))
+    std::optional<std::string> op_balance = unit::DB::get_balance(tx.from);
+    if(op_balance->empty())
         return false;
 
+    nlohmann::json wallet = nlohmann::json::parse(op_balance.value());
+    if(wallet["amount"].get<double>() < tx.amount)
+        return false;
+    
     this->tx_deque->push_back(tx);
     return true;
 }
