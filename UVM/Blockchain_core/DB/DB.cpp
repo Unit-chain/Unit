@@ -160,6 +160,10 @@ bool unit::DB::push_transaction(Transaction *transaction) {
 
     unit_transfer: {
         nlohmann::json parsed_wallet = nlohmann::json::parse(op_recipient.value());
+
+        if(parsed_wallet["amount"].get<double>() < transaction->amount)
+            return false;
+
         parsed_wallet["amount"] = parsed_wallet["amount"].get<double>() + transaction->amount;
         status = db->Put(rocksdb::WriteOptions(), handles[2], rocksdb::Slice(transaction->hash), rocksdb::Slice(transaction->to_json_string()));
         status = db->Put(rocksdb::WriteOptions(), handles[4], rocksdb::Slice(transaction->to), rocksdb::Slice(parsed_wallet.dump()));
