@@ -14,7 +14,7 @@ rocksdb::Options unit::DB::get_db_options() {
     options.compression = rocksdb::kLZ4Compression;
     options.max_background_jobs = cpuss;
     options.delete_obsolete_files_period_micros = 300000000;
-    options.env->SetBackgroundThreads(4);
+    options.env->SetBackgroundThreads(cpuss);
     options.keep_log_file_num = 5;
     return options;
 }
@@ -187,8 +187,6 @@ bool unit::DB::push_transaction(Transaction *transaction) {
             close_db(db, &handles);
             return false;
         }
-
-        op_recipient = unit::DB::get_balance(transaction->to);
         nlohmann::json parsed_wallet = nlohmann::json::parse(op_recipient.value());
         bool balance_in_token = false;
         for (nlohmann::json::iterator it = parsed_wallet["tokens_balance"].begin(); it != parsed_wallet["tokens_balance"].end(); ++it) {
