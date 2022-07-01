@@ -141,8 +141,8 @@ std::optional<std::string> unit::DB::create_new_token(Transaction *transaction) 
 bool unit::DB::push_transaction(Transaction *transaction) {
     std::optional<std::string> op_recipient = unit::DB::get_balance(transaction->to);
 
-    if(!unit::DB::validate_sender_balance(transaction))
-        return false;
+//    if(!unit::DB::validate_sender_balance(transaction))
+//        return false;
 
     if (!op_recipient.has_value())
         unit::DB::create_wallet(transaction->to);
@@ -164,8 +164,8 @@ bool unit::DB::push_transaction(Transaction *transaction) {
 
         nlohmann::json parsed_wallet = nlohmann::json::parse(op_recipient.value());
 
-        if(parsed_wallet["amount"].get<double>() < transaction->amount)
-            return false;
+//        if(parsed_wallet["amount"].get<double>() < transaction->amount)
+//            return false;
 
         parsed_wallet["amount"] = parsed_wallet["amount"].get<double>() + transaction->amount;
         status = db->Put(rocksdb::WriteOptions(), handles[2], rocksdb::Slice(transaction->hash), rocksdb::Slice(transaction->to_json_string()));
