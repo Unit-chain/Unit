@@ -54,6 +54,13 @@ VM::~VM() {}
         if(block_lock) goto loop;
         Transaction transaction = this->transactions_deque.front();
         currentblock.push_tx(transaction);
+//        std::map<std::string, std::string> map = {{"name", "unit"}, {"value", "0"}, {"bytecode", "null"}};
+//        Transaction tx = Transaction("genesis", "g2px1", 0,  map, "0", 350000);
+//        Transaction tx1 = Transaction("genesis", "teo", 0,  map, "0", 350000);
+//        Transaction tx2 = Transaction("genesis", "sunaked", 0,  map, "0", 350000);
+//        current->transactions.push_back(tx);
+//        current->transactions.push_back(tx1);
+//        current->transactions.push_back(tx2);
         this->transactions_deque.pop_front();
         goto loop;
     };
