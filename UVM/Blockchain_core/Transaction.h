@@ -8,6 +8,7 @@
 #include "map"
 #include "iostream"
 #include <sstream>
+#include "../Blockchain_core/Crypto/SHA3/sha3.h"
 
 class Transaction {
 public:
