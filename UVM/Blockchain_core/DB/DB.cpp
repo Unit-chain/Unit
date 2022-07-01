@@ -253,8 +253,10 @@ bool unit::DB::validate_sender_balance(Transaction *transaction) {
     else if (transaction->type == CREATE_TOKEN) {
         close_db(db, &handles);
         goto create_token;
-    } else
+    } else if (transaction->type == TOKEN_TRANSFER)
         goto transfer_tokens;
+    else
+        return false;
 
     unit_transfer: {
         nlohmann::json parsed_wallet = nlohmann::json::parse(op_sender.value());
@@ -333,7 +335,7 @@ bool unit::DB::push_block(Block block) {
     };
 
     push_values: {
-//        std::cout << "block #" << block.getIndex() << ": " << block.to_json_with_tx_hash_only() << std::endl;
+        std::cout << "block #" << block.getIndex() << ": " << block.to_json_with_tx_hash_only() << std::endl;
         status = db->Put(rocksdb::WriteOptions(), handles[0], rocksdb::Slice(block.hash), rocksdb::Slice(block.to_json_with_tx_hash_only()));
         if (!status.ok()) {
             close_db(db, &handles);
