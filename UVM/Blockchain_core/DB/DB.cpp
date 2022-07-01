@@ -67,6 +67,7 @@ std::optional<std::string> unit::DB::get_balance(std::string &address) {
     rocksdb::DB *db;
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::Status status = rocksdb::DB::OpenForReadOnly(unit::DB::get_db_options(), kkDBPath, unit::DB::get_column_families(), &handles, &db);
+    if(!status.ok()) return std::nullopt;
     std::string user;
     status = db->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(address), &user);
 
