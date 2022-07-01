@@ -34,6 +34,7 @@ public:
     std::string hash;
     std::string prev_hash;
     std::vector<Transaction> transactions;
+    long block_size = 0;
 
     void generate_hash();
     void push_tx(Transaction &tx);
@@ -55,6 +56,9 @@ public:
     std::string to_string();
     std::string to_json_string();
     std::string to_json_with_tx_hash_only();
+    inline void increase_block_size(long tx_size) {
+        this->block_size += tx_size;
+    }
 private:
     SHA3 sha3 = SHA3(SHA3::Bits256);
     std::string previous_block_num();

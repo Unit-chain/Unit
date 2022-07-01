@@ -146,19 +146,21 @@ bool unit::DB::push_transaction(Transaction *transaction) {
     if (!op_recipient.has_value())
         unit::DB::create_wallet(transaction->to);
 
-    rocksdb::DB *db;
-    std::vector<rocksdb::ColumnFamilyHandle*> handles;
-    rocksdb::Status status = rocksdb::DB::Open(unit::DB::get_db_options(), kkDBPath, unit::DB::get_column_families(), &handles, &db);
-
     if (transaction->type == UNIT_TRANSFER)
         goto unit_transfer;
     else if (transaction->type == CREATE_TOKEN)
         goto create_token;
-    else
+    else if (transaction->type == TOKEN_TRANSFER)
         goto transfer_tokens;
+    else
+        return false;
 
 
     unit_transfer: {
+        rocksdb::DB *db;
+        std::vector<rocksdb::ColumnFamilyHandle*> handles;
+        rocksdb::Status status = rocksdb::DB::Open(unit::DB::get_db_options(), kkDBPath, unit::DB::get_column_families(), &handles, &db);
+
         nlohmann::json parsed_wallet = nlohmann::json::parse(op_recipient.value());
 
         if(parsed_wallet["amount"].get<double>() < transaction->amount)
@@ -176,6 +178,10 @@ bool unit::DB::push_transaction(Transaction *transaction) {
     };
 
     create_token: {
+        rocksdb::DB *db;
+        std::vector<rocksdb::ColumnFamilyHandle*> handles;
+        rocksdb::Status status = rocksdb::DB::Open(unit::DB::get_db_options(), kkDBPath, unit::DB::get_column_families(), &handles, &db);
+
         status = db->Put(rocksdb::WriteOptions(), handles[2], rocksdb::Slice(transaction->hash), rocksdb::Slice(transaction->to_json_string()));
 
         close_db(db, &handles);
@@ -186,6 +192,10 @@ bool unit::DB::push_transaction(Transaction *transaction) {
     };
 
     transfer_tokens: {
+        rocksdb::DB *db;
+        std::vector<rocksdb::ColumnFamilyHandle*> handles;
+        rocksdb::Status status = rocksdb::DB::Open(unit::DB::get_db_options(), kkDBPath, unit::DB::get_column_families(), &handles, &db);
+
         std::optional op_token = unit::DB::get_token(transaction->extra_data["name"]);
         if (!op_token.has_value()) {
             close_db(db, &handles);
