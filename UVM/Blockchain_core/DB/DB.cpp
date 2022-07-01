@@ -333,7 +333,7 @@ bool unit::DB::push_block(Block block) {
     };
 
     push_values: {
-        std::cout << "block #" << block.getIndex() << ": " << block.to_json_with_tx_hash_only() << std::endl;
+//        std::cout << "block #" << block.getIndex() << ": " << block.to_json_with_tx_hash_only() << std::endl;
         status = db->Put(rocksdb::WriteOptions(), handles[0], rocksdb::Slice(block.hash), rocksdb::Slice(block.to_json_with_tx_hash_only()));
         if (!status.ok()) {
             close_db(db, &handles);
