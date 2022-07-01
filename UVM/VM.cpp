@@ -30,6 +30,7 @@ VM::~VM() {}
         }
 
         current->setIndex(index);
+        current->generate_hash();
         unit::DB::push_block(*current);
         *lock = false;
         goto loop;
