@@ -2,11 +2,11 @@
 1. Firstly, install `rocksdb` library
 2. Secondly, install `nlohmann_json` library
 3. Thirdly, build with cmake program in `rocksdb_uvm_support`:
-	1. `cd rocksdb_uvm_support`
-	2. `mkdir build`
-	3. `cd build`
-	4. `cmake ..`
-	5. `make`
+  1. `cd rocksdb_uvm_support`
+  2. `mkdir build`
+  3. `cd build`
+  4. `cmake ..`
+  5. `make`
 4. After building, need to run it:  `./rocksdb_uvm_support`. It will create column families which UVM needed
 5. After column families were created - need to build `UVM`. 
 
@@ -18,7 +18,18 @@
 - [ ] DECENTRALIZATION
 - [ ] GPU counting Proof of Knowledge
 
+# Tests
+
+```markdown
+Recent tests show that current blockhain is able to operate on ***ten thousand*** transaction easily.
+***UVM*** proccess with 10.000 transactions consumed:
+- 22 Megabytes memory usage
+- 13 threads
+Block with 10.000 transactions was counted by 40 minutes with one thread on Apple M1.
+```
+
 # Dependencies
+
 - rocksdb
 - nlohmann_json
 - boost
