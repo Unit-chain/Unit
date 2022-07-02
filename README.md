@@ -72,5 +72,5 @@
 |0			   	 |instruction_stack   		|Stack with all instructions of the program 				  |
 |1	|program_counter |it contains an address of currently executed instruction. Program will be executed by moving PC through instruction set, reading opcodes and executing them |
 |2	|stack_pointer |it contains information about number of elements stored on the stack. It always points on the top of it |
-|3	|s |frame pointer (for local scope) |
+|3	|frame_pointer |frame pointer (for local scope) |
 
