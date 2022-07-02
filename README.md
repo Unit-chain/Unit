@@ -26,13 +26,13 @@
 # VM Opcodes
 
 |hex num|name   		|note   													|
-|	---	|	---			|				---											|
+|	:---|	:---:		|				:---:										|
 |000	|stop   		|stop execution of the contract 							|
 |001	|loop   		|-   														|
 |002	|swap   		|swaps two references   									|
 |003	|inc 			|increase value 											|
 |004	|sub 			|substract value 											|
-|005	|devide 		|devide value 												|
+|005	|divide 		|devide value 												|
 |006	|mul 			|multiply value 											|
 |007	|i_div 			|a % b														|
 |008	|i_xor 			|a ^ b														|
@@ -42,17 +42,35 @@
 |012	|pop 			|pop value													|
 |013	|push 			|push value													|
 |014	|dup 			|duplicate(memcpy)											|
-|015	|i_or 			|a || b		 												|
+|015	|i_or 			|a |
 |016	|i_and 			|a & b			 											|
 |017	|i_return		|return;													|
-|018	|i_sha3 		|sha3_384		 											|
+|018	|i_sha3 		|sha3_256		 											|
 |019	|i_balance 		|get balance of address										|
 |020	|i_timestamp	|get timestamps												|
 |021	|i_blockhash	|get blockhash												|
 |022	|i_chainid 		|returns chain_id											|
 |023	|i_memory_store	|store value in memory		 								|
-|024	|in memory value|return;													|
+|024	|i_memory_value|return;													|
 |025	|i_storage_store|stores key : value		 									|
 |026	|create 		|create contract 											|
 |027	|destruct 		|destruct contract and returns all holdings to their holders|
 |028	|jump 			|jumps to instruction <num> in stack						|
+|029	|equal |a  == b	|
+|030	|gt |a > b	|
+|031	|lt |a < b	|
+|032	|egt |a >= b	|
+|033	|elt |a <=b	|
+|034	|address |address of current contract	|
+|035	|invalid |invalid	|
+
+
+​	
+# VM Structures
+|Num   |name   		|note   												     |
+|	:---		|	:---:		 |				:---:											|
+|0			   	 |instruction_stack   		|Stack with all instructions of the program 				  |
+|1	|program_counter |it contains an address of currently executed instruction. Program will be executed by moving PC through instruction set, reading opcodes and executing them |
+|2	|stack_pointer |it contains information about number of elements stored on the stack. It always points on the top of it |
+|3	|s |frame pointer (for local scope) |
+
