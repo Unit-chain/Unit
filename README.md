@@ -22,7 +22,7 @@
 
 ```markdown
 Recent tests show that current blockhain is able to operate on ***ten thousand*** transaction easily.
-***UVM*** proccess with 10.000 transactions consumed:
+**UVM** proccess with 10.000 transactions consumed:
 - 22 Megabytes memory usage
 - 13 threads
 Block with 10.000 transactions was counted by 40 minutes with one thread on Apple M1.
