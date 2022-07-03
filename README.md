@@ -22,7 +22,7 @@
 
 ```markdown
 Recent tests show that current blockhain is able to operate on ***ten thousand*** transaction easily.
-**UVM** proccess with 10.000 transactions consumed:
+***UVM*** proccess with 10.000 transactions consumed:
 - 22 Megabytes memory usage
 - 13 threads
 Block with 10.000 transactions was counted by 40 minutes with one thread on Apple M1.
@@ -75,9 +75,22 @@ Block with 10.000 transactions was counted by 40 minutes with one thread on Appl
 |034	|address |address of current contract	|
 |035	|invalid |invalid	|
 
+# Vm Data Structures
 
-​	
-# VM Structures
+| num  | name       | note                               |
+| ---- | ---------- | ---------------------------------- |
+| 0    | int        | 4 bytes                            |
+| 1    | long       | 8 bytes                            |
+| 2    | uint32_t   | 4 bytes                            |
+| 3    | uint64_t   | 8 bytes                            |
+| 4    | uint128_t  | 16 bytes                           |
+| 5    | uint256_t  | 32 bytes                           |
+| 6    | bool       | 1 byte                             |
+| 7    | collection | sum of sizes all structures inside |
+| 8    | string     | 1 byte * length (ASCII)            |
+| 9    | JSON       | 1 byte * length (ASCII)            |
+
+# VM Technical Structures
 |Num   |name   		|note   												     |
 |	:---		|	:---:		 |				:---:											|
 |0			   	 |instruction_stack   		|Stack with all instructions of the program 				  |
