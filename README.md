@@ -1,12 +1,11 @@
 # Requirements
 
 > Memory: 2GB (due RocksDB)
->
-> OS: MacOS, Linux, Windows
+> OS: MacOS, Linux, Window
 
 # Installing(Unit-chain)
 
-1. Firstly, install `rocksdb` library
+1. Firstly, install `rocksdb` library (download rocksdb last version, into rocksdb folder: `make shared lib` and then `make install-shared INSTALL_PATH=/usr/local/lib`)
 2. Secondly, install `nlohmann_json` library
 3. Thirdly, build with cmake program in `rocksdb_uvm_support`:
   1. `cd rocksdb_uvm_support`
@@ -279,7 +278,6 @@ for (int i = 0; i < 2; i++) {}
 ```
 
 # Tests (without program code examples) UVM
-
 
 
 ## Test #1
