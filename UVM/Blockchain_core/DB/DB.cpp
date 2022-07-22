@@ -16,7 +16,6 @@ rocksdb::Options unit::DB::get_db_options() {
     options.bottommost_compression = rocksdb::kZSTD;
     options.compression = rocksdb::kLZ4Compression;
     options.max_background_jobs = cpuss;
-    options.delete_obsolete_files_period_micros = 300000000;
     options.env->SetBackgroundThreads(cpuss);
     options.keep_log_file_num = 5;
     return options;
