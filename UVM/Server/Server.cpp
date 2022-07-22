@@ -88,15 +88,17 @@ nlohmann::json json_type_validator(nlohmann::json json) {
                 out = data;
             break;
         case 1:
+            bytecode = data["extradata"]["bytecode"];
+            std::cout << 111 << std::endl;
+            tmp = nlohmann::json::parse(hex_to_ascii(bytecode));
+            std::cout << 222 << std::endl;
+            if (!tmp["name"].empty() && !tmp["supply"].empty())
+                out = tmp;
+            break;
+        case 2:
             if (!data["extradata"]["value"].empty() &&
                 !data["amount"].empty() && !data["extradata"]["name"].empty())
                 out = data;
-            break;
-        case 2:
-            bytecode = data["extradata"]["bytecode"];
-            tmp = nlohmann::json::parse(hex_to_ascii(bytecode));
-            if (!tmp["name"].empty() && !tmp["supply"].empty())
-                out = tmp;
             break;
         default:
             out = out;
@@ -306,6 +308,7 @@ void http_server(tcp::acceptor &acceptor, tcp::socket &socket, std::deque<Transa
 
 int Server::start_server(std::deque<Transaction> *tx_deque) {
     http_connection::initialize_instructions();
+    rerun_server:{};
     try {
         std::string ip_address = LOCAL_IP;
         auto const address = net::ip::make_address(ip_address);
@@ -319,7 +322,7 @@ int Server::start_server(std::deque<Transaction> *tx_deque) {
     }
     catch (std::exception const &e) {
         std::cerr << "Error: " << e.what() << std::endl;
-        return EXIT_FAILURE;
+        goto rerun_server;
     }
     return 0;
 }

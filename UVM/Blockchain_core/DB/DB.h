@@ -9,6 +9,8 @@
 #include "rocksdb/db.h"
 #include "rocksdb/slice.h"
 #include "rocksdb/options.h"
+#include "rocksdb/utilities/transaction.h"
+#include "rocksdb/utilities/optimistic_transaction_db.h"
 #include "cassert"
 #include "vector"
 #include "iterator"
@@ -50,6 +52,7 @@ namespace unit {
         static bool push_block(Block block);
         static bool validate_sender_balance(Transaction *transaction);
         static bool push_transaction(Transaction *transaction);
+        static bool push_transactions(Block *block);
         static std::optional<std::string> get_balance(std::string &address);
         static std::optional<std::string> get_block_height();
         static std::optional<std::string> get_token(std::string &token_address);
@@ -61,6 +64,7 @@ namespace unit {
     private:
         static std::vector<rocksdb::ColumnFamilyDescriptor> get_column_families();
         static rocksdb::Options get_db_options();
+        static rocksdb::Options get_blockheight_options();
         static std::optional<std::string> create_new_token(Transaction *transaction);
         static inline void normalize_str(std::string *str) {
             str->erase(std::remove(str->begin(), str->end(), '\"'),str->end());

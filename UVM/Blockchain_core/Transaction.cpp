@@ -166,8 +166,7 @@ void Transaction::setFee(double fee) {
 
 std::string Transaction::to_json_string() {
     std::ostringstream string_stream;
-    std::map<std::string, std::string> extra_map = this->extra_data;
-    string_stream << R"({"hash":")" << this->hash << R"(", "from":")" << this->from << R"(", "to":")" << this->to << R"(", "type":)" << this->type << R"(, "date":)" << this->date << R"(, "extradata":{)" << R"("name":")" << extra_map["name"] << R"(", "value":")" << extra_map["value"] << R"(", "bytecode":")" << extra_map["bytecode"] << "\"}" << R"(, "sign":")" << this->previous_hash << R"(", "block_id":")" << this->block_id << R"(", "amount":)"  << std::fixed << this->amount <<  "}";
+    string_stream << R"({"hash":")" << this->hash << R"(", "from":")" << this->from << R"(", "to":")" << this->to << R"(", "type":)" << this->type << R"(, "date":)" << this->date << R"(, "extradata":{)" << R"("name":")" << this->extra_data["name"] << R"(", "value":")" << this->extra_data["value"] << R"(", "bytecode":")" << this->extra_data["bytecode"] << "\"}" << R"(, "sign":")" << this->previous_hash << R"(", "block_id":")" << this->block_id << R"(", "amount":)"  << std::fixed << this->amount <<  "}";
     return string_stream.str();
 }
 

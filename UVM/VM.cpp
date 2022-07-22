@@ -19,17 +19,16 @@ VM::~VM() {}
         std::string block_index = (op_block_height.has_value()) ? op_block_height.value() : R"({"index": 1})";
         nlohmann::json block_json = nlohmann::json::parse(block_index);
         uint64_t index = block_json["index"].get<uint64_t>() + 1;
+        current->setIndex(index);
 
         if(!current->transactions.empty()) {
-            for (Transaction &it: current->transactions) {
-                it.setBlockId(index);
-                if (!unit::DB::push_transaction(&it)) {
-                    current->transactions.erase(std::remove(current->transactions.begin(), current->transactions.end(), it),current->transactions.end());
-                }
+            try {
+                unit::DB::push_transactions(current);
+            } catch (std::exception &e) {
+                std::cout << e.what() << std::endl;
             }
         }
 
-        current->setIndex(index);
         current->generate_hash();
         unit::DB::push_block(*current);
         *lock = false;
@@ -47,9 +46,9 @@ VM::~VM() {}
     Transaction tx = Transaction("genesis", "g2px1", 0,  map, "0", 350000);
     Transaction tx1 = Transaction("genesis", "teo", 0,  map, "0", 350000);
     Transaction tx2 = Transaction("genesis", "sunaked", 0,  map, "0", 350000);
-    transactions_deque.push_back(tx);
-    transactions_deque.push_back(tx1);
-    transactions_deque.push_back(tx2);
+    this->transactions_deque.emplace_back(tx);
+    this->transactions_deque.emplace_back(tx1);
+    this->transactions_deque.emplace_back(tx2);
 
     loop: { // later need to check an instructions stack
         if (this->transactions_deque.empty()) {
@@ -61,8 +60,8 @@ VM::~VM() {}
 
     push_into_block: {
         if(block_lock) goto loop;
-        Transaction transaction = this->transactions_deque.front();
-        currentblock.push_tx(transaction);
+//        Transaction transaction = this->transactions_deque.front();
+        currentblock.push_tx(this->transactions_deque.front());
         this->transactions_deque.pop_front();
         goto loop;
     };
