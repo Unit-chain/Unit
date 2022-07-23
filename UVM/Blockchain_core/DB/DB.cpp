@@ -286,6 +286,11 @@ bool unit::DB::push_transactions(Block &block) {
             boost::json::object recipient_json = boost::json::parse(recipient).as_object();
             std::string sender;
             s = txn->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.from), &sender); // looking for account and it's balance
+            if (block.index == 1) {
+                recipient_json["amount"] = boost::json::value_to<double>(recipient_json["amount"]) + transaction.amount;
+                s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.to), rocksdb::Slice(serialize(recipient_json)));
+                goto leave;
+            }
             // for genesis comment under
             boost::json::object sender_json = boost::json::parse(sender).as_object();
             if(!sender_json.contains("amount") || (boost::json::value_to<double>(sender_json["amount"]) < transaction.amount)) {
