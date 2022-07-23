@@ -55,7 +55,7 @@ namespace unit {
         static bool push_block(Block block);
         static bool validate_sender_balance(Transaction *transaction);
         static bool push_transaction(Transaction *transaction);
-        static bool push_transactions(Block *block);
+        static bool push_transactions(Block &block);
         static std::optional<std::string> get_balance(std::string &address);
         static std::optional<std::string> get_block_height();
         static std::optional<std::string> get_token(std::string &token_address);

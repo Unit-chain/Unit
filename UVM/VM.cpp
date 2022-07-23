@@ -12,7 +12,7 @@ VM::~VM() {}
     std::cout << "Starting 'block generator'" << std::endl;
     loop: {
         *current = Block(1);
-//        std::this_thread::sleep_for(std::chrono::milliseconds(5000)); // 1000 millisecond * 5 = 5 seconds
+        std::this_thread::sleep_for(std::chrono::milliseconds(5000)); // 1000 millisecond * 5 = 5 seconds
         *lock = true;
 
         std::optional<std::string> op_block_height = unit::DB::get_block_height();
@@ -23,7 +23,7 @@ VM::~VM() {}
 
         if(!current->transactions.empty()) {
             try {
-                unit::DB::push_transactions(current);
+                unit::DB::push_transactions(*current);
             } catch (std::exception &e) {
                 std::cout << e.what() << std::endl;
             }
@@ -46,11 +46,11 @@ VM::~VM() {}
     Transaction tx = Transaction("genesis", "g2px1", 0,  map, "0", 350000);
     Transaction tx1 = Transaction("genesis", "teo", 0,  map, "0", 350000);
     Transaction tx2 = Transaction("genesis", "sunaked", 0,  map, "0", 350000);
-    this->transactions_deque.emplace_back(tx);
-    this->transactions_deque.emplace_back(tx1);
-    this->transactions_deque.emplace_back(tx2);
+    transactions_deque.push_back(tx);
+    transactions_deque.push_back(tx1);
+    transactions_deque.push_back(tx2);
 
-    loop: { // later need to check an instructions stack
+    loop: {
         if (this->transactions_deque.empty()) {
             goto loop;
         } else {
@@ -60,8 +60,8 @@ VM::~VM() {}
 
     push_into_block: {
         if(block_lock) goto loop;
-//        Transaction transaction = this->transactions_deque.front();
-        currentblock.push_tx(this->transactions_deque.front());
+        Transaction transaction = this->transactions_deque.front();
+        currentblock.push_tx(transaction);
         this->transactions_deque.pop_front();
         goto loop;
     };

@@ -15,13 +15,13 @@ public:
     Transaction();
 
     Transaction(const std::string &from, const std::string &to, uint64_t type,
-                const std::map<std::string, std::string> &extraData, const std::string &previousHash, double amount);
+                std::map<std::string, std::string> &extraData, const std::string &previousHash, double amount);
 
     Transaction(const std::string &from, const std::string &to, uint64_t type, uint64_t date,
-                const std::map<std::string, std::string> &extraData, const std::string &previousHash, double amount);
+                std::map<std::string, std::string> &extraData, const std::string &previousHash, double amount);
 
     Transaction(const std::string &from, const std::string &to, uint64_t type, uint64_t date,
-                const std::map<std::string, std::string> &extraData, const std::string &hash,
+                std::map<std::string, std::string> &extraData, const std::string &hash,
                 const std::string &previousHash, double amount);
 
     virtual ~Transaction();
@@ -29,7 +29,7 @@ public:
     std::string to;
     uint64_t type;
     uint64_t date = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    std::map<std::string, std::string> extra_data {{"name", nullptr}, {"value", nullptr}, {"bytecode", nullptr}};
+    std::map<std::string, std::string> extra_data {{"name", std::string()}, {"value", std::string()}, {"bytecode", std::string()}};
     std::string hash;
     std::string previous_hash;
     uint64_t block_id;

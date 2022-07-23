@@ -29,7 +29,7 @@ rocksdb::Options unit::DB::get_db_options() {
     options.max_background_flushes = cpuss;
     options.level0_stop_writes_trigger = -1;
     options.level0_slowdown_writes_trigger = -1;
-    options.max_open_files = 5000;
+    options.max_open_files = -1;
 
     return options;
 }
@@ -244,7 +244,7 @@ bool unit::DB::push_transaction(Transaction *transaction) {
     };
 }
 
-bool unit::DB::push_transactions(Block *block) {
+bool unit::DB::push_transactions(Block &block) {
     rocksdb::Options options;
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::OptimisticTransactionDBOptions optimisticTransactionDbOptions;
@@ -257,8 +257,8 @@ bool unit::DB::push_transactions(Block *block) {
     txn_options.set_snapshot = true;
     rocksdb::Transaction* txn = txn_db->BeginTransaction(write_options, txn_options);
 
-    for (Transaction &transaction : block->transactions) {
-        transaction.setBlockId(block->getIndex());
+    for (Transaction &transaction : block.transactions) {
+        transaction.setBlockId(block.getIndex());
         const rocksdb::Snapshot* snapshot = txn->GetSnapshot();
         read_options.snapshot = snapshot;
         std::string recipient;
@@ -284,14 +284,14 @@ bool unit::DB::push_transactions(Block *block) {
 
         unit_transfer: {
             boost::json::object recipient_json = boost::json::parse(recipient).as_object();
-            s = txn->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.from), &recipient); // looking for account and it's balance
-
+            std::string sender;
+            s = txn->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.from), &sender); // looking for account and it's balance
             // for genesis comment under
-            boost::json::object sender_json = boost::json::parse(recipient).as_object();
+            boost::json::object sender_json = boost::json::parse(sender).as_object();
             if(!sender_json.contains("amount") || (boost::json::value_to<double>(sender_json["amount"]) < transaction.amount)) {
-                block->transactions.erase(
-                        std::remove(block->transactions.begin(), block->transactions.end(), transaction),
-                        block->transactions.end());
+                block.transactions.erase(
+                        std::remove(block.transactions.begin(), block.transactions.end(), transaction),
+                        block.transactions.end());
                 goto leave;
             }
             // for genesis comment above
@@ -306,9 +306,9 @@ bool unit::DB::push_transactions(Block *block) {
         create_token: {
             boost::json::object transaction_parser = boost::json::parse(transaction.to_json_string()).as_object();
             if (!transaction_parser["extradata"].as_object().contains("bytecode")) {
-                block->transactions.erase(
-                        std::remove(block->transactions.begin(), block->transactions.end(), transaction),
-                        block->transactions.end());
+                block.transactions.erase(
+                        std::remove(block.transactions.begin(), block.transactions.end(), transaction),
+                        block.transactions.end());
                 goto leave;
             }
 
@@ -317,18 +317,18 @@ bool unit::DB::push_transactions(Block *block) {
             try {
                 bytecode_parsed = boost::json::parse(hex_to_ascii(hex)).as_object();
             } catch (std::exception &e) {
-                block->transactions.erase(
-                        std::remove(block->transactions.begin(), block->transactions.end(), transaction),
-                        block->transactions.end());
+                block.transactions.erase(
+                        std::remove(block.transactions.begin(), block.transactions.end(), transaction),
+                        block.transactions.end());
                 goto leave;
             }
 
             std::string token;
             s = txn->Get(rocksdb::ReadOptions(), handles[1], rocksdb::Slice(serialize(bytecode_parsed["name"])), &token); // looking for token
             if(!token.empty()) {
-                block->transactions.erase(
-                        std::remove(block->transactions.begin(), block->transactions.end(), transaction),
-                        block->transactions.end());
+                block.transactions.erase(
+                        std::remove(block.transactions.begin(), block.transactions.end(), transaction),
+                        block.transactions.end());
                 goto leave;
             }
 
@@ -349,9 +349,9 @@ bool unit::DB::push_transactions(Block *block) {
             std::string token;
             s = txn->Get(rocksdb::ReadOptions(), handles[1], rocksdb::Slice(transaction.extra_data["name"]), &token); // looking for token
             if(token.empty()) {
-                block->transactions.erase(
-                        std::remove(block->transactions.begin(), block->transactions.end(), transaction),
-                        block->transactions.end());
+                block.transactions.erase(
+                        std::remove(block.transactions.begin(), block.transactions.end(), transaction),
+                        block.transactions.end());
                 goto leave;
             }
 
@@ -375,9 +375,9 @@ bool unit::DB::push_transactions(Block *block) {
             s = txn->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.from), &sender); // looking for token
 
             if (sender.empty()) {
-                block->transactions.erase(
-                        std::remove(block->transactions.begin(), block->transactions.end(), transaction),
-                        block->transactions.end());
+                block.transactions.erase(
+                        std::remove(block.transactions.begin(), block.transactions.end(), transaction),
+                        block.transactions.end());
                 goto leave;
             }
 
@@ -386,9 +386,9 @@ bool unit::DB::push_transactions(Block *block) {
             for(boost::json::array::iterator it = sender_json.at("tokens_balance").as_array().begin(); it != sender_json.at("tokens_balance").as_array().end(); ++it){
                 if(it->as_object().contains(transaction.extra_data["name"])) {
                     if ((boost::json::value_to<double>(it->at(transaction.extra_data["name"])) < std::stod(transaction.extra_data["value"]))) {
-                        block->transactions.erase(
-                                std::remove(block->transactions.begin(), block->transactions.end(), transaction),
-                                block->transactions.end());
+                        block.transactions.erase(
+                                std::remove(block.transactions.begin(), block.transactions.end(), transaction),
+                                block.transactions.end());
                         goto leave;
                     }
                     it->as_object()[transaction.extra_data["name"]] = boost::json::value_to<double>(it->at(transaction.extra_data["name"])) - std::stod(transaction.extra_data["value"]);
@@ -397,12 +397,12 @@ bool unit::DB::push_transactions(Block *block) {
             }
 
             if (!balance_in_token) {
-                block->transactions.erase(
-                        std::remove(block->transactions.begin(), block->transactions.end(), transaction),
-                        block->transactions.end());
+                block.transactions.erase(
+                        std::remove(block.transactions.begin(), block.transactions.end(), transaction),
+                        block.transactions.end());
                 goto leave;
             }
-//boost::json::value_to<std::string>(
+
             s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.to), rocksdb::Slice(serialize(recipient_json)));
             s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.to), rocksdb::Slice(serialize(recipient_json)));
             s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.from), rocksdb::Slice(serialize(sender_json)));
