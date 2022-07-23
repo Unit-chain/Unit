@@ -61,7 +61,12 @@ VM::~VM() {}
     push_into_block: {
         if(block_lock) goto loop;
         Transaction transaction = this->transactions_deque.front();
-        currentblock.push_tx(transaction);
+        try {
+            currentblock.push_tx(transaction);
+        } catch (std::exception &e) {
+            std::cout << e.what() << std::endl;
+            goto loop;
+        }
         this->transactions_deque.pop_front();
         goto loop;
     };

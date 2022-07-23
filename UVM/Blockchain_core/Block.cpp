@@ -101,7 +101,6 @@ void Block::setTransactions(const std::vector<Transaction> &transactions) {
 }
 
 void Block::push_tx(Transaction &tx) {
-//    this->transactions.emplace_back(tx);
     this->transactions.push_back(tx);
 }
 
