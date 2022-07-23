@@ -15,9 +15,21 @@ rocksdb::Options unit::DB::get_db_options() {
     options.OptimizeLevelStyleCompaction();
     options.bottommost_compression = rocksdb::kZSTD;
     options.compression = rocksdb::kLZ4Compression;
+    options.create_if_missing = true;
+    options.create_missing_column_families = true;
     options.max_background_jobs = cpuss;
     options.env->SetBackgroundThreads(cpuss);
-    options.keep_log_file_num = 5;
+    options.num_levels = 2;
+    options.merge_operator = nullptr;
+    options.compaction_filter = nullptr;
+    options.compaction_filter_factory = nullptr;
+    options.rate_limiter = nullptr;
+    options.max_open_files = -1;
+    options.max_write_buffer_number = 6;
+    options.max_background_flushes = cpuss;
+    options.level0_stop_writes_trigger = -1;
+    options.level0_slowdown_writes_trigger = -1;
+
     return options;
 }
 

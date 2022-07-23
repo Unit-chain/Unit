@@ -7,16 +7,27 @@
 Result<bool> Blockchain_db::start_node_db() {
     std::cout << "test" << std::endl;
     rocksdb::Options options;
-    options.create_if_missing = true;
+    options.create_if_missing = false;
     options.error_if_exists = false;
-    options.create_missing_column_families = true;
-    options.IncreaseParallelism(cpus);
+    options.IncreaseParallelism(cpuss);
     options.OptimizeLevelStyleCompaction();
-    options.bottommost_compression = rocksdb::kLZ4Compression;
+    options.bottommost_compression = rocksdb::kZSTD;
     options.compression = rocksdb::kLZ4Compression;
-    options.max_background_jobs = cpus;
-    options.delete_obsolete_files_period_micros = 300000000;
-    options.keep_log_file_num = 5;
+    options.create_if_missing = true;
+    options.create_missing_column_families = true;
+    options.max_background_jobs = cpuss;
+    options.env->SetBackgroundThreads(cpuss);
+    options.num_levels = 2;
+    options.merge_operator = nullptr;
+    options.compaction_filter = nullptr;
+    options.compaction_filter_factory = nullptr;
+    options.rate_limiter = nullptr;
+    options.max_open_files = -1;
+    options.max_write_buffer_number = 6;
+    options.max_background_flushes = cpuss;
+    options.level0_stop_writes_trigger = -1;
+    options.level0_slowdown_writes_trigger = -1;
+
     rocksdb::DB* db;
     rocksdb::Status status = rocksdb::DB::Open(options, kDBPath, &db);
 

@@ -9,7 +9,10 @@
 #include "rocksdb/db.h"
 #include "rocksdb/slice.h"
 #include "rocksdb/options.h"
+#include "rocksdb/env.h"
+#include "rocksdb/merge_operator.h"
 #include "rocksdb/utilities/transaction.h"
+#include "rocksdb/compaction_filter.h"
 #include "rocksdb/utilities/optimistic_transaction_db.h"
 #include "cassert"
 #include "vector"
@@ -32,7 +35,7 @@
 #include <unistd.h>
 #include <thread>
 static std::string kkDBPath = "/tmp/unit_db/";
-//const char DBPath[] = "/tmp/unit_db/";
+const char DBPath[] = "/tmp/unit_db/";
 const int cpuss = (int) std::thread::hardware_concurrency();
 #endif
 
