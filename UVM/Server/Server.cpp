@@ -89,9 +89,7 @@ nlohmann::json json_type_validator(nlohmann::json json) {
             break;
         case 1:
             bytecode = data["extradata"]["bytecode"];
-            std::cout << 111 << std::endl;
             tmp = nlohmann::json::parse(hex_to_ascii(bytecode));
-            std::cout << 222 << std::endl;
             if (!tmp["name"].empty() && !tmp["supply"].empty())
                 out = tmp;
             break;
@@ -191,6 +189,10 @@ bool http_connection::instruction_run(http_connection::instructions instruction,
         case i_chainId:
             good_response(std::to_string(i_chainId_(json)));
             return true;
+        case i_block_height:
+            out = (unit::DB::get_block_height().has_value()) ? unit::DB::get_block_height().value() : "error: null height";
+            good_response((unit::DB::get_block_height().has_value()) ? unit::DB::get_block_height().value() : "error: null height");
+            return true;
         case i_destruct:
             return false;
     }
@@ -205,6 +207,7 @@ void http_connection::initialize_instructions() {
     mapStringInstructions["i_destruct"] = instructions::i_destruct;
     mapStringInstructions["_false"] = instructions::_false;
     mapStringInstructions["i_push_transaction"] = instructions::i_push_transaction;
+    mapStringInstructions["i_block_height"] = instructions::i_block_height;
 }
 
 http_connection::instructions http_connection::matchInstruction(nlohmann::json json) {
@@ -214,12 +217,19 @@ http_connection::instructions http_connection::matchInstruction(nlohmann::json j
     switch (instruction) {
         case _false:
             return _false;
+            break;
         case i_balance:
             return i_balance;
+            break;
         case i_chainId:
             return i_chainId;
+            break;
         case i_push_transaction:
             return i_push_transaction;
+            break;
+        case i_block_height:
+            return i_block_height;
+            break;
         default:
             return _false;
     }
