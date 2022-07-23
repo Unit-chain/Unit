@@ -29,7 +29,7 @@ rocksdb::Options unit::DB::get_db_options() {
     options.max_background_flushes = cpuss;
     options.level0_stop_writes_trigger = -1;
     options.level0_slowdown_writes_trigger = -1;
-    options.max_open_files = -1;
+    options.max_open_files = 5000;
 
     return options;
 }
