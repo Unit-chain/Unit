@@ -174,6 +174,7 @@ void http_connection::process_request() {
 
 bool http_connection::instruction_run(http_connection::instructions instruction, nlohmann::json json) {
     std::string out;
+    std::optional<std::string> possible_response;
     switch (instruction) {
         case _false:
             return false;
@@ -190,8 +191,14 @@ bool http_connection::instruction_run(http_connection::instructions instruction,
             good_response(std::to_string(i_chainId_(json)));
             return true;
         case i_block_height:
-            out = (unit::DB::get_block_height().has_value()) ? unit::DB::get_block_height().value() : "error: null height";
-            good_response((unit::DB::get_block_height().has_value()) ? unit::DB::get_block_height().value() : "error: null height");
+            possible_response = unit::DB::get_block_height();
+            good_response((possible_response.has_value()) ? possible_response.value() : "error: null height");
+            return true;
+        case i_tx:
+            if (json["data"]["hash"].empty())
+                return false;
+            possible_response = unit::DB::find_transaction(json["data"]["hash"].get<std::string>());
+            good_response((possible_response.has_value()) ? possible_response.value() : "error: null tx");
             return true;
         case i_destruct:
             return false;
@@ -208,6 +215,7 @@ void http_connection::initialize_instructions() {
     mapStringInstructions["_false"] = instructions::_false;
     mapStringInstructions["i_push_transaction"] = instructions::i_push_transaction;
     mapStringInstructions["i_block_height"] = instructions::i_block_height;
+    mapStringInstructions["i_tx"] = instructions::i_tx;
 }
 
 http_connection::instructions http_connection::matchInstruction(nlohmann::json json) {
@@ -229,6 +237,9 @@ http_connection::instructions http_connection::matchInstruction(nlohmann::json j
             break;
         case i_block_height:
             return i_block_height;
+            break;
+        case i_tx:
+            return i_tx;
             break;
         default:
             return _false;

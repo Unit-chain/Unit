@@ -21,6 +21,8 @@ public:
     std::string address;
     double amount;
     std::map<std::string, std::string> non_default_balances;
+    std::vector<std::string> inputs;
+    std::vector<std::string> outputs;
 
     // getters & setters
     [[nodiscard]] const std::string &getAddress() const;

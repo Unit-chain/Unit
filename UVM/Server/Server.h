@@ -41,7 +41,8 @@ public:
         i_chainId,
         i_destruct,
         i_push_transaction,
-        i_block_height
+        i_block_height,
+        i_tx
     };
 //    static std::map<std::string, instructions> mapStringInstructions;
     http_connection::instructions matchInstruction(nlohmann::json);

@@ -3,6 +3,8 @@
 //
 
 #include "WalletAccount.h"
+#include "boost/json.hpp"
+#include "boost/json/value_from.hpp"
 
 const std::string &WalletAccount::getAddress() const {
     return address;
@@ -46,7 +48,10 @@ std::ostream &operator<<(std::ostream &out, const WalletAccount &walletAccount) 
         .append((i == key.size() - 1) ? "}" : "},");
     }
 
-    return out << R"({"address":")" << walletAccount.address <<  R"(", "amount":)" << walletAccount.amount <<  R"(, "tokens_balance":[)" << serialized_token_balances << "]}";
+    std::string inputs = serialize(boost::json::value_from(walletAccount.inputs));
+    std::string outputs = serialize((boost::json::value_from(walletAccount.outputs)));
+
+    return out << R"({"address":")" << walletAccount.address <<  R"(", "amount":)" << walletAccount.amount <<  R"(, "tokens_balance":[)" << serialized_token_balances << R"(], "inputs": )" << inputs << R"(, "outputs": )" << outputs << "}";
 }
 
 

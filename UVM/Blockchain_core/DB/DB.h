@@ -60,6 +60,7 @@ namespace unit {
         static std::optional<std::string> get_block_height();
         static std::optional<std::string> get_token(std::string &token_address);
         static void create_wallet(std::string &address);
+        static std::optional<std::string> find_transaction(std::string tx_hash);
         static std::vector<rocksdb::ColumnFamilyHandle*> open_database(rocksdb::DB* db);
         static std::vector<rocksdb::ColumnFamilyHandle*> open_read_only_database(rocksdb::DB* db);
         static void close_db(rocksdb::DB* db, std::vector<rocksdb::ColumnFamilyHandle*> *handles);
