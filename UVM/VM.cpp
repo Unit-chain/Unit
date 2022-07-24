@@ -50,14 +50,6 @@ VM::~VM() {}
     std::thread server_th(Server::start_server, &transactions_deque);
     server_th.detach();
 
-//    std::map<std::string, std::string> map = {{"name", "unit"}, {"value", "0"}, {"bytecode", "null"}};
-//    Transaction tx = Transaction("genesis", "g2px1", 0,  map, "0", 350000);
-//    Transaction tx1 = Transaction("genesis", "teo", 0,  map, "0", 350000);
-//    Transaction tx2 = Transaction("genesis", "sunaked", 0,  map, "0", 350000);
-//    transactions_deque.push_back(tx);
-//    transactions_deque.push_back(tx1);
-//    transactions_deque.push_back(tx2);
-
     loop: {
     if (this->transactions_deque.empty()) {
         goto loop;

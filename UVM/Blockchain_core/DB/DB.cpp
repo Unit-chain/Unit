@@ -246,10 +246,11 @@ bool unit::DB::push_transaction(Transaction *transaction) {
 
 bool unit::DB::push_transactions(Block *block) {
     rocksdb::Options options;
+    rocksdb::DBOptions dbOptions;
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::OptimisticTransactionDBOptions optimisticTransactionDbOptions;
     rocksdb::OptimisticTransactionDB* txn_db;
-    rocksdb::Status s = rocksdb::OptimisticTransactionDB::Open(rocksdb::DBOptions(), optimisticTransactionDbOptions, kkDBPath, get_column_families(), &handles, &txn_db);
+    rocksdb::Status s = rocksdb::OptimisticTransactionDB::Open(unit::DB::get_db_options(), optimisticTransactionDbOptions, kkDBPath, get_column_families(), &handles, &txn_db);
     rocksdb::WriteOptions write_options;
     rocksdb::ReadOptions read_options;
     rocksdb::OptimisticTransactionOptions txn_options;
