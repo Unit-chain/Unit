@@ -309,7 +309,6 @@ bool unit::DB::push_transactions(Block *block) {
             recipient_json["amount"] = boost::json::value_to<double>(recipient_json["amount"]) + transaction.amount;
             recipient_json["inputs"].as_array().emplace_back(transaction.hash);
             sender_json["outputs"].as_array().emplace_back(transaction.hash);
-            std::cout << "recipient: " << recipient << std::endl << "sender: " << sender_json << std::endl;
 
             s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.from), rocksdb::Slice(serialize(sender_json))); // for genesis comment this
             s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.to), rocksdb::Slice(serialize(recipient_json)));
