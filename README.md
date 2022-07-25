@@ -16,7 +16,76 @@
 4. After building, need to run it:  `./rocksdb_uvm_support`. It will create column families which UVM needed
 5. After column families were created - need to build `UVM`. 
 
+# Api Requests:
+
+> Send unit transaction
+>
+> Default URL: localhost:49000
+
+```json
+{
+  "instruction": "i_push_transaction",
+  "data": {
+    "from": "g2px1",
+    "to": "sunaked",
+    "amount": 1.00003,
+    "type": 0,
+    "extradata": {
+      "name": "null",
+      "value": "null",
+      "bytecode":"null"
+    }
+  }
+}
+```
+
+> Create countable token
+>
+> Default URL: localhost:49000
+
+```json
+{
+  "instruction": "i_push_transaction",
+  "data": {
+    "from": "g2px1",
+    "to": "",
+    "amount": 0,
+    "type": 1,
+    "extradata": {
+      "name": "null",
+      "value": "nulll",
+      "bytecode":"7B226E616D65223A202274656565657374222C2022737570706C79223A20327D"
+    }
+  }
+}
+
+```
+
+> Send tokens 
+>
+> Default URL: localhost:49000
+
+```json
+{
+  "instruction": "i_push_transaction",
+  "data": {
+    "from": "g2px1",
+    "to": "sunaked",
+    "amount": 0,
+    "type": 2,
+    "extradata": {
+      "name": "teeeest",
+      "value": "1",
+      "bytecode":"null"
+    }
+  }
+}
+```
+
+
+
 # ToDo:
+
 - [ ] BIP32 & BIP44
 - [ ] Pseudonymous
 - [x] VM
