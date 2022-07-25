@@ -354,6 +354,7 @@ bool unit::DB::push_transactions(Block *block) {
             prepared_token_json.emplace(token_created.name, token_created.supply);
             creator["tokens_balance"].as_array().emplace_back(prepared_token_json);
             transaction.generate_tx_hash();
+            creator["outputs"].as_array().emplace_back(transaction.hash);
             s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.from), rocksdb::Slice(serialize(creator)));
             goto push_tx;
         };
@@ -418,7 +419,7 @@ bool unit::DB::push_transactions(Block *block) {
 
             transaction.generate_tx_hash();
             recipient_json["inputs"].as_array().emplace_back(transaction.hash);
-            sender_json["inputs"].as_array().emplace_back(transaction.hash);
+            sender_json["outputs"].as_array().emplace_back(transaction.hash);
             s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.to), rocksdb::Slice(serialize(recipient_json)));
             s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.from), rocksdb::Slice(serialize(sender_json)));
 
@@ -586,6 +587,7 @@ std::optional<std::string> unit::DB::find_transaction(std::string tx_hash) {
     std::string tx;
     status = db->Get(rocksdb::ReadOptions(), handles[2], rocksdb::Slice(std::move(tx_hash)), &tx);
 
+    unit::DB::close_db(db, &handles);
     if(tx.empty())
         return std::nullopt;
 
