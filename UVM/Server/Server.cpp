@@ -55,10 +55,6 @@ bool http_connection::push_transaction(std::string &transaction) {
     if(op_balance->empty())
         return false;
 
-//    nlohmann::json wallet = nlohmann::json::parse(op_balance.value());
-//    if(wallet["amount"].get<double>() < tx.amount)
-//        return false;
-
     this->tx_deque->push_back(tx);
     return true;
 }
@@ -91,7 +87,7 @@ nlohmann::json json_type_validator(nlohmann::json json) {
             bytecode = data["extradata"]["bytecode"];
             tmp = nlohmann::json::parse(hex_to_ascii(bytecode));
             if (!tmp["name"].empty() && !tmp["supply"].empty())
-                out = tmp;
+                out = data;
             break;
         case 2:
             if (!data["extradata"]["value"].empty() &&
@@ -184,7 +180,7 @@ bool http_connection::instruction_run(http_connection::instructions instruction,
             i_balance_(json);
             return true;
         case i_push_transaction:
-            out = json_type_validator(json).dump();
+            out = json_type_validator(json).dump(); // bug is here
             good_response(push_transaction(out) ? "true" : "false");
             return true;
         case i_chainId:
