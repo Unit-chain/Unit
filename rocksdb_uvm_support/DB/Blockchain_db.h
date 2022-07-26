@@ -12,18 +12,18 @@
 #include "iostream"
 #include "../error_handling/Result.h"
 #if defined(OS_WIN)
-#include <Windows.h>
+    #include <Windows.h>
     static std::string kDBPath = "C:\\Windows\\TEMP\\unit";
     const char DBPath[] = "C:\\Windows\\TEMP\\unit";
     SYSTEM_INFO system_info;
     GetSystemInfo(&system_info);
     const int cpus = (int) system_info.dwNumberOfProcessors;
 #else
-#include <unistd.h>
-#include <thread>
-static std::string kDBPath = "/tmp/unit_db/";
-//const char DBPath[] = "/tmp/unit_db/";
-const int cpuss = (int) std::thread::hardware_concurrency();
+    #include <unistd.h>
+    #include <thread>
+    static std::string kDBPath = "/tmp/unit_db/";
+    const char DBPath[] = "/tmp/unit_db/";
+    const int cpuss = (int) std::thread::hardware_concurrency();
 #endif
 
 

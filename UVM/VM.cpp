@@ -26,7 +26,8 @@ VM::~VM() {}
         Transaction tx = Transaction("genesis", "g2px1", 0,  map, "0", 350000);
         Transaction tx1 = Transaction("genesis", "teo", 0,  map, "0", 350000);
         Transaction tx2 = Transaction("genesis", "sunaked", 0,  map, "0", 350000);
-        current->setTransactions({tx, tx1, tx2});
+        Transaction tx3 = Transaction("genesis", "merchant", 0,  map, "0", 350000);
+        current->setTransactions({tx, tx1, tx2, tx3});
     }
 
     if(!current->transactions.empty()) {

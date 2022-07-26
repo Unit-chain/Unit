@@ -27,7 +27,7 @@ Result<bool> Blockchain_db::start_node_db() {
     options.max_background_flushes = cpuss;
     options.level0_stop_writes_trigger = -1;
     options.level0_slowdown_writes_trigger = -1;
-    options.max_open_files = 5000;
+    options.max_open_files = -1;
 
     rocksdb::DB* db;
     rocksdb::Status status = rocksdb::DB::Open(options, kDBPath, &db);
