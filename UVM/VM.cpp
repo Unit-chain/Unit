@@ -17,8 +17,9 @@ VM::~VM() {}
 
     std::optional<std::string> op_block_height = unit::DB::get_block_height();
     std::string block_index = (op_block_height.has_value()) ? op_block_height.value() : R"({"index": 0})";
-    nlohmann::json block_json = nlohmann::json::parse(block_index);
-    uint64_t index = block_json["index"].get<uint64_t>() + 1;
+//    nlohmann::json block_json = nlohmann::json::parse(block_index);
+    boost::json::value block_json = boost::json::parse(block_index);
+    uint64_t index = boost::json::value_to<uint64_t>(block_json.at("index")) + 1;
     current->setIndex(index);
 
     if(index == 1){
