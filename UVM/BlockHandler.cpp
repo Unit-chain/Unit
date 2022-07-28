@@ -63,7 +63,7 @@ BlockHandler::~BlockHandler() {}
     push_into_block: {
         if(block_lock) goto loop;
         try {
-            if(currentblock.transactions.size() >= 100) goto loop;
+            if(currentblock.transactions.size() >= 500) goto loop;
             Transaction transaction = Transaction(this->transactions_deque.front());
             currentblock.push_tx(transaction);
         } catch (std::exception &e) {
