@@ -1,332 +1,478 @@
 //
-// Created by Alexander Syrgulev on 18.06.2022.
+// Created by Gosha Stolyarov on 28.07.2022.
 //
+#include <boost/beast/core.hpp>
+#include <boost/beast/http.hpp>
+#include <boost/beast/version.hpp>
+#include <boost/asio.hpp>
+#include <boost/json.hpp>
+#include <boost/algorithm/hex.hpp>
+
+#include <chrono>
+#include <cstdlib>
+#include <optional>
+#include <ctime>
+#include <iostream>
+#include <memory>
+#include <string>
+#include "deque"
 
 #include "Server.h"
 
-namespace my_program_state {
-    std::size_t request_count() {
+namespace beast = boost::beast;   // from <boost/beast.hpp>
+namespace http = beast::http;     // from <boost/beast/http.hpp>
+namespace net = boost::asio;      // from <boost/asio.hpp>
+using tcp = boost::asio::ip::tcp; // from <boost/asio/ip/tcp.hpp>
+
+namespace my_program_state
+{
+    std::size_t
+    request_count()
+    {
         static std::size_t count = 0;
         return ++count;
     }
 
-    std::time_t now() {
+    std::time_t
+    now()
+    {
         return std::time(0);
     }
 }
 
-/*
- * type 0 = unit transfer
- * type 1 = token transfer
- * type 2 = create token
- * -----------------------
- * if type == 0, we need to check if transaction's field "to" not equals to field "from" and "amount" not 0 or null (DONE)
- * if type == 1, we need to check if extradata is valid for transferring tokens: name equals to token name and value equals to amount of transffering tokens (DONE)
- * if type == 2, we need to check if extradata's bytecode can be parsed to json(try-catch) and contains fields: supply and name (DONE)
- */
+class http_connection : public std::enable_shared_from_this<http_connection>
+{
+public:
+    http_connection(tcp::socket socket) : socket_(std::move(socket)){}
 
-bool http_connection::push_transaction(std::string &transaction) {
-    nlohmann::json transaction_json;
-    try {
-        transaction_json = nlohmann::json::parse(transaction);
-    }
-    catch (std::exception &e) {
-        return false;
+    // Initiate the asynchronous operations associated with the connection.
+    void start(std::vector<Transaction> *tx_deque)
+    {
+        this->tx_deque = tx_deque;
+        read_request();
+        check_deadline();
     }
 
-    if (!transaction_json.contains("extradata") || !transaction_json["extradata"].contains("name") ||
-        !transaction_json["extradata"].contains("value") || !transaction_json["extradata"].contains("bytecode"))
-        return false;
-    if (transaction_json["extradata"]["name"].empty() || transaction_json["extradata"]["value"].empty() ||
-        transaction_json["extradata"]["bytecode"].empty())
-        return false;
-
-    auto extradata_name = transaction_json["extradata"]["name"].get<std::string>();
-    auto extradata_value = transaction_json["extradata"]["value"].get<std::string>();
-    auto extradata_bytecode = transaction_json["extradata"]["bytecode"].get<std::string>();
-    std::map<std::string, std::string> map = {{"name",     extradata_name},
-                                              {"value",    extradata_value},
-                                              {"bytecode", extradata_bytecode}};
-    auto from = transaction_json["from"].get<std::string>();
-    auto to = transaction_json["to"].get<std::string>();
-    Transaction tx = Transaction(from, to, transaction_json["type"].get<uint64_t>(), map, "0",
-                                 transaction_json["amount"]);
-    std::optional<std::string> op_balance = unit::DB::get_balance(tx.from);
-    if(op_balance->empty())
-        return false;
-
-    this->tx_deque->emplace_back(tx);
-    return true;
-}
-
-void http_connection::start(std::vector<Transaction> *deque) {
-    this->tx_deque = deque;
-    read_request();
-    check_deadline();
-}
-
-nlohmann::json json_type_validator(nlohmann::json json) {
-    nlohmann::json empty;
-    if (json["data"].empty()) return empty;
-    nlohmann::json data = json["data"];
-    if (data["type"].empty())
-        return empty;
-    int type = data["type"];
-    std::string bytecode;
-    nlohmann::json tmp;
-    nlohmann::json out;
-    switch (type) {
-        case 0:
-            if (!data["amount"].empty() &&
-                !data["to"].empty() &&
-                !data["from"].empty() && (data["to"].get<std::string>() != data["from"].get<std::string>()) &&
-                data["amount"] != 0)
-                out = data;
-            break;
-        case 1:
-            bytecode = data["extradata"]["bytecode"];
-            tmp = nlohmann::json::parse(hex_to_ascii(bytecode));
-            if (!tmp["name"].empty() && !tmp["supply"].empty())
-                out = data;
-            break;
-        case 2:
-            if (!data["extradata"]["value"].empty() &&
-                !data["amount"].empty() && !data["extradata"]["name"].empty())
-                out = data;
-            break;
-        default:
-            out = out;
-            break;
-    }
-    return out;
-}
-
-void http_connection::bad_response(const std::runtime_error& e) {
-    response_.result(http::status::not_found);
-    nlohmann::json out = {{"Error",  "true"},
-                          {"Result", e.what()}};
-    beast::ostream(response_.body()) << to_string(out);
-}
-
-// Asynchronously receive a complete request message.
-void http_connection::read_request() {
-    auto self = shared_from_this();
-    http::async_read(
-
+private:
+    // pointer to tx deque
+    std::vector<Transaction> *tx_deque;
+    // The socket for the currently connected client.
+    tcp::socket socket_;
+    // The buffer for performing reads.
+    beast::flat_buffer buffer_{8192};
+    // The request message.
+    http::request<http::string_body> request_;
+    // The response message.
+    http::response<http::dynamic_body> response_;
+    // The timer for putting a deadline on connection processing.
+    net::steady_timer deadline_{socket_.get_executor(), std::chrono::seconds(60)};
+    // Asynchronously receive a complete request message.
+    void read_request()
+    {
+        auto self = shared_from_this();
+        http::async_read(
             socket_,
             buffer_,
             request_,
             [self](beast::error_code ec,
-                   std::size_t bytes_transferred) {
+                   std::size_t bytes_transferred)
+            {
                 boost::ignore_unused(bytes_transferred);
                 if (!ec)
                     self->process_request();
             });
-}
+    }
 
-void http_connection::good_response(std::string message) {
-    nlohmann::json out = {{"Error",  "false"},
-                          {"Result", message}};
-    beast::ostream(response_.body()) << to_string(out);
-}
+    /*request*/
+    void process_request()
+    {
+        response_.version(request_.version());
+        response_.keep_alive(true);
 
-// Determine what needs to be done with the request message.
-void http_connection::process_request() {
-    response_.version(request_.version());
-    response_.keep_alive(true);
-    nlohmann::json json;
-    response_.set(http::field::server, "Unit");
-    nlohmann::json out;
-    http_connection::instructions instruction;
-    switch (request_.method()) {
+        // featured json body
+        boost::json::value body_to_json;
+
+        boost::json::error_code ec;
+
+        switch (request_.method())
+        {
         case http::verb::get:
-            response_.result(http::status::ok);
-            response_.set(http::field::server, "Unit");
-            this->create_response();
+
+            create_success_response(R"({"message":"Ok"})");
+
             break;
         case http::verb::post:
-            response_.set(http::field::content_type, "application/json");
-            response_.set(http::field::server, "Unit");
-            try {
-                json = nlohmann::json::parse(request_.body());
-            }
-            catch (std::exception &e) {
-                bad_response(std::runtime_error("error with parsing json"));
-                write_response();
+
+            /* parsing options not implemented (no overload for function parse) */
+            /*
+            boost::json::parse_options opt;
+            opt.allow_comments = true;
+            opt.allow_trailing_commas = true;
+            */
+
+            body_to_json = boost::json::parse(request_.body());
+
+            // parsing failed
+            if (ec)
+            {
+                create_error_response(R"({"message":"Failed to parse JSON"})");
                 break;
             }
-            instruction = matchInstruction(json);
-            if (!instruction_run(instruction, json)) {
-                bad_response(std::runtime_error("error with instruction"));
-                break;
-            }
+
+            // pasing success
+            process_instruction(body_to_json);
+
             break;
         default:
-            bad_response(std::runtime_error("Invalid request-method" + std::string(request_.method_string())));
+            create_error_response(R"({"message":"Invalid request type"})");
             break;
+        }
+        write_response();
     }
-    write_response();
-}
 
-bool http_connection::instruction_run(http_connection::instructions instruction, nlohmann::json json) {
-    std::string out;
-    std::optional<std::string> possible_response;
-    switch (instruction) {
-        case _false:
-            return false;
-        case i_balance:
-            if (json["data"]["name"].empty())
-                return false;
-            i_balance_(json);
-            return true;
-        case i_push_transaction:
-            out = json_type_validator(json).dump(); // bug is here
-            good_response(push_transaction(out) ? "true" : "false");
-            return true;
-        case i_chainId:
-            good_response(std::to_string(i_chainId_(json)));
-            return true;
-        case i_block_height:
-            possible_response = unit::DB::get_block_height();
-            good_response((possible_response.has_value()) ? possible_response.value() : "error: null height");
-            return true;
-        case i_tx:
-            if (json["data"]["hash"].empty())
-                return false;
-            possible_response = unit::DB::find_transaction(json["data"]["hash"].get<std::string>());
-            good_response((possible_response.has_value()) ? possible_response.value() : "error: null tx");
-            return true;
-        case i_destruct:
-            return false;
+    /* RESPONSES */
+    /*-----------*/
+    void create_error_response(std::string message = R"({"message":"Error"})", bool isJSON = true)
+    {
+        response_.result(http::status::bad_request);
+        response_.set(http::field::content_type, (isJSON ? "application/json" : "text/plain"));
+        response_.set(http::field::server, "Unit");
+        beast::ostream(response_.body()) << message;
     }
-    return false;
-}
-
-static std::map<std::string, http_connection::instructions> mapStringInstructions;
-
-void http_connection::initialize_instructions() {
-    mapStringInstructions["i_balance"] = instructions::i_balance;
-    mapStringInstructions["i_chainid"] = instructions::i_chainId;
-    mapStringInstructions["i_destruct"] = instructions::i_destruct;
-    mapStringInstructions["_false"] = instructions::_false;
-    mapStringInstructions["i_push_transaction"] = instructions::i_push_transaction;
-    mapStringInstructions["i_block_height"] = instructions::i_block_height;
-    mapStringInstructions["i_tx"] = instructions::i_tx;
-}
-
-http_connection::instructions http_connection::matchInstruction(nlohmann::json json) {
-    if (json["instruction"].empty())
-        return _false;
-    auto instruction = mapStringInstructions[json["instruction"]];
-    switch (instruction) {
-        case _false:
-            return _false;
-            break;
-        case i_balance:
-            return i_balance;
-            break;
-        case i_chainId:
-            return i_chainId;
-            break;
-        case i_push_transaction:
-            return i_push_transaction;
-            break;
-        case i_block_height:
-            return i_block_height;
-            break;
-        case i_tx:
-            return i_tx;
-            break;
-        default:
-            return _false;
+    void create_success_response(std::string message = R"({"message":"Ok"})", bool isJSON = true)
+    {
+        response_.result(http::status::ok);
+        response_.set(http::field::content_type, (isJSON ? "application/json" : "text/plain"));
+        response_.set(http::field::server, "Unit");
+        beast::ostream(response_.body()) << message;
     }
-}
-
-int http_connection::i_chainId_(nlohmann::json json) {
-    // std::optional<std::string> height = unit::DB::get_block_height();
-    return 1000000l;
-}
-
-void http_connection::i_balance_(nlohmann::json json) {
-    std::string name = json["data"]["name"].get<std::string>();
-    std::optional<std::string> op_balance = unit::DB::get_balance(name);
-    if (!op_balance.has_value())
-        beast::ostream(response_.body()) << R"({"balance": null})";
-    else
-        beast::ostream(response_.body()) << R"({"balance": )" << op_balance.value() << "}";
-}
-
-void http_connection::create_response() {
-    if (request_.target() == "/count") {
-        response_.set(http::field::content_type, "text/html");
-        beast::ostream(response_.body())
-                << "<html>\n"
-                << "<head><title>Request count</title></head>\n"
-                << "<body>\n"
-                << "<h1>Request count</h1>\n"
-                << "<p>There have been "
-                << my_program_state::request_count()
-                << " requests so far.</p>\n"
-                << "</body>\n"
-                << "</html>\n";
-    } else if (request_.target() == "/time") {
-        response_.set(http::field::content_type, "text/html");
-        beast::ostream(response_.body())
-                << "<html>\n"
-                << "<head><title>Current time</title></head>\n"
-                << "<body>\n"
-                << "<h1>Current time</h1>\n"
-                << "<p>The current time is "
-                << my_program_state::now()
-                << " seconds since the epoch.</p>\n"
-                << "</body>\n"
-                << "</html>\n";
-    } else {
-        response_.result(http::status::not_found);
-        response_.set(http::field::content_type, "text/plain");
-        beast::ostream(response_.body()) << "File not found\r\n";
-    }
-}
-
-// Asynchronously transmit the response message.
-void http_connection::write_response() {
-    auto self = shared_from_this();
-    response_.content_length(response_.body().size());
-    http::async_write(
+    void write_response()
+    {
+        auto self = shared_from_this();
+        response_.content_length(response_.body().size());
+        http::async_write(
             socket_,
             response_,
-            [self](beast::error_code ec, std::size_t) {
+            [self](beast::error_code ec, std::size_t)
+            {
                 self->socket_.shutdown(tcp::socket::shutdown_send, ec);
                 self->deadline_.cancel();
             });
-}
-
-// Check whether we have spent enough time on this connection.
-void http_connection::check_deadline() {
-    auto self = shared_from_this();
-    deadline_.async_wait(
-            [self](beast::error_code ec) {
-                if (!ec) {
-                    // Close socket to cancel any outstanding operation.
+    }
+    void check_deadline()
+    {
+        auto self = shared_from_this();
+        deadline_.async_wait(
+            [self](beast::error_code ec)
+            {
+                if (!ec)
+                {
                     self->socket_.close(ec);
                 }
             });
-}
+    }
+    /* END OF RESPONSES */
+    /*------------------*/
+
+    /*INSTRUCTIONS*/
+    /*------------*/
+    void process_instruction(boost::json::value json)
+    {
+        try
+        {
+            std::string instruction;
+            instruction = boost::json::value_to<std::string>(json.at("instruction"));
+            if (instruction == "i_balance")
+            {
+                i_balance(json);
+            }
+            else if (instruction == "i_push_transaction")
+            {
+                try {
+                    i_push_transaction(json);
+                } catch (std::exception &e) {
+                    create_error_response(R"({"message":"Invalid data"})");
+                    return;
+                }
+            }
+            else if (instruction == "i_block_height")
+            {
+                i_block_height();
+            }
+            else if (instruction == "i_tx")
+            {
+                i_tx(json);
+            }
+            else
+            {
+                create_error_response(R"({"message":"Instruction not found"})");
+            }
+        }
+        catch (const boost::wrapexcept<std::out_of_range> &o)
+        {
+            create_error_response(R"({"message":"Instruction field not found"})");
+        }
+    }
+
+    void i_balance(boost::json::value json)
+    {
+        try
+        {
+            std::string name;
+            name = boost::json::value_to<std::string>(json.at("data").at("name"));
+            std::optional<std::string> op_balance = unit::DB::get_balance(name);
+            if (!op_balance.has_value())
+                create_error_response(R"({"message":"Balance not found"})");
+            else
+                create_success_response(R"({"message":"Ok","balance":)" + op_balance.value() + "}");
+        }
+        catch (const boost::wrapexcept<std::out_of_range> &o)
+        {
+            create_error_response(R"({"message":"Invalid data"})");
+        }
+    }
+
+    void i_push_transaction(boost::json::value json)
+    {
+        try
+        {
+            std::string type;
+            type = std::to_string(boost::json::value_to<int>(json.at("data").at("type")));
+            if (type.length() == 0)
+            {
+                create_error_response(R"({"message":"'type' field is invalid"})");
+                return;
+            }
+
+            std::string from;
+            from = boost::json::value_to<std::string>(json.at("data").at("from"));
+            if (from.length() == 0)
+            {
+                create_error_response(R"({"message":"'from' field is invalid"})");
+                return;
+            }
+
+            std::optional<std::string> u_balance = unit::DB::get_balance(from);
+            if (!u_balance.has_value())
+            {
+                create_error_response(R"({"message":"Balance not found"})");
+                return;
+            }
+
+            if (type == "0")
+            {
+                std::string to;
+                to = boost::json::value_to<std::string>(json.at("data").at("to"));
+                if (to.length() == 0)
+                {
+                    create_error_response(R"({"message":"'to' field is invalid"})");
+                    return;
+                }
+
+                std::string amount;
+                amount = std::to_string(boost::json::value_to<double>(json.at("data").at("amount")));
+                if (amount.length() == 0)
+                {
+                    create_error_response(R"({"message":"'amount' field is invalid"})");
+                    return;
+                }
+
+                double d_amount;
+                try
+                {
+                    d_amount = std::stod(amount);
+                }
+                catch (const std::exception &e)
+                {
+                    create_error_response(R"({"message":"Invalid amount"})");
+                    return;
+                }
+
+                std::map<std::string, std::string> extradata = {{"name", "null"},
+                                                                {"value", "null"},
+                                                                {"bytecode", "null"}};
+
+                Transaction tx = Transaction(from, to, 0, extradata, "0", d_amount);
+                this->tx_deque->emplace_back(tx);
+                create_success_response(R"({"message":"Ok"})");
+                return;
+            }
+            else if (type == "1")
+            {
+                std::string bytecode;
+                std::string decoded_bytecode;
+                bytecode = boost::json::value_to<std::string>(json.at("data").at("extradata").at("bytecode"));
+                if (bytecode.length() == 0)
+                {
+                    create_error_response(R"({"message":"'bytecode' field is invalid"})");
+                    return;
+                }
+                try
+                {
+                    decoded_bytecode = boost::algorithm::unhex(bytecode);
+                }
+                catch (const boost::algorithm::hex_decode_error &e)
+                {
+                    create_error_response(R"({"message":"Bytecode decoding error"})");
+                    return;
+                }
+
+                boost::json::error_code ec;
+                boost::json::value bytecode_to_json = boost::json::parse(decoded_bytecode, ec);
+                // parsing failed
+                if (ec)
+                {
+                    create_error_response(R"({"message":"Failed to parse bytecode to JSON"})");
+                    return;
+                }
+
+                std::string name;
+                std::string supply;
+                try
+                {
+                    name = boost::json::value_to<std::string>(bytecode_to_json.at("name"));
+                    supply = std::to_string(boost::json::value_to<double>(bytecode_to_json.at("supply")));
+                }
+                catch (const boost::wrapexcept<std::out_of_range> &e)
+                {
+                    create_error_response(R"({"message":"Not enough fields in bytecode data"})");
+                    return;
+                }
+
+                if (name.length() == 0)
+                {
+                    create_error_response(R"({"message":"Bytecode error: 'name' is empty"})");
+                    return;
+                }
+                if (supply.length() == 0)
+                {
+                    create_error_response(R"({"message":"Bytecode error: 'supply' is empty"})");
+                    return;
+                }
+
+                try
+                {
+                    double r = std::stod(supply);
+                }
+                catch (const std::exception &e)
+                {
+                    create_error_response(R"({"message":"Bytecode error: 'supply' is not a number"})");
+                    return;
+                }
+
+                std::map<std::string, std::string> extradata = {{"name", "null"},
+                                                                {"value", "null"},
+                                                                {"bytecode", bytecode}};
+
+                Transaction tx = Transaction(from, "", 1, extradata, "0", 0);
+                this->tx_deque->emplace_back(tx);
+                create_success_response(R"({"message":"Ok"})");
+                return;
+            }
+            else if (type == "2")
+            {
+                std::string to;
+                to = boost::json::value_to<std::string>(json.at("data").at("to"));
+                if (to.length() == 0)
+                {
+                    create_error_response(R"({"message":"'to' field is invalid"})");
+                    return;
+                }
+
+                std::string name;
+                name = boost::json::value_to<std::string>(json.at("data").at("extradata").at("name"));
+                if (name.length() == 0)
+                {
+                    create_error_response(R"({"message":"'name' field is invalid"})");
+                    return;
+                }
+
+                std::string value;
+                value = boost::json::value_to<std::string>(json.at("data").at("extradata").at("value"));
+                if (value.length() == 0)
+                {
+                    create_error_response(R"({"message":"'value' field is invalid"})");
+                    return;
+                }
+
+                double d_value;
+                try
+                {
+                    d_value = std::stod(value);
+                }
+                catch (const std::exception &e)
+                {
+                    create_error_response(R"({"message":"'value' field is not a number"})");
+                    return;
+                }
+
+                std::map<std::string, std::string> extradata = {{"name", name},
+                                                                {"value", value},
+                                                                {"bytecode", "null"}};
+
+                Transaction tx = Transaction(from, to, 2, extradata, "0", 0);
+                this->tx_deque->emplace_back(tx);
+                create_success_response(R"({"message":"Ok"})");
+                return;
+            }
+            create_error_response(R"({"message":"No such type"})");
+        }
+        catch (const boost::wrapexcept<std::out_of_range> &o)
+        {
+            create_error_response(R"({"message":"Data is invalid"})");
+        }
+    }
+
+    void i_block_height()
+    {
+        std::optional<std::string> block_height = unit::DB::get_block_height();
+        if (!block_height.has_value())
+            create_error_response();
+        else
+            create_success_response(R"({"message":"Ok","block_height":)" + block_height.value() + "}");
+    }
+
+    void i_tx(boost::json::value json)
+    {
+        try
+        {
+            std::string hash;
+            hash = boost::json::value_to<std::string>(json.at("data").at("hash"));
+            std::optional<std::string> op_tx = unit::DB::find_transaction(hash);
+            if (!op_tx.has_value())
+                create_error_response(R"({"message":"Transaction not found"})");
+            else
+                create_success_response(R"({"message":"Ok","transaction":)" + op_tx.value() + "}");
+        }
+        catch (const boost::wrapexcept<std::out_of_range> &o)
+        {
+            create_error_response(R"({"message":"Invalid data"})");
+        }
+    }
+    /*END OF INSTRUCTIONS*/
+    /*-------------------*/
+};
 
 // "Loop" forever accepting new connections.
-void http_server(tcp::acceptor &acceptor, tcp::socket &socket, std::vector<Transaction> *tx_deque) {
-    acceptor.async_accept(socket, [&, tx_deque](beast::error_code ec) {
-
-        if (!ec)
-            std::make_shared<http_connection>(std::move(socket))->start(tx_deque); // start - http_connection
-        http_server(acceptor, socket, tx_deque);
-    });
+void http_server(tcp::acceptor &acceptor, tcp::socket &socket, std::vector<Transaction> *tx_deque)
+{
+    acceptor.async_accept(socket,
+                          [&, tx_deque](beast::error_code ec)
+                          {
+                              if (!ec)
+                                  std::make_shared<http_connection>(std::move(socket))->start(tx_deque);
+                              http_server(acceptor, socket, tx_deque);
+                          });
 }
 
-int Server::start_server(std::vector<Transaction> *tx_deque) {
-    http_connection::initialize_instructions();
-    rerun_server:{};
-    try {
+int Server::start_server(std::vector<Transaction> *tx_deque)
+{
+// http_connection::initialize_instructions();
+rerun_server:
+{
+};
+    try
+    {
         std::string ip_address = LOCAL_IP;
         auto const address = net::ip::make_address(ip_address);
         uint16_t port = PORT;
@@ -337,7 +483,8 @@ int Server::start_server(std::vector<Transaction> *tx_deque) {
         std::cout << "Server has been started" << std::endl;
         ioc.run();
     }
-    catch (std::exception const &e) {
+    catch (std::exception const &e)
+    {
         std::cerr << "Error: " << e.what() << std::endl;
         goto rerun_server;
     }
