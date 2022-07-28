@@ -2,8 +2,8 @@
 // Created by Kirill Zhukov on 31.05.2022.
 //
 
-#ifndef UVM_VM_H
-#define UVM_VM_H
+#ifndef UVM_BLOCKHANDLER_H
+#define UVM_BLOCKHANDLER_H
 #include "deque"
 #include "vector"
 #include "thread"
@@ -16,21 +16,16 @@
 #include "Blockchain_core/DB/DB.h"
 #include "Server/Server.h"
 
-class VM {
+class BlockHandler {
 public:
-    VM();
-    virtual ~VM();
+    BlockHandler();
+    virtual ~BlockHandler();
 
     [[noreturn]] void run();
-    void popInstruction();
-    bool pushInstruction(void* instruction);
-    bool push_transaction(std::string &transaction);
 
 private:
-    std::vector<void*> memory;
-    std::vector<void*> instructionsReferences;
-    std::deque<Transaction> transactions_deque;
-    std::stack<void*> instructions;
+//    std::deque<Transaction> transactions_deque;
+    std::vector<Transaction> transactions_deque;
     Block currentblock = Block(1);
     bool block_lock = false;
 
@@ -38,4 +33,4 @@ private:
 };
 
 
-#endif //UVM_VM_H
+#endif //UVM_BLOCKHANDLER_H

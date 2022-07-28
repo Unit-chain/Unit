@@ -55,11 +55,11 @@ bool http_connection::push_transaction(std::string &transaction) {
     if(op_balance->empty())
         return false;
 
-    this->tx_deque->push_back(tx);
+    this->tx_deque->emplace_back(tx);
     return true;
 }
 
-void http_connection::start(std::deque<Transaction> *deque) {
+void http_connection::start(std::vector<Transaction> *deque) {
     this->tx_deque = deque;
     read_request();
     check_deadline();
@@ -314,7 +314,7 @@ void http_connection::check_deadline() {
 }
 
 // "Loop" forever accepting new connections.
-void http_server(tcp::acceptor &acceptor, tcp::socket &socket, std::deque<Transaction> *tx_deque) {
+void http_server(tcp::acceptor &acceptor, tcp::socket &socket, std::vector<Transaction> *tx_deque) {
     acceptor.async_accept(socket, [&, tx_deque](beast::error_code ec) {
 
         if (!ec)
@@ -323,7 +323,7 @@ void http_server(tcp::acceptor &acceptor, tcp::socket &socket, std::deque<Transa
     });
 }
 
-int Server::start_server(std::deque<Transaction> *tx_deque) {
+int Server::start_server(std::vector<Transaction> *tx_deque) {
     http_connection::initialize_instructions();
     rerun_server:{};
     try {

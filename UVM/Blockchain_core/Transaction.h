@@ -24,6 +24,8 @@ public:
                 std::map<std::string, std::string> &extraData, const std::string &hash,
                 const std::string &previousHash, double amount);
 
+//    explicit Transaction(const Transaction &tx);
+
     virtual ~Transaction();
     std::string from;
     std::string to;
@@ -73,6 +75,13 @@ public:
     bool operator==(const Transaction &rhs) const;
     bool operator!=(const Transaction &rhs) const;
 
+    bool operator<(const Transaction &rhs) const;
+
+    bool operator>(const Transaction &rhs) const;
+
+    bool operator<=(const Transaction &rhs) const;
+
+    bool operator>=(const Transaction &rhs) const;
 protected:
 };
 

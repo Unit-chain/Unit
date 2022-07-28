@@ -1,5 +1,5 @@
-#include "VM.h"
+#include "BlockHandler.h"
 int main(){
-    VM vm = VM();
+    BlockHandler vm = BlockHandler();
     vm.run();
 }

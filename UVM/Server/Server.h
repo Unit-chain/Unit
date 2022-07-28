@@ -34,7 +34,7 @@ class http_connection : public std::enable_shared_from_this<http_connection>{
 public:
     explicit http_connection(tcp::socket socket):socket_(std::move(socket)){}
     // Initiate the asynchronous operations associated with the connection.
-    void start(std::deque<Transaction> *deque);
+    void start(std::vector<Transaction> *deque);
     enum instructions {
         _false,
         i_balance,
@@ -52,7 +52,7 @@ public:
 
 
 private:
-    std::deque<Transaction> *tx_deque;
+    std::vector<Transaction> *tx_deque;
     // The socket for the currently connected client.
     tcp::socket socket_;
     // The buffer for performing reads.
@@ -84,7 +84,7 @@ private:
 
 class Server {
 public:
-    static int start_server(std::deque<Transaction> *tx_deque);
+    static int start_server(std::vector<Transaction> *tx_deque);
 };
 
 

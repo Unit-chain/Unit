@@ -11,25 +11,6 @@ Transaction::Transaction() {}
 
 Transaction::~Transaction() {}
 
-//const std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> &
-//Transaction::getFrom() const {
-//    return this->from;
-//}
-//
-//void
-//Transaction::setFrom(const std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> &from) {
-//    this->from = from;
-//}
-//
-//const std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> &Transaction::getTo() const {
-//    return this->to;
-//}
-//
-//void
-//Transaction::setTo(const std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> &to) {
-//    this->to = to;
-//}
-
 uint64_t Transaction::getType() const {
     return this->type;
 }
@@ -46,13 +27,7 @@ void Transaction::setDate(uint64_t date) {
     this->date = date;
 }
 
-//const std::__1::map<std::string, std::string> &Transaction::getExtraData() const {
-//    return this->extra_data;
-//}
-
-//void Transaction::setExtraData(const std::__1::map<std::string, std::string> &extraData) {
-//    this->extra_data = extraData;
-//}
+//Transaction::Transaction(const Transaction &tx) : type(tx.type), amount(tx.amount), from(tx.from), to(tx.to), extra_data(tx.extra_data), sign(tx.sign), fee(tx.fee), date(tx.date), block_id(tx.block_id), hash(tx.hash) {}
 
 void Transaction::generate_tx_hash() {
     std::string tx_as_str = this->to_string();
@@ -210,6 +185,62 @@ const std::string &Transaction::getSign() const {
 
 void Transaction::setSign(const std::string &sign) {
     Transaction::sign = sign;
+}
+
+bool Transaction::operator<(const Transaction &rhs) const {
+    if (from < rhs.from)
+        return true;
+    if (rhs.from < from)
+        return false;
+    if (to < rhs.to)
+        return true;
+    if (rhs.to < to)
+        return false;
+    if (type < rhs.type)
+        return true;
+    if (rhs.type < type)
+        return false;
+    if (date < rhs.date)
+        return true;
+    if (rhs.date < date)
+        return false;
+    if (extra_data < rhs.extra_data)
+        return true;
+    if (rhs.extra_data < extra_data)
+        return false;
+    if (hash < rhs.hash)
+        return true;
+    if (rhs.hash < hash)
+        return false;
+    if (previous_hash < rhs.previous_hash)
+        return true;
+    if (rhs.previous_hash < previous_hash)
+        return false;
+    if (block_id < rhs.block_id)
+        return true;
+    if (rhs.block_id < block_id)
+        return false;
+    if (sign < rhs.sign)
+        return true;
+    if (rhs.sign < sign)
+        return false;
+    if (amount < rhs.amount)
+        return true;
+    if (rhs.amount < amount)
+        return false;
+    return fee < rhs.fee;
+}
+
+bool Transaction::operator>(const Transaction &rhs) const {
+    return rhs < *this;
+}
+
+bool Transaction::operator<=(const Transaction &rhs) const {
+    return !(rhs < *this);
+}
+
+bool Transaction::operator>=(const Transaction &rhs) const {
+    return !(*this < rhs);
 }
 
 //const std::string &Transaction::getByteCode() const {
