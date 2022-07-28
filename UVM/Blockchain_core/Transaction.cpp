@@ -27,8 +27,6 @@ void Transaction::setDate(uint64_t date) {
     this->date = date;
 }
 
-//Transaction::Transaction(const Transaction &tx) : type(tx.type), amount(tx.amount), from(tx.from), to(tx.to), extra_data(tx.extra_data), sign(tx.sign), fee(tx.fee), date(tx.date), block_id(tx.block_id), hash(tx.hash) {}
-
 void Transaction::generate_tx_hash() {
     std::string tx_as_str = this->to_string();
     std::string tx_hash = kec256::getHash(tx_as_str, tx_as_str.length());
@@ -119,10 +117,6 @@ Transaction::Transaction(const std::string &from, const std::string &to, uint64_
 Transaction::Transaction(const std::string &from, const std::string &to, uint64_t type, uint64_t date,
                          std::map<std::string, std::string> &extraData, const std::string &hash,
                          const std::string &previousHash, double amount) {
-//    : from(from), to(to), type(type), date(date),
-//            extra_data(extraData), hash(hash),
-//            previous_hash(previousHash),
-//            amount(amount)
     this->from = from;
     this->to = to;
     this->type = type;
@@ -242,11 +236,3 @@ bool Transaction::operator<=(const Transaction &rhs) const {
 bool Transaction::operator>=(const Transaction &rhs) const {
     return !(*this < rhs);
 }
-
-//const std::string &Transaction::getByteCode() const {
-//    return byte_code;
-//}
-//
-//void Transaction::setByteCode(const std::string &byteCode) {
-//    byte_code = byteCode;
-//}

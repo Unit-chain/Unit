@@ -116,151 +116,151 @@ bool unit::DB::push_transactions(Block *block) {
 
 
         unit_transfer: {
-            boost::json::object recipient_json = boost::json::parse(recipient).as_object();
-            s = txn->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.from), &recipient); // looking for account and it's balance
+        boost::json::object recipient_json = boost::json::parse(recipient).as_object();
+        s = txn->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.from), &recipient); // looking for account and it's balance
 
-            if(block->index == 1) {
-                transaction.generate_tx_hash();
-                recipient_json["amount"] = boost::json::value_to<double>(recipient_json["amount"]) + transaction.amount;
-                recipient_json["inputs"].as_array().emplace_back(transaction.hash);
-                s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.to), rocksdb::Slice(serialize(recipient_json)));
-                goto push_tx;
-            }
-
-            boost::json::object sender_json = boost::json::parse(recipient).as_object();
-            if(!sender_json.contains("amount") || (boost::json::value_to<double>(sender_json["amount"]) < transaction.amount)) {
-                block->transactions.erase(
-                        std::remove(block->transactions.begin(), block->transactions.end(), transaction),
-                        block->transactions.end());
-                goto leave;
-            }
-
+        if(block->index == 1) {
             transaction.generate_tx_hash();
-
-            sender_json["amount"] = boost::json::value_to<double>(sender_json["amount"]) - transaction.amount; // for genesis comment this
             recipient_json["amount"] = boost::json::value_to<double>(recipient_json["amount"]) + transaction.amount;
             recipient_json["inputs"].as_array().emplace_back(transaction.hash);
-            sender_json["outputs"].as_array().emplace_back(transaction.hash);
-
-            s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.from), rocksdb::Slice(serialize(sender_json))); // for genesis comment this
             s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.to), rocksdb::Slice(serialize(recipient_json)));
             goto push_tx;
-        };
+        }
+
+        boost::json::object sender_json = boost::json::parse(recipient).as_object();
+        if(!sender_json.contains("amount") || (boost::json::value_to<double>(sender_json["amount"]) < transaction.amount)) {
+            block->transactions.erase(
+                    std::remove(block->transactions.begin(), block->transactions.end(), transaction),
+                    block->transactions.end());
+            goto leave;
+        }
+
+        transaction.generate_tx_hash();
+
+        sender_json["amount"] = boost::json::value_to<double>(sender_json["amount"]) - transaction.amount; // for genesis comment this
+        recipient_json["amount"] = boost::json::value_to<double>(recipient_json["amount"]) + transaction.amount;
+        recipient_json["inputs"].as_array().emplace_back(transaction.hash);
+        sender_json["outputs"].as_array().emplace_back(transaction.hash);
+
+        s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.from), rocksdb::Slice(serialize(sender_json))); // for genesis comment this
+        s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.to), rocksdb::Slice(serialize(recipient_json)));
+        goto push_tx;
+    };
 
         create_token: {
-            boost::json::object transaction_parser = boost::json::parse(transaction.to_json_string()).as_object();
-            if (!transaction_parser["extradata"].as_object().contains("bytecode")) {
-                block->transactions.erase(
-                        std::remove(block->transactions.begin(), block->transactions.end(), transaction),
-                        block->transactions.end());
-                goto leave;
-            }
+        boost::json::object transaction_parser = boost::json::parse(transaction.to_json_string()).as_object();
+        if (!transaction_parser["extradata"].as_object().contains("bytecode")) {
+            block->transactions.erase(
+                    std::remove(block->transactions.begin(), block->transactions.end(), transaction),
+                    block->transactions.end());
+            goto leave;
+        }
 
-            std::string hex = boost::json::value_to<std::string>(transaction_parser["extradata"].at("bytecode"));
-            boost::json::object bytecode_parsed;
-            try {
-                bytecode_parsed = boost::json::parse(hex_to_ascii(hex)).as_object();
-            } catch (std::exception &e) {
-                block->transactions.erase(
-                        std::remove(block->transactions.begin(), block->transactions.end(), transaction),
-                        block->transactions.end());
-                goto leave;
-            }
+        std::string hex = boost::json::value_to<std::string>(transaction_parser["extradata"].at("bytecode"));
+        boost::json::object bytecode_parsed;
+        try {
+            bytecode_parsed = boost::json::parse(hex_to_ascii(hex)).as_object();
+        } catch (std::exception &e) {
+            block->transactions.erase(
+                    std::remove(block->transactions.begin(), block->transactions.end(), transaction),
+                    block->transactions.end());
+            goto leave;
+        }
 
-            std::string token;
-            s = txn->Get(rocksdb::ReadOptions(), handles[1], rocksdb::Slice(serialize(bytecode_parsed["name"])), &token); // looking for token
-            if(!token.empty()) {
-                block->transactions.erase(
-                        std::remove(block->transactions.begin(), block->transactions.end(), transaction),
-                        block->transactions.end());
-                goto leave;
-            }
+        std::string token;
+        s = txn->Get(rocksdb::ReadOptions(), handles[1], rocksdb::Slice(serialize(bytecode_parsed["name"])), &token); // looking for token
+        if(!token.empty()) {
+            block->transactions.erase(
+                    std::remove(block->transactions.begin(), block->transactions.end(), transaction),
+                    block->transactions.end());
+            goto leave;
+        }
 
-            Token token_created = Token(boost::json::value_to<std::string>(bytecode_parsed["name"]), transaction.extra_data["bytecode"], transaction.from, boost::json::value_to<double>(bytecode_parsed["supply"]));
-            s = txn->PutUntracked(handles[1], rocksdb::Slice(token_created.name), rocksdb::Slice(token_created.to_json_string()));
-            transaction.setTo(token_created.token_hash);
+        Token token_created = Token(boost::json::value_to<std::string>(bytecode_parsed["name"]), transaction.extra_data["bytecode"], transaction.from, boost::json::value_to<double>(bytecode_parsed["supply"]));
+        s = txn->PutUntracked(handles[1], rocksdb::Slice(token_created.name), rocksdb::Slice(token_created.to_json_string()));
+        transaction.setTo(token_created.token_hash);
 
-            s = txn->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.from), &recipient); // looking for account and it's balance
-            boost::json::object creator = boost::json::parse(recipient).as_object();
-            boost::json::object prepared_token_json;
-            prepared_token_json.emplace(token_created.name, token_created.supply);
-            creator["tokens_balance"].as_array().emplace_back(prepared_token_json);
-            transaction.generate_tx_hash();
-            creator["outputs"].as_array().emplace_back(transaction.hash);
-            s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.from), rocksdb::Slice(serialize(creator)));
-            goto push_tx;
-        };
+        s = txn->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.from), &recipient); // looking for account and it's balance
+        boost::json::object creator = boost::json::parse(recipient).as_object();
+        boost::json::object prepared_token_json;
+        prepared_token_json.emplace(token_created.name, token_created.supply);
+        creator["tokens_balance"].as_array().emplace_back(prepared_token_json);
+        transaction.generate_tx_hash();
+        creator["outputs"].as_array().emplace_back(transaction.hash);
+        s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.from), rocksdb::Slice(serialize(creator)));
+        goto push_tx;
+    };
 
         transfer_tokens: {
-            std::string token;
-            s = txn->Get(rocksdb::ReadOptions(), handles[1], rocksdb::Slice(transaction.extra_data["name"]), &token); // looking for token
-            if(token.empty()) {
-                block->transactions.erase(
-                        std::remove(block->transactions.begin(), block->transactions.end(), transaction),
-                        block->transactions.end());
-                goto leave;
+        std::string token;
+        s = txn->Get(rocksdb::ReadOptions(), handles[1], rocksdb::Slice(transaction.extra_data["name"]), &token); // looking for token
+        if(token.empty()) {
+            block->transactions.erase(
+                    std::remove(block->transactions.begin(), block->transactions.end(), transaction),
+                    block->transactions.end());
+            goto leave;
+        }
+
+        boost::json::object recipient_json = boost::json::parse(recipient).as_object();
+
+        bool balance_in_token = false;
+        for(boost::json::array::iterator it = recipient_json.at("tokens_balance").as_array().begin(); it != recipient_json.at("tokens_balance").as_array().end(); ++it){
+            if(it->as_object().contains(transaction.extra_data["name"])) {
+                it->as_object()[transaction.extra_data["name"]] = boost::json::value_to<double>(it->at(transaction.extra_data["name"])) + std::stod(transaction.extra_data["value"]);
+                balance_in_token = true;
             }
+        }
 
-            boost::json::object recipient_json = boost::json::parse(recipient).as_object();
+        if (!balance_in_token) {
+            boost::json::object prepared_token_json;
+            prepared_token_json.emplace(transaction.extra_data["name"], std::stod(transaction.extra_data["value"]));
+            recipient_json["tokens_balance"].as_array().emplace_back(prepared_token_json);
+        }
 
-            bool balance_in_token = false;
-            for(boost::json::array::iterator it = recipient_json.at("tokens_balance").as_array().begin(); it != recipient_json.at("tokens_balance").as_array().end(); ++it){
-                if(it->as_object().contains(transaction.extra_data["name"])) {
-                    it->as_object()[transaction.extra_data["name"]] = boost::json::value_to<double>(it->at(transaction.extra_data["name"])) + std::stod(transaction.extra_data["value"]);
-                    balance_in_token = true;
+        std::string sender;
+        s = txn->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.from), &sender); // looking for token
+
+        if (sender.empty()) {
+            block->transactions.erase(
+                    std::remove(block->transactions.begin(), block->transactions.end(), transaction),
+                    block->transactions.end());
+            goto leave;
+        }
+
+        boost::json::object sender_json = boost::json::parse(sender).as_object();
+        balance_in_token = false;
+        for(boost::json::array::iterator it = sender_json.at("tokens_balance").as_array().begin(); it != sender_json.at("tokens_balance").as_array().end(); ++it){
+            if(it->as_object().contains(transaction.extra_data["name"])) {
+                if ((boost::json::value_to<double>(it->at(transaction.extra_data["name"])) < std::stod(transaction.extra_data["value"]))) {
+                    block->transactions.erase(
+                            std::remove(block->transactions.begin(), block->transactions.end(), transaction),
+                            block->transactions.end());
+                    goto leave;
                 }
+                it->as_object()[transaction.extra_data["name"]] = boost::json::value_to<double>(it->at(transaction.extra_data["name"])) - std::stod(transaction.extra_data["value"]);
+                balance_in_token = true;
             }
+        }
 
-            if (!balance_in_token) {
-                boost::json::object prepared_token_json;
-                prepared_token_json.emplace(transaction.extra_data["name"], std::stod(transaction.extra_data["value"]));
-                recipient_json["tokens_balance"].as_array().emplace_back(prepared_token_json);
-            }
+        if (!balance_in_token) {
+            block->transactions.erase(
+                    std::remove(block->transactions.begin(), block->transactions.end(), transaction),
+                    block->transactions.end());
+            goto leave;
+        }
 
-            std::string sender;
-            s = txn->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.from), &sender); // looking for token
+        transaction.generate_tx_hash();
+        recipient_json["inputs"].as_array().emplace_back(transaction.hash);
+        sender_json["outputs"].as_array().emplace_back(transaction.hash);
+        s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.to), rocksdb::Slice(serialize(recipient_json)));
+        s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.from), rocksdb::Slice(serialize(sender_json)));
 
-            if (sender.empty()) {
-                block->transactions.erase(
-                        std::remove(block->transactions.begin(), block->transactions.end(), transaction),
-                        block->transactions.end());
-                goto leave;
-            }
-
-            boost::json::object sender_json = boost::json::parse(sender).as_object();
-            balance_in_token = false;
-            for(boost::json::array::iterator it = sender_json.at("tokens_balance").as_array().begin(); it != sender_json.at("tokens_balance").as_array().end(); ++it){
-                if(it->as_object().contains(transaction.extra_data["name"])) {
-                    if ((boost::json::value_to<double>(it->at(transaction.extra_data["name"])) < std::stod(transaction.extra_data["value"]))) {
-                        block->transactions.erase(
-                                std::remove(block->transactions.begin(), block->transactions.end(), transaction),
-                                block->transactions.end());
-                        goto leave;
-                    }
-                    it->as_object()[transaction.extra_data["name"]] = boost::json::value_to<double>(it->at(transaction.extra_data["name"])) - std::stod(transaction.extra_data["value"]);
-                    balance_in_token = true;
-                }
-            }
-
-            if (!balance_in_token) {
-                block->transactions.erase(
-                        std::remove(block->transactions.begin(), block->transactions.end(), transaction),
-                        block->transactions.end());
-                goto leave;
-            }
-
-            transaction.generate_tx_hash();
-            recipient_json["inputs"].as_array().emplace_back(transaction.hash);
-            sender_json["outputs"].as_array().emplace_back(transaction.hash);
-            s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.to), rocksdb::Slice(serialize(recipient_json)));
-            s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.from), rocksdb::Slice(serialize(sender_json)));
-
-            goto push_tx;
-        };
+        goto push_tx;
+    };
 
         push_tx:{
-            s = txn->PutUntracked(handles[2], rocksdb::Slice(transaction.hash), rocksdb::Slice(transaction.to_json_string()));
-        };
+        s = txn->PutUntracked(handles[2], rocksdb::Slice(transaction.hash), rocksdb::Slice(transaction.to_json_string()));
+    };
 
         leave:{ snapshot = nullptr; };
     }
@@ -268,9 +268,9 @@ bool unit::DB::push_transactions(Block *block) {
     s = txn->Commit();
 
     await: {
-        if (s.IsBusy())
-            goto await;
-    };
+    if (s.IsBusy())
+        goto await;
+};
 
     for (auto &handle : handles)
         txn_db->DestroyColumnFamilyHandle(handle);
@@ -318,29 +318,29 @@ bool unit::DB::push_block(Block block) {
 
 
     genesis: {
-        block.setIndex(1);
-        block.setPrevHash("genesis");
-        goto push_values;
-    };
+    block.setIndex(1);
+    block.setPrevHash("genesis");
+    goto push_values;
+};
 
     common: {
-        boost::json::value parsed_current = boost::json::parse(height);
-        block.setPrevHash(boost::json::value_to<std::string>(parsed_current.at("hash")));
-        goto push_values;
-    };
+    boost::json::value parsed_current = boost::json::parse(height);
+    block.setPrevHash(boost::json::value_to<std::string>(parsed_current.at("hash")));
+    goto push_values;
+};
 
     push_values: {
-        std::cout << "block #" << block.getIndex() << ": " << block.to_json_with_tx_hash_only() << std::endl;
-        s = txn->PutUntracked(handles[0], rocksdb::Slice(block.hash), rocksdb::Slice(block.to_json_with_tx_hash_only()));
-        s = txn->PutUntracked(handles[3], rocksdb::Slice("current"), rocksdb::Slice(block.to_json_with_tx_hash_only()));
-    };
+    std::cout << "block #" << block.getIndex() << ": " << block.to_json_with_tx_hash_only() << std::endl;
+    s = txn->PutUntracked(handles[0], rocksdb::Slice(block.hash), rocksdb::Slice(block.to_json_with_tx_hash_only()));
+    s = txn->PutUntracked(handles[3], rocksdb::Slice("current"), rocksdb::Slice(block.to_json_with_tx_hash_only()));
+};
 
     s = txn->Commit();
 
     await: {
-        if (s.IsBusy())
-            goto await;
-    };
+    if (s.IsBusy())
+        goto await;
+};
 
     for (auto &handle : handles)
         txn_db->DestroyColumnFamilyHandle(handle);

@@ -17,7 +17,7 @@ BlockHandler::~BlockHandler() {}
 
         std::optional<std::string> op_block_height = unit::DB::get_block_height();
         std::string block_index = (op_block_height.has_value()) ? op_block_height.value() : R"({"index": 0})";
-    //    nlohmann::json block_json = nlohmann::json::parse(block_index);
+        //    nlohmann::json block_json = nlohmann::json::parse(block_index);
         boost::json::value block_json = boost::json::parse(block_index);
         uint64_t index = boost::json::value_to<uint64_t>(block_json.at("index")) + 1;
         current->setIndex(index);
@@ -62,8 +62,9 @@ BlockHandler::~BlockHandler() {}
 
     push_into_block: {
         if(block_lock) goto loop;
-        Transaction transaction = Transaction(this->transactions_deque.front());
         try {
+            if(currentblock.transactions.size() >= 100) goto loop;
+            Transaction transaction = Transaction(this->transactions_deque.front());
             currentblock.push_tx(transaction);
         } catch (std::exception &e) {
             std::cout << e.what() << std::endl;

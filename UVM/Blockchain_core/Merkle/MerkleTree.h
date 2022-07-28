@@ -24,6 +24,7 @@ public:
     }
 
     void buildTree(unsigned long long currentIndex, unsigned long long leftQueryBorder, unsigned long long rightQueryBorder);
+
     void print_tree();
     inline std::optional<std::string> get_root(){
         if (this->tree.empty() || this->initial_array.empty())
