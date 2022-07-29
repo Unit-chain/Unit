@@ -6,7 +6,7 @@
 # Installing(Unit-chain)
 
 1. Firstly, install `rocksdb` library (download rocksdb last version, into rocksdb folder: `make shared lib` and then `make install-shared INSTALL_PATH=/usr/local/lib`)
-2. Secondly, install `nlohmann_json` library
+2. ~~Secondly, install `nlohmann_json` library~~
 3. Thirdly, build with cmake program in `rocksdb_uvm_support`:
   1. `cd rocksdb_uvm_support`
   2. `mkdir build`
@@ -106,7 +106,6 @@ The block with 10,000 transactions was counted in 40 minutes with one thread on 
 
 - rocksdb
 - boost
-- nlohmann json
 
 # VM Opcodes
 

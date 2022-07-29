@@ -69,19 +69,19 @@ bool WalletAccount::operator!=(const WalletAccount &rhs) const {
     return !(rhs == *this);
 }
 
-nlohmann::json WalletAccount::subtract_unit_balance(nlohmann::json &account, double value) {
-    // sender's balance
-    double balance_amount = account["amount"];
-    account["amount"] = balance_amount - value; // subtracting value
-    return account;
-}
-
-nlohmann::json WalletAccount::increase_unit_balance(nlohmann::json &account, double value) {
-    // sender's balance
-    double balance_amount = account["amount"];
-    account["amount"] = balance_amount + value; // subtracting value
-    return account;
-}
+//nlohmann::json WalletAccount::subtract_unit_balance(nlohmann::json &account, double value) {
+//    // sender's balance
+//    double balance_amount = account["amount"];
+//    account["amount"] = balance_amount - value; // subtracting value
+//    return account;
+//}
+//
+//nlohmann::json WalletAccount::increase_unit_balance(nlohmann::json &account, double value) {
+//    // sender's balance
+//    double balance_amount = account["amount"];
+//    account["amount"] = balance_amount + value; // subtracting value
+//    return account;
+//}
 
 WalletAccount::WalletAccount(const std::string &address, double amount,
                              const std::map<std::string, std::string> &nonDefaultBalances) : address(address),
