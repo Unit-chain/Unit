@@ -292,7 +292,7 @@ private:
                                                                 {"value", "null"},
                                                                 {"bytecode", "null"}};
 
-                Transaction tx = Transaction(from, to, 0, extradata, "0", d_amount);
+                Transaction tx = Transaction(from, to, 0, json.at("data").at("extradata"), "0", d_amount);
                 this->tx_deque->emplace_back(tx);
                 create_success_response(R"({"message":"Ok"})");
                 return;
@@ -364,7 +364,7 @@ private:
                                                                 {"value", "null"},
                                                                 {"bytecode", bytecode}};
 
-                Transaction tx = Transaction(from, "", 1, extradata, "0", 0);
+                Transaction tx = Transaction(from, "", 1, json.at("data").at("extradata"), "0", 0);
                 this->tx_deque->emplace_back(tx);
                 create_success_response(R"({"message":"Ok"})");
                 return;
@@ -410,7 +410,7 @@ private:
                                                                 {"value", value},
                                                                 {"bytecode", "null"}};
 
-                Transaction tx = Transaction(from, to, 2, extradata, "0", 0);
+                Transaction tx = Transaction(from, to, 2, json.at("data").at("extradata"), "0", 0);
                 this->tx_deque->emplace_back(tx);
                 create_success_response(R"({"message":"Ok"})");
                 return;

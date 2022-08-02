@@ -64,6 +64,7 @@ namespace unit {
         static std::vector<rocksdb::ColumnFamilyHandle*> open_database(rocksdb::DB* db);
         static std::vector<rocksdb::ColumnFamilyHandle*> open_read_only_database(rocksdb::DB* db);
         static void close_db(rocksdb::DB* db, std::vector<rocksdb::ColumnFamilyHandle*> *handles);
+        static rocksdb::WriteOptions get_write_options();
 
     private:
         static std::vector<rocksdb::ColumnFamilyDescriptor> get_column_families();

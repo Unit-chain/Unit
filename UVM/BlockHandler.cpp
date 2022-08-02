@@ -8,7 +8,7 @@
 BlockHandler::BlockHandler() {}
 BlockHandler::~BlockHandler() {}
 
-[[noreturn]] void BlockHandler::generate_block(Block *current, bool *lock) {
+[[noreturn]] void BlockHandler::generate_block(Block *current, bool *lock, bool *high_load) {
     std::cout << "Starting 'block generator'" << std::endl;
     loop: {
         *current = Block(1);
@@ -24,10 +24,11 @@ BlockHandler::~BlockHandler() {}
 
         if(index == 1){
             std::map<std::string, std::string> map = {{"name", "unit"}, {"value", "0"}, {"bytecode", "null"}};
-            Transaction tx = Transaction("genesis", "g2px1", 0,  map, "0", 350000);
-            Transaction tx1 = Transaction("genesis", "teo", 0,  map, "0", 350000);
-            Transaction tx2 = Transaction("genesis", "sunaked", 0,  map, "0", 350000);
-            Transaction tx3 = Transaction("genesis", "merchant", 0,  map, "0", 350000);
+            boost::json::value extra = boost::json::value_from(R"({"name":"unit", "value":"null", "bytecode":"null"})");
+            Transaction tx = Transaction("genesis", "g2px1", 0,  extra, "0", 350000);
+            Transaction tx1 = Transaction("genesis", "teo", 0,  extra, "0", 350000);
+            Transaction tx2 = Transaction("genesis", "sunaked", 0,  extra, "0", 350000);
+            Transaction tx3 = Transaction("genesis", "merchant", 0,  extra, "0", 350000);
             current->setTransactions({tx, tx1, tx2, tx3});
         }
 
@@ -47,7 +48,7 @@ BlockHandler::~BlockHandler() {}
 }
 
 [[noreturn]] void BlockHandler::run() {
-    std::thread th(BlockHandler::generate_block, &currentblock, &block_lock);
+    std::thread th(BlockHandler::generate_block, &currentblock, &block_lock, &high_load);
     th.detach();
     std::thread server_th(Server::start_server, &transactions_deque);
     server_th.detach();
@@ -64,6 +65,11 @@ BlockHandler::~BlockHandler() {}
         if(block_lock) goto loop;
         try {
             if(currentblock.transactions.size() >= 100) goto loop;
+            if(this->transactions_deque.size() >= 300) {
+                this->high_load = true;
+            } else {
+                this->high_load = false;
+            }
             Transaction transaction = Transaction(this->transactions_deque.front());
             currentblock.push_tx(transaction);
         } catch (std::exception &e) {

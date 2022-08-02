@@ -24,12 +24,12 @@ public:
     [[noreturn]] void run();
 
 private:
-//    std::deque<Transaction> transactions_deque;
     std::vector<Transaction> transactions_deque;
     Block currentblock = Block(1);
     bool block_lock = false;
+    bool high_load = false;
 
-    [[noreturn]] static void generate_block(Block *current, bool *lock);
+    [[noreturn]] static void generate_block(Block *current, bool *lock, bool *high_load);
 };
 
 

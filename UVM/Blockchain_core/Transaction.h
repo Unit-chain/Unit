@@ -9,20 +9,32 @@
 #include "iostream"
 #include <sstream>
 #include "../Blockchain_core/Crypto/SHA3/sha3.h"
+#include "boost/json.hpp"
 
 class Transaction {
 public:
     Transaction();
 
+//    Transaction(const std::string &from, const std::string &to, uint64_t type,
+//                std::map<std::string, std::string> &extraData, const std::string &previousHash, double amount);
+//
+//    Transaction(const std::string &from, const std::string &to, uint64_t type, uint64_t date,
+//                std::map<std::string, std::string> &extraData, const std::string &previousHash, double amount);
+//
+//    Transaction(const std::string &from, const std::string &to, uint64_t type, uint64_t date,
+//                std::map<std::string, std::string> &extraData, const std::string &hash,
+//                const std::string &previousHash, double amount);
+
     Transaction(const std::string &from, const std::string &to, uint64_t type,
-                std::map<std::string, std::string> &extraData, const std::string &previousHash, double amount);
+                const boost::json::value &extra, const std::string &previousHash, double amount);
 
-    Transaction(const std::string &from, const std::string &to, uint64_t type, uint64_t date,
-                std::map<std::string, std::string> &extraData, const std::string &previousHash, double amount);
-
-    Transaction(const std::string &from, const std::string &to, uint64_t type, uint64_t date,
-                std::map<std::string, std::string> &extraData, const std::string &hash,
+    Transaction(const std::string &from, const std::string &to, uint64_t type, uint64_t date, const boost::json::value &extra,
                 const std::string &previousHash, double amount);
+
+    Transaction(const std::string &from, const std::string &to, uint64_t type, uint64_t date,
+                const boost::json::value &extra, const std::string &hash, const std::string &previousHash,
+                double amount);
+
 
 //    explicit Transaction(const Transaction &tx);
 
@@ -32,6 +44,7 @@ public:
     uint64_t type;
     uint64_t date = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     std::map<std::string, std::string> extra_data {{"name", std::string()}, {"value", std::string()}, {"bytecode", std::string()}};
+    boost::json::value extra;
     std::string hash;
     std::string previous_hash;
     uint64_t block_id;
@@ -70,6 +83,7 @@ public:
     std::string to_string();
     void set_current_date();
     std::string to_json_string();
+    std::string to_json_string_test();
 
     //  boolean operators
     bool operator==(const Transaction &rhs) const;
