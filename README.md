@@ -1,7 +1,7 @@
 # Requirements
 
 > Memory: 2GB (due RocksDB)
-> OS: MacOS, Linux, Window
+> OS: MacOS, Linux, Windows
 
 # Installing(Unit-chain)
 
