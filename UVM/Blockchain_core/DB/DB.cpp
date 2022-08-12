@@ -36,10 +36,6 @@ rocksdb::Options unit::DB::get_db_options() {
     return options;
 }
 
-rocksdb::WriteOptions unit::DB::get_write_options() {
-    rocksdb::WriteOptions writeOptions;
-}
-
 std::vector<rocksdb::ColumnFamilyDescriptor> unit::DB::get_column_families() {
     const std::vector<rocksdb::ColumnFamilyDescriptor> columnFamilies = {rocksdb::ColumnFamilyDescriptor("blockTX", rocksdb::ColumnFamilyOptions()),
                                                                          rocksdb::ColumnFamilyDescriptor("addressContracts", rocksdb::ColumnFamilyOptions()),
@@ -132,7 +128,6 @@ bool unit::DB::push_transactions(Block *block) {
             s = txn->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.from), &recipient); // looking for account and it's balance
 
             if(block->index == 1) {
-                transaction.generate_tx_hash();
                 recipient_json["amount"] = boost::json::value_to<double>(recipient_json["amount"]) + transaction.amount;
                 recipient_json["inputs"].as_array().emplace_back(transaction.hash);
                 s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.to), rocksdb::Slice(serialize(recipient_json)));
@@ -146,8 +141,6 @@ bool unit::DB::push_transactions(Block *block) {
                         block->transactions.end());
                 goto leave;
             }
-
-            transaction.generate_tx_hash();
 
             sender_json["amount"] = boost::json::value_to<double>(sender_json["amount"]) - transaction.amount; // for genesis comment this
             recipient_json["amount"] = boost::json::value_to<double>(recipient_json["amount"]) + transaction.amount;
@@ -200,7 +193,6 @@ bool unit::DB::push_transactions(Block *block) {
             prepared_token_json.emplace(token_created.name, token_created.supply);
             creator["tokens_balance"].as_array().emplace_back(prepared_token_json);
 
-            transaction.generate_tx_hash();
             creator["outputs"].as_array().emplace_back(transaction.hash);
             s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.from), rocksdb::Slice(serialize(creator)));
             goto push_tx;
@@ -264,7 +256,6 @@ bool unit::DB::push_transactions(Block *block) {
                 goto leave;
             }
 
-            transaction.generate_tx_hash();
             recipient_json["inputs"].as_array().emplace_back(transaction.hash);
             sender_json["outputs"].as_array().emplace_back(transaction.hash);
             s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.to), rocksdb::Slice(serialize(recipient_json)));

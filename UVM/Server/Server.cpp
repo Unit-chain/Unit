@@ -291,10 +291,11 @@ private:
                 std::map<std::string, std::string> extradata = {{"name", "null"},
                                                                 {"value", "null"},
                                                                 {"bytecode", "null"}};
-
                 Transaction tx = Transaction(from, to, 0, json.at("data").at("extradata"), "0", d_amount);
+                tx.generate_tx_hash();
                 this->tx_deque->emplace_back(tx);
-                create_success_response(R"({"message":"Ok"})");
+                std::string response = R"({"message":"Ok","hash":")" + tx.getHash() + R"("})";
+                create_success_response(response);
                 return;
             }
             else if (type == "1")
@@ -360,13 +361,15 @@ private:
                     return;
                 }
 
-                std::map<std::string, std::string> extradata = {{"name", "null"},
-                                                                {"value", "null"},
-                                                                {"bytecode", bytecode}};
+//                std::map<std::string, std::string> extradata = {{"name", "null"},
+//                                                                {"value", "null"},
+//                                                                {"bytecode", bytecode}};
 
                 Transaction tx = Transaction(from, "", 1, json.at("data").at("extradata"), "0", 0);
+                tx.generate_tx_hash();
                 this->tx_deque->emplace_back(tx);
-                create_success_response(R"({"message":"Ok"})");
+                std::string response = R"({"message":"Ok","hash":")" + tx.getHash() + R"("})";
+                create_success_response(response);
                 return;
             }
             else if (type == "2")
@@ -411,8 +414,10 @@ private:
                                                                 {"bytecode", "null"}};
 
                 Transaction tx = Transaction(from, to, 2, json.at("data").at("extradata"), "0", 0);
+                tx.generate_tx_hash();
                 this->tx_deque->emplace_back(tx);
-                create_success_response(R"({"message":"Ok"})");
+                std::string response = R"({"message":"Ok","hash":")" + tx.getHash() + R"("})";
+                create_success_response(response);
                 return;
             }
             create_error_response(R"({"message":"No such type"})");

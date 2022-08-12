@@ -254,6 +254,6 @@ Transaction::Transaction(const std::string &from, const std::string &to, uint64_
 
 std::string Transaction::to_json_string_test() {
     std::ostringstream string_stream;
-    string_stream << R"({"hash":")" << this->hash << R"(", "from":")" << this->from << R"(", "to":")" << this->to << R"(", "type":)" << this->type << R"(, "date":)" << this->date << R"(, "extradata":)" << extra << R"(, "sign":")" << this->previous_hash << R"(", "block_id":")" << this->block_id << R"(", "amount":)"  << std::fixed << this->amount <<  "}";
+    string_stream << R"({"hash":")" << this->hash << R"(", "from":")" << this->from << R"(", "to":")" << this->to << R"(", "type":)" << this->type << R"(, "date":)" << this->date << R"(, "extradata":)" << extra << R"(, "sign":")" << this->previous_hash << R"(", "amount":)"  << std::fixed << this->amount <<  "}";
     return string_stream.str();
 }
