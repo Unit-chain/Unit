@@ -29,6 +29,10 @@ BlockHandler::~BlockHandler() {}
             Transaction tx1 = Transaction("genesis", "teo", 0,  extra, "0", 350000);
             Transaction tx2 = Transaction("genesis", "sunaked", 0,  extra, "0", 350000);
             Transaction tx3 = Transaction("genesis", "merchant", 0,  extra, "0", 350000);
+            tx.generate_tx_hash();
+            tx1.generate_tx_hash();
+            tx2.generate_tx_hash();
+            tx3.generate_tx_hash();
             current->setTransactions({tx, tx1, tx2, tx3});
         }
 
