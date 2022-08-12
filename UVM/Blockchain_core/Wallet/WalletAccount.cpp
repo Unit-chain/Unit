@@ -95,6 +95,24 @@ WalletAccount::WalletAccount(const std::string &address, double amount,
 
 WalletAccount::WalletAccount() {}
 
+bool WalletAccount::isEnoughTokenBalance(const boost::json::value& balance, const std::string& token_name, double value) {
+    boost::json::object balance_json = balance.as_object();
+    for(boost::json::array::iterator it = balance_json.at("tokens_balance").as_array().begin(); it != balance_json.at("tokens_balance").as_array().end(); ++it){
+        if(it->as_object().contains(token_name)) {
+            if(boost::json::value_to<double>(it->at(token_name)) < value)
+                return false;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool WalletAccount::isEnoughUnitBalance(const boost::json::value& balance, double value) {
+    if(boost::json::value_to<double>(balance.at("amount")) < value)
+        return false;
+    return true;
+}
+
 //void WalletAccount::serialize_from_json(std::string &account) {
 //
 //}

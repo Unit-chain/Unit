@@ -9,7 +9,7 @@
 #include "map"
 #include "sstream"
 #include "vector"
-//#include <nlohmann/json.hpp>
+#include "boost/json.hpp"
 
 class WalletAccount {
 public:
@@ -40,6 +40,8 @@ public:
 
     std::string to_json_string();
     void serialize_from_json(std::string &account);
+    static bool isEnoughTokenBalance(const boost::json::value& balance, const std::string& token_name, double value);
+    static bool isEnoughUnitBalance(const boost::json::value& balance, double value);
 //    static nlohmann::json subtract_unit_balance(nlohmann::json &account, double value);
 //    static nlohmann::json increase_unit_balance(nlohmann::json &account, double value);
 };

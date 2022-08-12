@@ -232,6 +232,24 @@ private:
         }
     }
 
+    bool isEnoughTokenBalance(const boost::json::value& balance, const std::string& token_name, double value) {
+        boost::json::object balance_json = balance.as_object();
+        for(boost::json::array::iterator it = balance_json.at("tokens_balance").as_array().begin(); it != balance_json.at("tokens_balance").as_array().end(); ++it){
+            if(it->as_object().contains(token_name)) {
+                if(boost::json::value_to<double>(it->at(token_name)) < value)
+                    return false;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool isEnoughUnitBalance(const boost::json::value& balance, double value) {
+        if(boost::json::value_to<double>(balance.at("amount")) < value)
+            return false;
+        return true;
+    }
+
     void i_push_transaction(boost::json::value json)
     {
         try
@@ -291,6 +309,20 @@ private:
                 std::map<std::string, std::string> extradata = {{"name", "null"},
                                                                 {"value", "null"},
                                                                 {"bytecode", "null"}};
+
+                std::optional<std::string> op_balance = unit::DB::get_balance(from);
+                if(op_balance->empty()) {
+                    std::string response = R"({"message":"Error occurred, please try again"})";
+                    create_error_response(response);
+                }
+
+                if(!isEnoughUnitBalance(boost::json::parse(op_balance.value()), boost::json::value_to<double>(json.at("data").at("amount")))) {
+                    std::string response = R"({"message":"Error occurred, please try again"})";
+                    create_error_response(response);
+                    return;
+                }
+
+
                 Transaction tx = Transaction(from, to, 0, json.at("data").at("extradata"), "0", d_amount);
                 tx.generate_tx_hash();
                 this->tx_deque->emplace_back(tx);
@@ -413,6 +445,18 @@ private:
                                                                 {"value", value},
                                                                 {"bytecode", "null"}};
 
+                std::optional<std::string> op_balance = unit::DB::get_balance(from);
+                if(op_balance->empty()) {
+                    std::string response = R"({"message":"Error occurred, please try again"})";
+                    create_error_response(response);
+                }
+
+                if(!isEnoughTokenBalance(boost::json::parse(op_balance.value()), boost::json::value_to<std::string>(json.at("data").at("extradata").at("name")), boost::json::value_to<double>(json.at("data").at("amount")))) {
+                    std::string response = R"({"message":"Error occurred, please try again"})";
+                    create_error_response(response);
+                    return;
+                }
+
                 Transaction tx = Transaction(from, to, 2, json.at("data").at("extradata"), "0", 0);
                 tx.generate_tx_hash();
                 this->tx_deque->emplace_back(tx);
@@ -495,3 +539,4 @@ rerun_server:
     }
     return 0;
 }
+
