@@ -114,10 +114,8 @@
 # Tests(Unit-chain)
 
 ```markdown
-Recent tests show that current blockhain is able to operate on ten thousand transaction easily.
-UVM proccess with 10.000 transactions consumed:
-- 22 Megabytes memory usage
-The block with 10,000 transactions was counted in 40 minutes with one thread on the Apple M1.
+Maximun RAM consumption: 260 MB.
+10 thousand TX were processed by 5 minutes.
 ```
 
 # Dependencies(VM && Unit-chain)
