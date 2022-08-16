@@ -5,26 +5,15 @@
 
 # Installing(Unit-chain)
 
-1. Firstly, install `rocksdb` library (download rocksdb last version, into rocksdb folder: `make shared lib` and then `make install-shared INSTALL_PATH=/usr/local/lib`)
-
-2. ~~Secondly, install `nlohmann_json` library~~
-
-3. Thirdly, build with cmake program in `rocksdb_uvm_support`:
-
-  4. `cd rocksdb_uvm_support`
-
-  5. `mkdir build`
-
-  6. `cd build`
-
-  7. `cmake ..`
-
-  8. `make`
-
-9. After building, need to run it:  `./rocksdb_uvm_support`. It will create column families which Unit needed
-
-10. After column families were created - need to build `Unit`. 
-
+  1. Install `rocksdb` library (download rocksdb last version, into rocksdb folder: `make shared lib` and then `make install-shared       INSTALL_PATH=/usr/local/lib`)
+  2. Build with cmake program in `rocksdb_uvm_support`:
+  3. `cd rocksdb_uvm_support`
+  4. `mkdir build`
+  5. `cd build`
+  6. `cmake ..`
+  7. `make`
+  8. After building, need to run it:  `./rocksdb_uvm_support`. It will create column families which Unit needed
+  9. After column families were created - need to build `Unit`. 
     ## Building Unit(Unix)
 
     1. `cd UVM`
