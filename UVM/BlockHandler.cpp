@@ -12,7 +12,7 @@ BlockHandler::~BlockHandler() {}
     std::cout << "Starting 'block generator'" << std::endl;
     loop: {
         *current = Block(1);
-        std::this_thread::sleep_for(std::chrono::milliseconds(5000)); // 1000 millisecond * 5 = 5 seconds
+        std::this_thread::sleep_for(std::chrono::milliseconds( 5000)); // 1000 millisecond * 5 = 5 seconds
         *lock = true;
 
         std::optional<std::string> op_block_height = unit::DB::get_block_height();

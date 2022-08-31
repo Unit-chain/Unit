@@ -22,6 +22,7 @@
     #include <unistd.h>
     #include <thread>
     static std::string kDBPath = "/tmp/unit_db/";
+    static std::string kkDBPath = "/tmp/unit_db/balances";
     const char DBPath[] = "/tmp/unit_db/";
     const int cpuss = (int) std::thread::hardware_concurrency();
 #endif

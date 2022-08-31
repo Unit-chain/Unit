@@ -35,6 +35,35 @@ rocksdb::Options unit::DB::get_db_options() {
 
     return options;
 }
+rocksdb::Options unit::DB::get_balance_db_options() {
+    rocksdb::Options options;
+    options.create_if_missing = false;
+    options.error_if_exists = false;
+    options.IncreaseParallelism(cpuss);
+    options.OptimizeLevelStyleCompaction();
+    options.bottommost_compression = rocksdb::kNoCompression;
+    options.compression = rocksdb::kNoCompression;
+    options.create_if_missing = true;
+    options.create_missing_column_families = true;
+    options.max_background_jobs = cpuss;
+    options.env->SetBackgroundThreads(cpuss);
+    options.num_levels = 2;
+    options.merge_operator = nullptr;
+    options.compaction_filter = nullptr;
+    options.compaction_filter_factory = nullptr;
+    options.rate_limiter = nullptr;
+    options.max_open_files = -1;
+    options.max_write_buffer_number = 6;
+    options.max_background_flushes = cpuss;
+    options.level0_stop_writes_trigger = -1;
+    options.level0_slowdown_writes_trigger = -1;
+    options.max_open_files = 5000;
+    options.num_levels = 2;
+    options.create_if_missing = true;
+    options.create_missing_column_families = true;
+
+    return options;
+}
 
 std::vector<rocksdb::ColumnFamilyDescriptor> unit::DB::get_column_families() {
     const std::vector<rocksdb::ColumnFamilyDescriptor> columnFamilies = {rocksdb::ColumnFamilyDescriptor("blockTX", rocksdb::ColumnFamilyOptions()),
@@ -48,6 +77,8 @@ std::vector<rocksdb::ColumnFamilyDescriptor> unit::DB::get_column_families() {
 
 std::optional<std::string> unit::DB::get_block_height() {
     rocksdb::DB *db;
+    rocksdb::ReadOptions readOptions;
+    readOptions.ignore_range_deletions = true;
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::Status status = rocksdb::DB::OpenForReadOnly(unit::DB::get_db_options(), kkDBPath, unit::DB::get_column_families(), &handles, &db);
 
@@ -67,18 +98,17 @@ std::optional<std::string> unit::DB::get_block_height() {
 
 std::optional<std::string> unit::DB::get_balance(std::string &address) {
     rocksdb::DB *db;
-    std::vector<rocksdb::ColumnFamilyHandle*> handles;
-    rocksdb::Status status = rocksdb::DB::OpenForReadOnly(unit::DB::get_db_options(), kkDBPath, unit::DB::get_column_families(), &handles, &db);
+    rocksdb::Status status = rocksdb::DB::OpenForReadOnly(unit::DB::get_db_options(), kDBPath, &db);
 
     if(!status.ok()) {
-        close_db(db, &handles);
+        delete db;
         return std::nullopt;
     }
 
     std::string user;
-    status = db->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(address), &user);
+    status = db->Get(rocksdb::ReadOptions(), rocksdb::Slice(address), &user);
 
-    close_db(db, &handles);
+    delete db;
     if (user.empty())
         return std::nullopt;
     return user;
@@ -90,13 +120,16 @@ bool unit::DB::push_transactions(Block *block) {
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::OptimisticTransactionDBOptions optimisticTransactionDbOptions;
     rocksdb::OptimisticTransactionDB* txn_db;
+    rocksdb::OptimisticTransactionDB* txn_balance_db;
     rocksdb::Status s = rocksdb::OptimisticTransactionDB::Open(unit::DB::get_db_options(), optimisticTransactionDbOptions, kkDBPath, get_column_families(), &handles, &txn_db);
+    s = rocksdb::OptimisticTransactionDB::Open(unit::DB::get_balance_db_options(), kDBPath, &txn_balance_db);
     rocksdb::WriteOptions write_options;
     rocksdb::ReadOptions read_options;
     rocksdb::OptimisticTransactionOptions txn_options;
     std::string value;
     txn_options.set_snapshot = true;
     rocksdb::Transaction* txn = txn_db->BeginTransaction(write_options, txn_options);
+    rocksdb::Transaction* balance_txn = txn_balance_db->BeginTransaction(write_options, txn_options);
 
     for (Transaction &transaction : block->transactions) {
         transaction.setBlockId(block->getIndex());
@@ -105,11 +138,11 @@ bool unit::DB::push_transactions(Block *block) {
         std::string recipient;
 
         if (transaction.type != CREATE_TOKEN) {
-            s = txn->Get(read_options, handles[4], rocksdb::Slice(transaction.to),&recipient); // looking for account and it's balance
+            s = balance_txn->Get(rocksdb::ReadOptions(), rocksdb::Slice(transaction.to), &recipient);
             if (s.IsNotFound()) {
                 WalletAccount walletAccount = WalletAccount(transaction.to, 0, {});
                 recipient = walletAccount.to_json_string();
-                s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.to), rocksdb::Slice(recipient));
+                s = balance_txn->Put(rocksdb::Slice(transaction.to), rocksdb::Slice(recipient));
             }
         }
 
@@ -125,12 +158,14 @@ bool unit::DB::push_transactions(Block *block) {
 
         unit_transfer: {
             boost::json::object recipient_json = boost::json::parse(recipient).as_object();
-            s = txn->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.from), &recipient); // looking for account and it's balance
-
+            s = balance_txn->Get(rocksdb::ReadOptions(), rocksdb::Slice(transaction.from), &recipient);
             if(block->index == 1) {
                 recipient_json["amount"] = boost::json::value_to<double>(recipient_json["amount"]) + transaction.amount;
                 recipient_json["inputs"].as_array().emplace_back(transaction.hash);
-                s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.to), rocksdb::Slice(serialize(recipient_json)));
+                s = balance_txn->Put(rocksdb::Slice(transaction.to), rocksdb::Slice(serialize(recipient_json)));
+                std::string test;
+                s = txn->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.from), &test);
+                std::cout << test;
                 goto push_tx;
             }
 
@@ -147,8 +182,8 @@ bool unit::DB::push_transactions(Block *block) {
             recipient_json["inputs"].as_array().emplace_back(transaction.hash);
             sender_json["outputs"].as_array().emplace_back(transaction.hash);
 
-            s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.from), rocksdb::Slice(serialize(sender_json))); // for genesis comment this
-            s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.to), rocksdb::Slice(serialize(recipient_json)));
+            s = balance_txn->Put(rocksdb::Slice(transaction.to), rocksdb::Slice(serialize(sender_json)));
+            s = balance_txn->Put(rocksdb::Slice(transaction.to), rocksdb::Slice(serialize(recipient_json)));
             goto push_tx;
         };
 
@@ -185,7 +220,7 @@ bool unit::DB::push_transactions(Block *block) {
             s = txn->PutUntracked(handles[1], rocksdb::Slice(token_created.name), rocksdb::Slice(token_created.to_json_string()));
             transaction.setTo(token_created.token_hash);
 
-            s = txn->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.from), &recipient); // looking for account and it's balance
+            s = balance_txn->Get(rocksdb::ReadOptions(), rocksdb::Slice(transaction.from), &recipient);
 
             boost::json::object creator = boost::json::parse(recipient).as_object();
             boost::json::object prepared_token_json;
@@ -194,7 +229,7 @@ bool unit::DB::push_transactions(Block *block) {
             creator["tokens_balance"].as_array().emplace_back(prepared_token_json);
 
             creator["outputs"].as_array().emplace_back(transaction.hash);
-            s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.from), rocksdb::Slice(serialize(creator)));
+            s = balance_txn->Put(rocksdb::Slice(transaction.to), rocksdb::Slice(serialize(creator)));
             goto push_tx;
         };
 
@@ -225,8 +260,7 @@ bool unit::DB::push_transactions(Block *block) {
             }
 
             std::string sender;
-            s = txn->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(transaction.from), &sender); // looking for token
-
+            s = balance_txn->Get(rocksdb::ReadOptions(), rocksdb::Slice(transaction.from), &sender);
             if (sender.empty()) {
                 block->transactions.erase(
                         std::remove(block->transactions.begin(), block->transactions.end(), transaction),
@@ -258,8 +292,8 @@ bool unit::DB::push_transactions(Block *block) {
 
             recipient_json["inputs"].as_array().emplace_back(transaction.hash);
             sender_json["outputs"].as_array().emplace_back(transaction.hash);
-            s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.to), rocksdb::Slice(serialize(recipient_json)));
-            s = txn->PutUntracked(handles[4], rocksdb::Slice(transaction.from), rocksdb::Slice(serialize(sender_json)));
+            s = balance_txn->Put(rocksdb::Slice(transaction.to), rocksdb::Slice(serialize(recipient_json)));
+            s = balance_txn->Put(rocksdb::Slice(transaction.from), rocksdb::Slice(serialize(sender_json)));
 
             goto push_tx;
         };
@@ -272,6 +306,7 @@ bool unit::DB::push_transactions(Block *block) {
     }
 
     s = txn->Commit();
+    s = balance_txn->Commit();
 
     await: {
     if (s.IsBusy())
@@ -283,6 +318,7 @@ bool unit::DB::push_transactions(Block *block) {
 
     delete txn;
     delete txn_db;
+    delete balance_txn;
 
     return true;
 }
@@ -291,7 +327,6 @@ std::optional<std::string> unit::DB::get_token(std::string &token_address) {
     rocksdb::DB *db;
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::Status status = rocksdb::DB::OpenForReadOnly(unit::DB::get_db_options(), kkDBPath, unit::DB::get_column_families(), &handles, &db);
-
     std::string token;
     status = db->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(token_address), &token);
 

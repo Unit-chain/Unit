@@ -34,6 +34,7 @@
 #include <unistd.h>
 #include <thread>
 static std::string kkDBPath = "/tmp/unit_db/";
+static std::string kDBPath = "/tmp/unit_db/balances";
 const char DBPath[] = "/tmp/unit_db/";
 const int cpuss = (int) std::thread::hardware_concurrency();
 #endif
@@ -68,6 +69,7 @@ namespace unit {
     private:
         static std::vector<rocksdb::ColumnFamilyDescriptor> get_column_families();
         static rocksdb::Options get_db_options();
+        static rocksdb::Options get_balance_db_options();
         static rocksdb::Options get_blockheight_options();
         static std::optional<std::string> create_new_token(Transaction *transaction);
         static inline void normalize_str(std::string *str) {
