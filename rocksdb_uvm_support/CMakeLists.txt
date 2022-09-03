@@ -7,7 +7,7 @@ if(UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
 
-add_executable(rocksdb_uvm_support main.cpp DB/Blockchain_db.cpp DB/Blockchain_db.h error_handling/Result.h)
+add_executable(rocksdb_uvm_support main.cpp DB/DB.cpp DB/DB.h error_handling/Result.h)
 
 if(LINUX)
     message(STATUS ">>> Linux found")

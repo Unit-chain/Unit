@@ -2,9 +2,9 @@
 // Created by Kirill Zhukov on 12.06.2022.
 //
 
-#include "Blockchain_db.h"
+#include "DB.h"
 
-Result<bool> Blockchain_db::start_node_db() {
+Result<bool> DB::start_node_db() {
     std::cout << "test" << std::endl;
     rocksdb::Options options;
     options.create_if_missing = false;

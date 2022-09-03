@@ -236,6 +236,7 @@ private:
         boost::json::object balance_json = balance.as_object();
         for(boost::json::array::iterator it = balance_json.at("tokens_balance").as_array().begin(); it != balance_json.at("tokens_balance").as_array().end(); ++it){
             if(it->as_object().contains(token_name)) {
+                std::cout << "token object: " << *it << ", carrots in double: " << boost::json::value_to<double>(it->at(token_name)) << ", value: " << value << ", tokens lower: " << (boost::json::value_to<double>(it->at(token_name)) < value) << std::endl;
                 if(boost::json::value_to<double>(it->at(token_name)) < value)
                     return false;
                 return true;
@@ -451,7 +452,7 @@ private:
                     create_error_response(response);
                 }
 
-                if(!isEnoughTokenBalance(boost::json::parse(op_balance.value()), boost::json::value_to<std::string>(json.at("data").at("extradata").at("name")), boost::json::value_to<double>(json.at("data").at("amount")))) {
+                if(!isEnoughTokenBalance(boost::json::parse(op_balance.value()), boost::json::value_to<std::string>(json.at("data").at("extradata").at("name")), boost::json::value_to<double>(json.at("data").at("value")))) {
                     std::string response = R"({"message":"Error occurred, please try again"})";
                     create_error_response(response);
                     return;

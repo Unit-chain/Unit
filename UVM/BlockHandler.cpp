@@ -9,6 +9,7 @@ BlockHandler::BlockHandler() {}
 BlockHandler::~BlockHandler() {}
 
 [[noreturn]] void BlockHandler::generate_block(Block *current, bool *lock, bool *high_load) {
+    begin:{};
     std::cout << "Starting 'block generator'" << std::endl;
     loop: {
         *current = Block(1);
@@ -17,7 +18,6 @@ BlockHandler::~BlockHandler() {}
 
         std::optional<std::string> op_block_height = unit::DB::get_block_height();
         std::string block_index = (op_block_height.has_value()) ? op_block_height.value() : R"({"index": 0})";
-        //    nlohmann::json block_json = nlohmann::json::parse(block_index);
         boost::json::value block_json = boost::json::parse(block_index);
         uint64_t index = boost::json::value_to<uint64_t>(block_json.at("index")) + 1;
         current->setIndex(index);
@@ -40,7 +40,8 @@ BlockHandler::~BlockHandler() {}
             try {
                 unit::DB::push_transactions(current);
             } catch (std::exception &e) {
-                std::cout << e.what() << std::endl;
+                std::cout << "Error: " << e.what() << std::endl;
+                goto begin;
             }
         }
 

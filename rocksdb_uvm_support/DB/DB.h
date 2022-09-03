@@ -28,7 +28,7 @@
 #endif
 
 
-class Blockchain_db {
+class DB {
 public:
     Result<bool> start_node_db();
     /* column families for blockchain database
