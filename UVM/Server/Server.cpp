@@ -71,16 +71,16 @@ private:
     {
         auto self = shared_from_this();
         http::async_read(
-            socket_,
-            buffer_,
-            request_,
-            [self](beast::error_code ec,
-                   std::size_t bytes_transferred)
-            {
-                boost::ignore_unused(bytes_transferred);
-                if (!ec)
-                    self->process_request();
-            });
+                socket_,
+                buffer_,
+                request_,
+                [self](beast::error_code ec,
+                       std::size_t bytes_transferred)
+                {
+                    boost::ignore_unused(bytes_transferred);
+                    if (!ec)
+                        self->process_request();
+                });
     }
 
     /*request*/
@@ -96,36 +96,36 @@ private:
 
         switch (request_.method())
         {
-        case http::verb::get:
+            case http::verb::get:
 
-            create_success_response(R"({"message":"Ok"})");
+                create_success_response(R"({"message":"Ok"})");
 
-            break;
-        case http::verb::post:
-
-            /* parsing options not implemented (no overload for function parse) */
-            /*
-            boost::json::parse_options opt;
-            opt.allow_comments = true;
-            opt.allow_trailing_commas = true;
-            */
-
-            body_to_json = boost::json::parse(request_.body());
-
-            // parsing failed
-            if (ec)
-            {
-                create_error_response(R"({"message":"Failed to parse JSON"})");
                 break;
-            }
+            case http::verb::post:
 
-            // pasing success
-            process_instruction(body_to_json);
+                /* parsing options not implemented (no overload for function parse) */
+                /*
+                boost::json::parse_options opt;
+                opt.allow_comments = true;
+                opt.allow_trailing_commas = true;
+                */
 
-            break;
-        default:
-            create_error_response(R"({"message":"Invalid request type"})");
-            break;
+                body_to_json = boost::json::parse(request_.body());
+
+                // parsing failed
+                if (ec)
+                {
+                    create_error_response(R"({"message":"Failed to parse JSON"})");
+                    break;
+                }
+
+                // pasing success
+                process_instruction(body_to_json);
+
+                break;
+            default:
+                create_error_response(R"({"message":"Invalid request type"})");
+                break;
         }
         write_response();
     }
@@ -151,25 +151,25 @@ private:
         auto self = shared_from_this();
         response_.content_length(response_.body().size());
         http::async_write(
-            socket_,
-            response_,
-            [self](beast::error_code ec, std::size_t)
-            {
-                self->socket_.shutdown(tcp::socket::shutdown_send, ec);
-                self->deadline_.cancel();
-            });
+                socket_,
+                response_,
+                [self](beast::error_code ec, std::size_t)
+                {
+                    self->socket_.shutdown(tcp::socket::shutdown_send, ec);
+                    self->deadline_.cancel();
+                });
     }
     void check_deadline()
     {
         auto self = shared_from_this();
         deadline_.async_wait(
-            [self](beast::error_code ec)
-            {
-                if (!ec)
+                [self](beast::error_code ec)
                 {
-                    self->socket_.close(ec);
-                }
-            });
+                    if (!ec)
+                    {
+                        self->socket_.close(ec);
+                    }
+                });
     }
     /* END OF RESPONSES */
     /*------------------*/
@@ -236,7 +236,6 @@ private:
         boost::json::object balance_json = balance.as_object();
         for(boost::json::array::iterator it = balance_json.at("tokens_balance").as_array().begin(); it != balance_json.at("tokens_balance").as_array().end(); ++it){
             if(it->as_object().contains(token_name)) {
-                std::cout << "token object: " << *it << ", carrots in double: " << boost::json::value_to<double>(it->at(token_name)) << ", value: " << value << ", tokens lower: " << (boost::json::value_to<double>(it->at(token_name)) < value) << std::endl;
                 if(boost::json::value_to<double>(it->at(token_name)) < value)
                     return false;
                 return true;
@@ -452,8 +451,8 @@ private:
                     create_error_response(response);
                 }
 
-                if(!isEnoughTokenBalance(boost::json::parse(op_balance.value()), boost::json::value_to<std::string>(json.at("data").at("extradata").at("name")), boost::json::value_to<double>(json.at("data").at("value")))) {
-                    std::string response = R"({"message":"Error occurred, please try again"})";
+                if(!isEnoughTokenBalance(boost::json::parse(op_balance.value()), boost::json::value_to<std::string>(json.at("data").at("extradata").at("name")), std::stod(boost::json::value_to<std::string>(json.at("data").at("extradata").at("value"))))) {
+                    std::string response = R"({"message":"Low balance"})";
                     create_error_response(response);
                     return;
                 }
@@ -518,9 +517,9 @@ void http_server(tcp::acceptor &acceptor, tcp::socket &socket, std::vector<Trans
 int Server::start_server(std::vector<Transaction> *tx_deque)
 {
 // http_connection::initialize_instructions();
-rerun_server:
-{
-};
+    rerun_server:
+    {
+    };
     try
     {
         std::string ip_address = LOCAL_IP;
@@ -540,4 +539,3 @@ rerun_server:
     }
     return 0;
 }
-
