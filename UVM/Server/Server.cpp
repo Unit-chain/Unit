@@ -203,6 +203,9 @@ private:
             {
                 i_tx(json);
             }
+            else if (instruction == "i_pool_size"){
+                i_pool_size();
+            }
             else
             {
                 create_error_response(R"({"message":"Instruction not found"})");
@@ -447,6 +450,7 @@ private:
 
                 std::optional<std::string> op_balance = unit::DB::get_balance(from);
                 if(op_balance->empty()) {
+                    std::cout << "balance not found" << std::endl;
                     std::string response = R"({"message":"Error occurred, please try again"})";
                     create_error_response(response);
                 }
@@ -479,6 +483,10 @@ private:
             create_error_response();
         else
             create_success_response(R"({"message":"Ok","block_height":)" + block_height.value() + "}");
+    }
+    void i_pool_size()
+    {
+        create_success_response(R"({"message":"Ok","pool_size":)" + std::to_string(this->tx_deque->size()) + "}");
     }
 
     void i_tx(boost::json::value json)

@@ -69,19 +69,25 @@ std::optional<std::string> unit::DB::get_balance(std::string &address) {
     rocksdb::DB *db;
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::Status status = rocksdb::DB::OpenForReadOnly(unit::DB::get_db_options(), kkDBPath, unit::DB::get_column_families(), &handles, &db);
-
-    if(!status.ok()) {
-        close_db(db, &handles);
+    rocksdb::ReadOptions read_options;
+    read_options.auto_prefix_mode = true;
+    read_options.total_order_seek = true;
+    std::vector<rocksdb::Iterator*> iterators;
+    status = db->NewIterators(read_options, handles, &iterators);
+    if (!status.ok()) {
+        close_iterators_DB(db, &iterators);
         return std::nullopt;
     }
-
-    std::string user;
-    status = db->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(address), &user);
-
-    close_db(db, &handles);
-    if (user.empty())
+    std::string response;
+    for (iterators.at(4)->Seek(address); iterators.at(4)->Valid(); iterators.at(4)->Next()) {
+        if (iterators.at(4)->key() == address)
+            response = iterators.at(4)->value().ToString();
+    }
+    
+    close_iterators_DB(db, &iterators);
+    if (response.empty())
         return std::nullopt;
-    return user;
+    return response;
 }
 
 bool unit::DB::push_transactions(Block *block) {
@@ -382,5 +388,11 @@ std::optional<std::string> unit::DB::find_transaction(std::string tx_hash) {
 void unit::DB::close_db(rocksdb::DB* db, std::vector<rocksdb::ColumnFamilyHandle*> *handles) {
     for (auto handle : *handles)
         db->DestroyColumnFamilyHandle(handle);
+    delete db;
+}
+
+void unit::DB::close_iterators_DB(rocksdb::DB* db, std::vector<rocksdb::Iterator*> *iterators) {
+    for (auto iterator : *iterators)
+        delete iterator;
     delete db;
 }

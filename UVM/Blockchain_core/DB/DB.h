@@ -58,6 +58,7 @@ namespace unit {
         static std::optional<std::string> get_token(std::string &token_address);
         static std::optional<std::string> find_transaction(std::string tx_hash);
         static void close_db(rocksdb::DB* db, std::vector<rocksdb::ColumnFamilyHandle*> *handles);
+        static void close_iterators_DB(rocksdb::DB* db, std::vector<rocksdb::Iterator*> *iterators);
 
     private:
         static std::vector<rocksdb::ColumnFamilyDescriptor> get_column_families();
