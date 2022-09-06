@@ -69,6 +69,10 @@ std::optional<std::string> unit::DB::get_balance(std::string &address) {
     rocksdb::DB *db;
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::Status status = rocksdb::DB::OpenForReadOnly(unit::DB::get_db_options(), kkDBPath, unit::DB::get_column_families(), &handles, &db);
+    if (!status.ok()) {
+        delete db;
+        return std::nullopt;
+    }
     rocksdb::ReadOptions read_options;
     read_options.auto_prefix_mode = true;
     read_options.total_order_seek = true;
@@ -83,7 +87,7 @@ std::optional<std::string> unit::DB::get_balance(std::string &address) {
         if (iterators.at(4)->key() == address)
             response = iterators.at(4)->value().ToString();
     }
-    
+
     close_iterators_DB(db, &iterators);
     if (response.empty())
         return std::nullopt;
