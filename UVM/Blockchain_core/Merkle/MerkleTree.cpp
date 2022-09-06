@@ -16,9 +16,9 @@ void MerkleTree::buildTree(unsigned long long int currentIndex, unsigned long lo
         long long half = floor((rightQueryBorder + leftQueryBorder) / 2);
         buildTree(2 * currentIndex + 1, leftQueryBorder, half);
         buildTree(2 * currentIndex + 2, half, rightQueryBorder);
-        std::string hash_a = this->sha3(tree[2 * currentIndex + 1]);
-        std::string hash_b = this->sha3(tree[2 * currentIndex + 2]);
-        tree[currentIndex] = this->sha3(concat(&hash_a, &hash_b));
+        std::string hash_a = "0x" + this->sha3(tree[2 * currentIndex + 1]);
+        std::string hash_b = "0x" + this->sha3(tree[2 * currentIndex + 2]);
+        tree[currentIndex] = "0x" + this->sha3(concat(&hash_a, &hash_b));
     }
 }
 
