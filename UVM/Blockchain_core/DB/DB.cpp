@@ -11,7 +11,7 @@ rocksdb::Options unit::DB::get_db_options() {
     rocksdb::Options options;
     options.create_if_missing = false;
     options.error_if_exists = false;
-    options.IncreaseParallelism(cpuss);
+    options.IncreaseParallelism(cpuss / 2);
     options.OptimizeLevelStyleCompaction();
     options.bottommost_compression = rocksdb::kZSTD;
     options.compression = rocksdb::kLZ4Compression;
@@ -20,18 +20,20 @@ rocksdb::Options unit::DB::get_db_options() {
     options.max_background_jobs = cpuss;
     options.env->SetBackgroundThreads(cpuss);
     options.num_levels = 2;
-    options.merge_operator = nullptr;
-    options.compaction_filter = nullptr;
-    options.compaction_filter_factory = nullptr;
-    options.rate_limiter = nullptr;
-    options.max_open_files = -1;
     options.max_write_buffer_number = 6;
     options.max_background_flushes = cpuss;
     options.level0_stop_writes_trigger = -1;
     options.level0_slowdown_writes_trigger = -1;
-    options.max_open_files = 5000;
+    options.max_open_files = 300;
     options.create_if_missing = true;
     options.create_missing_column_families = true;
+    options.max_write_buffer_number=3;
+    options.optimize_filters_for_hits = true;
+    rocksdb::BlockBasedTableOptions tableOptions;
+    tableOptions.block_cache = rocksdb::NewLRUCache(10, 2);
+    tableOptions.block_cache_compressed = rocksdb::NewLRUCache(10, 2);
+    tableOptions.cache_index_and_filter_blocks= true;
+    options.table_factory.reset(rocksdb::NewBlockBasedTableFactory(tableOptions));
 
     return options;
 }

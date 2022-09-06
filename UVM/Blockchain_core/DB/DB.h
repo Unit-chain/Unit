@@ -14,6 +14,8 @@
 #include "rocksdb/utilities/transaction.h"
 #include "rocksdb/compaction_filter.h"
 #include "rocksdb/utilities/optimistic_transaction_db.h"
+#include "rocksdb/table.h"
+#include "rocksdb/table_properties.h"
 #include "cassert"
 #include "vector"
 #include "iterator"

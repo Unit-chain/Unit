@@ -225,7 +225,7 @@ private:
             name = boost::json::value_to<std::string>(json.at("data").at("name"));
             std::optional<std::string> op_balance = unit::DB::get_balance(name);
             if (!op_balance.has_value())
-                create_error_response(R"({"message":"Balance not found"})");
+                create_error_response(R"({"message":"Balance not found, address: )" + name + "\"}");
             else
                 create_success_response(R"({"message":"Ok","balance":)" + op_balance.value() + "}");
         }
@@ -276,7 +276,7 @@ private:
             std::optional<std::string> u_balance = unit::DB::get_balance(from);
             if (!u_balance.has_value())
             {
-                create_error_response(R"({"message":"Balance not found"})");
+                create_error_response(R"({"message":"Balance not found, address: )" + from + "\"}");
                 return;
             }
 
@@ -450,7 +450,6 @@ private:
 
                 std::optional<std::string> op_balance = unit::DB::get_balance(from);
                 if(op_balance->empty()) {
-                    std::cout << "balance not found" << std::endl;
                     std::string response = R"({"message":"Error occurred, please try again"})";
                     create_error_response(response);
                 }
