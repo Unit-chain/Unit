@@ -9,7 +9,7 @@
 #include "../Blockchain_core/DB/DB.h"
 
 #define LOCAL_IP "127.0.0.1"
-#define PORT 49000
+#define PORT 29000
 
 class Server {
 public:

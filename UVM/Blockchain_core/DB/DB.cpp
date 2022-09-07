@@ -30,8 +30,8 @@ rocksdb::Options unit::DB::get_db_options() {
     options.max_write_buffer_number=3;
     options.optimize_filters_for_hits = true;
     rocksdb::BlockBasedTableOptions tableOptions;
-    tableOptions.block_cache = rocksdb::NewLRUCache(10, 2);
-    tableOptions.block_cache_compressed = rocksdb::NewLRUCache(10, 2);
+    tableOptions.block_cache = rocksdb::NewLRUCache(64, 2);
+    tableOptions.block_cache_compressed = rocksdb::NewLRUCache(64, 2);
     tableOptions.cache_index_and_filter_blocks= true;
     options.table_factory.reset(rocksdb::NewBlockBasedTableFactory(tableOptions));
 
@@ -81,7 +81,7 @@ std::optional<std::string> unit::DB::get_balance(std::string &address) {
     std::vector<rocksdb::Iterator*> iterators;
     status = db->NewIterators(read_options, handles, &iterators);
     if (!status.ok()) {
-        close_iterators_DB(db, &iterators);
+        close_iterators_DB(db, &handles, &iterators);
         return std::nullopt;
     }
     std::string response;
@@ -90,7 +90,7 @@ std::optional<std::string> unit::DB::get_balance(std::string &address) {
             response = iterators.at(4)->value().ToString();
     }
 
-    close_iterators_DB(db, &iterators);
+    close_iterators_DB(db, &handles, &iterators);
     if (response.empty())
         return std::nullopt;
     return response;
@@ -397,8 +397,8 @@ void unit::DB::close_db(rocksdb::DB* db, std::vector<rocksdb::ColumnFamilyHandle
     delete db;
 }
 
-void unit::DB::close_iterators_DB(rocksdb::DB* db, std::vector<rocksdb::Iterator*> *iterators) {
-    for (auto iterator : *iterators)
-        delete iterator;
+void unit::DB::close_iterators_DB(rocksdb::DB* db, std::vector<rocksdb::ColumnFamilyHandle*> *handles, std::vector<rocksdb::Iterator*> *iterators) {
+    for (auto &iterator : *iterators) delete iterator;
+    for (auto handle : *handles) db->DestroyColumnFamilyHandle(handle);
     delete db;
 }

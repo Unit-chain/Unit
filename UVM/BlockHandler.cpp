@@ -81,7 +81,11 @@ BlockHandler::~BlockHandler() {}
             std::cout << e.what() << std::endl;
             goto loop;
         }
-        this->transactions_deque.erase(this->transactions_deque.begin());
+        try {
+            this->transactions_deque.erase(this->transactions_deque.begin());
+        } catch (std::exception &e) {
+            std::cout << e.what() << std::endl;
+        }
         goto loop;
     };
 }
