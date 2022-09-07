@@ -25,7 +25,6 @@ public:
     [[noreturn]] void run();
 
 private:
-//    std::vector<Transaction> transactions_deque;
     unit::list<Transaction> transactions_deque;
     Block currentblock = Block(1);
     bool block_lock = false;

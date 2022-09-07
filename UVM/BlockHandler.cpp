@@ -23,7 +23,6 @@ BlockHandler::~BlockHandler() {}
         current->setIndex(index);
 
         if(index == 1){
-            std::map<std::string, std::string> map = {{"name", "unit"}, {"value", "0"}, {"bytecode", "null"}};
             boost::json::value extra = boost::json::value_from(R"({"name":"unit", "value":"null", "bytecode":"null"})");
             Transaction tx = Transaction("genesis", "g2px1", 0,  extra, "0", 350000);
             Transaction tx1 = Transaction("genesis", "teo", 0,  extra, "0", 350000);

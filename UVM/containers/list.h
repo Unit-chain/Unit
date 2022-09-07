@@ -8,6 +8,8 @@
 #include <list>
 #include <boost/thread.hpp>
 
+// thanks to @ms705 on GitHub
+
 namespace unit {
     template < class T, class Allocator = std::allocator<T> >
     class list {

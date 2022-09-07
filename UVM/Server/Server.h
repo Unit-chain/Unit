@@ -14,7 +14,6 @@
 
 class Server {
 public:
-//    static int start_server(std::vector<Transaction> *tx_deque);
     static int start_server(unit::list<Transaction> *tx_deque);
     static bool isEnoughTokenBalance(const boost::json::value& balance, const std::string& token_name, double value);
     static bool isEnoughUnitBalance(const boost::json::value& balance, double value);
