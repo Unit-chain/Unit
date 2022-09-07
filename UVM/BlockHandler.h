@@ -15,6 +15,7 @@
 #include "Blockchain_core/Transaction.h"
 #include "Blockchain_core/DB/DB.h"
 #include "Server/Server.h"
+#include "containers/list.h"
 
 class BlockHandler {
 public:
@@ -24,7 +25,8 @@ public:
     [[noreturn]] void run();
 
 private:
-    std::vector<Transaction> transactions_deque;
+//    std::vector<Transaction> transactions_deque;
+    unit::list<Transaction> transactions_deque;
     Block currentblock = Block(1);
     bool block_lock = false;
     bool high_load = false;

@@ -35,9 +35,6 @@ public:
                 const boost::json::value &extra, const std::string &hash, const std::string &previousHash,
                 double amount);
 
-
-//    explicit Transaction(const Transaction &tx);
-
     virtual ~Transaction();
     std::string from;
     std::string to;

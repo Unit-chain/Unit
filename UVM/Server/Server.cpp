@@ -46,7 +46,7 @@ public:
     http_connection(tcp::socket socket) : socket_(std::move(socket)){}
 
     // Initiate the asynchronous operations associated with the connection.
-    void start(std::vector<Transaction> *tx_deque)
+    void start(unit::list<Transaction> *tx_deque)
     {
         this->tx_deque = tx_deque;
         read_request();
@@ -55,7 +55,8 @@ public:
 
 private:
     // pointer to tx deque
-    std::vector<Transaction> *tx_deque;
+//    std::vector<Transaction> *tx_deque;
+    unit::list<Transaction> *tx_deque;
     // The socket for the currently connected client.
     tcp::socket socket_;
     // The buffer for performing reads.
@@ -328,7 +329,7 @@ private:
 
                 Transaction tx = Transaction(from, to, 0, json.at("data").at("extradata"), "0", d_amount);
                 tx.generate_tx_hash();
-                this->tx_deque->emplace_back(tx);
+                this->tx_deque->push_back(tx);
                 std::string response = R"({"message":"Ok","hash":")" + tx.getHash() + R"("})";
                 create_success_response(response);
                 return;
@@ -402,7 +403,7 @@ private:
 
                 Transaction tx = Transaction(from, "", 1, json.at("data").at("extradata"), "0", 0);
                 tx.generate_tx_hash();
-                this->tx_deque->emplace_back(tx);
+                this->tx_deque->push_back(tx);
                 std::string response = R"({"message":"Ok","hash":")" + tx.getHash() + R"("})";
                 create_success_response(response);
                 return;
@@ -462,7 +463,7 @@ private:
 
                 Transaction tx = Transaction(from, to, 2, json.at("data").at("extradata"), "0", 0);
                 tx.generate_tx_hash();
-                this->tx_deque->emplace_back(tx);
+                this->tx_deque->push_back(tx);
                 std::string response = R"({"message":"Ok","hash":")" + tx.getHash() + R"("})";
                 create_success_response(response);
                 return;
@@ -510,7 +511,7 @@ private:
 };
 
 // "Loop" forever accepting new connections.
-void http_server(tcp::acceptor &acceptor, tcp::socket &socket, std::vector<Transaction> *tx_deque)
+void http_server(tcp::acceptor &acceptor, tcp::socket &socket, unit::list<Transaction> *tx_deque)
 {
     acceptor.async_accept(socket,
                           [&, tx_deque](beast::error_code ec)
@@ -521,7 +522,7 @@ void http_server(tcp::acceptor &acceptor, tcp::socket &socket, std::vector<Trans
                           });
 }
 
-int Server::start_server(std::vector<Transaction> *tx_deque)
+int Server::start_server(unit::list<Transaction> *tx_deque)
 {
 // http_connection::initialize_instructions();
     rerun_server:
