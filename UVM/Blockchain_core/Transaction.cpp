@@ -3,7 +3,6 @@
 //
 
 #include <string>
-#include <map>
 #include "Transaction.h"
 #include "Crypto/Keccak/kec256.h"
 
@@ -28,15 +27,15 @@ void Transaction::setDate(uint64_t date) {
 }
 
 void Transaction::generate_tx_hash() {
-    std::string tx_as_str = this->to_string();
+    std::string tx_as_str = this->to_json_string_test();
     SHA3 sha3 = SHA3(SHA3::Bits256);
     std::string tx_hash = sha3(tx_as_str);
     this->hash = "0x"+sha3(tx_hash);
 }
 
 std::ostream &operator<<(std::ostream &out, const Transaction &transaction) {
-    std::map<std::string, std::string> extra_map = transaction.extra_data;
-    return out << "{\"" << transaction.from << "\", \"" << transaction.to << "\", " << transaction.type << ", " << transaction.date << ", \"" << extra_map["name"] << "\", \"" << extra_map["value"] << "\", \"" << transaction.previous_hash << "\", " << transaction.amount <<  "}";
+    transaction.extra;
+    return out << "{\"" << transaction.from << "\", \"" << transaction.to << "\", " << transaction.type << ", " << transaction.date << ", \"" << transaction.extra.at("name") << "\", \"" << transaction.extra.at("value") << "\", " << transaction.amount <<  "}";
 }
 
 std::string Transaction::to_string() {
@@ -57,14 +56,6 @@ void Transaction::setHash(const std::string &hash) {
     this->hash = hash;
 }
 
-const std::string &Transaction::getPreviousHash() const {
-    return this->previous_hash;
-}
-
-void Transaction::setPreviousHash(const std::string &previousHash) {
-    this->previous_hash = previousHash;
-}
-
 double Transaction::getAmount() const {
     return this->amount;
 }
@@ -78,54 +69,14 @@ bool Transaction::operator==(const Transaction &rhs) const {
             this->to == rhs.to &&
             this->type == rhs.type &&
             this->date == rhs.date &&
-            this->extra_data == rhs.extra_data &&
+            this->extra == rhs.extra &&
             this->hash == rhs.hash &&
-            this->previous_hash == rhs.previous_hash &&
             this->amount == rhs.amount;
 }
 
 bool Transaction::operator!=(const Transaction &rhs) const {
     return !(rhs == *this);
 }
-
-//Transaction::Transaction(const std::string &from, const std::string &to, uint64_t type,
-//                         std::map<std::string, std::string> &extraData, const std::string &previousHash,
-//                         double amount)  {
-////    : from(from), to(to), type(type), extra_data(extraData),
-////            previous_hash(previousHash), amount(amount)
-//    this->from = from;
-//    this->to = to;
-//    this->type = type;
-//    this->extra_data = extraData;
-//    this->previous_hash = previousHash;
-//    this->amount = amount;
-//}
-//
-//Transaction::Transaction(const std::string &from, const std::string &to, uint64_t type, uint64_t date,
-//                         std::map<std::string, std::string> &extraData, const std::string &previousHash,
-//                         double amount)  { //: from(from), to(to), type(type), date(date), extra_data(extraData),
-////    previous_hash(previousHash), amount(amount)
-//    this->from = from;
-//    this->to = to;
-//    this->type = type;
-//    this->date = date;
-//    this->extra_data = extraData;
-//    this->previous_hash = previousHash;
-//    this->amount = amount;
-//}
-//
-//Transaction::Transaction(const std::string &from, const std::string &to, uint64_t type, uint64_t date,
-//                         std::map<std::string, std::string> &extraData, const std::string &hash,
-//                         const std::string &previousHash, double amount) {
-//    this->from = from;
-//    this->to = to;
-//    this->type = type;
-//    this->date = date;
-//    this->extra_data = extraData;
-//    this->hash = hash;
-//    this->previous_hash = previousHash;
-//    this->amount = amount;
-//}
 
 double Transaction::getFee() const {
     return this->fee;
@@ -137,7 +88,7 @@ void Transaction::setFee(double fee) {
 
 std::string Transaction::to_json_string() {
     std::ostringstream string_stream;
-    string_stream << R"({"hash":")" << this->hash << R"(", "from":")" << this->from << R"(", "to":")" << this->to << R"(", "type":)" << this->type << R"(, "date":)" << this->date << R"(, "extradata":{)" << R"("name":")" << this->extra_data.at("name") << R"(", "value":")" << this->extra_data.at("value") << R"(", "bytecode":")" << this->extra_data.at("bytecode") << "\"}" << R"(, "sign":")" << this->previous_hash << R"(", "block_id":")" << this->block_id << R"(", "amount":)"  << std::fixed << this->amount <<  "}";
+    string_stream << R"({"hash":")" << this->hash << R"(", "from":")" << this->from << R"(", "to":")" << this->to << R"(", "type":)" << this->type << R"(, "date":)" << this->date << R"(, "extradata":{)" << R"("name":")" << this->extra.at("name") << R"(", "value":")" << this->extra.at("value") << R"(", "bytecode":")" << this->extra.at("bytecode") << "\"}" << R"(, "sign":")" << this->sign << R"(", "block_id":")" << this->block_id << R"(", "amount":)"  << std::fixed << this->amount <<  "}";
     return string_stream.str();
 }
 
@@ -155,14 +106,6 @@ const std::string &Transaction::getTo() const {
 
 void Transaction::setTo(const std::string &to) {
     this->to = to;
-}
-
-const std::map<std::string, std::string> &Transaction::getExtraData() const {
-    return this->extra_data;
-}
-
-void Transaction::setExtraData(const std::map<std::string, std::string> &extraData) {
-    this->extra_data = extraData;
 }
 
 uint64_t Transaction::getBlockId() const {
@@ -198,17 +141,9 @@ bool Transaction::operator<(const Transaction &rhs) const {
         return true;
     if (rhs.date < date)
         return false;
-    if (extra_data < rhs.extra_data)
-        return true;
-    if (rhs.extra_data < extra_data)
-        return false;
     if (hash < rhs.hash)
         return true;
     if (rhs.hash < hash)
-        return false;
-    if (previous_hash < rhs.previous_hash)
-        return true;
-    if (rhs.previous_hash < previous_hash)
         return false;
     if (block_id < rhs.block_id)
         return true;
@@ -239,21 +174,32 @@ bool Transaction::operator>=(const Transaction &rhs) const {
 
 Transaction::Transaction(const std::string &from, const std::string &to, uint64_t type,
                          const boost::json::value &extra, const std::string &previousHash,
-                         double amount) : from(from), to(to), type(type), extra(extra),
-                                          previous_hash(previousHash), amount(amount) {}
+                         double amount) : from(from), to(to), type(type), extra(extra), amount(amount) {}
 
 Transaction::Transaction(const std::string &from, const std::string &to, uint64_t type, uint64_t date, const boost::json::value &extra,
                          const std::string &previousHash, double amount) : from(from), to(to), type(type), date(date), extra(extra),
-                                                                           previous_hash(previousHash),
                                                                            amount(amount) {}
 
 Transaction::Transaction(const std::string &from, const std::string &to, uint64_t type, uint64_t date,
                          const boost::json::value &extra, const std::string &hash, const std::string &previousHash,
-                         double amount) : from(from), to(to), type(type), date(date), extra(extra), hash(hash),
-                                          previous_hash(previousHash), amount(amount) {}
+                         double amount) : from(from), to(to), type(type), date(date), extra(extra), hash(hash), amount(amount) {}
 
 std::string Transaction::to_json_string_test() {
     std::ostringstream string_stream;
-    string_stream << R"({"hash":")" << this->hash << R"(", "from":")" << this->from << R"(", "to":")" << this->to << R"(", "type":)" << this->type << R"(, "date":)" << this->date << R"(, "extradata":)" << extra << R"(, "sign":")" << this->previous_hash << R"(", "amount":)"  << std::fixed << this->amount <<  "}";
+    string_stream << R"({"hash":")" << this->hash << R"(", "from":")" << this->from << R"(", "to":")" << this->to << R"(", "type":)" << this->type << R"(, "date":)" << this->date << R"(, "extradata":)" << extra << R"(, "sign":")" << this->sign << R"(", "amount":)"  << std::fixed << this->amount <<  "}";
     return string_stream.str();
+}
+
+Transaction::Transaction(const Transaction &tx) {
+    this->from = tx.from;
+    this->to = tx.to;
+    this->date = tx.date;
+    this->amount = tx.amount;
+    this->type = tx.type;
+    this->hash = tx.hash;
+    std::cout << "tx#" << tx.hash << " extra: " << tx.extra << std::endl;
+    this->extra = tx.extra;
+    this->block_id = tx.block_id;
+    this->sign = tx.sign;
+    this->fee = tx.fee;
 }

@@ -34,16 +34,15 @@ public:
     Transaction(const std::string &from, const std::string &to, uint64_t type, uint64_t date,
                 const boost::json::value &extra, const std::string &hash, const std::string &previousHash,
                 double amount);
+    Transaction(const Transaction &tx);
 
     virtual ~Transaction();
     std::string from;
     std::string to;
     uint64_t type;
     uint64_t date = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    std::map<std::string, std::string> extra_data {{"name", std::string()}, {"value", std::string()}, {"bytecode", std::string()}};
     boost::json::value extra;
     std::string hash;
-    std::string previous_hash;
     uint64_t block_id;
     std::string sign;
     double amount;

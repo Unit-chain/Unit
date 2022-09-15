@@ -37,7 +37,7 @@ public:
     long block_size = 0;
 
     void generate_hash();
-    void push_tx(Transaction tx);
+    void push_tx(Transaction &tx);
     void set_current_date();
 
     [[nodiscard]] uint64_t getDate() const;

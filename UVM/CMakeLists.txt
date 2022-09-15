@@ -24,7 +24,6 @@ if(LINUX)
     target_link_libraries(${PROJECT_NAME} Boost::boost)
 elseif(APPLE)
     find_package(RocksDB REQUIRED) # add rocksdb library to interact with RocksDB
-#    find_package(nlohmann_json 3.2.0 REQUIRED) # adding library for JSON
     find_package(Boost)
     target_link_libraries(${PROJECT_NAME} RocksDB::rocksdb)
     target_link_libraries(${PROJECT_NAME} Boost::boost)

@@ -100,7 +100,7 @@ void Block::setTransactions(const std::vector<Transaction> &transactions) {
     Block::transactions = transactions;
 }
 
-void Block::push_tx(Transaction tx) {
+void Block::push_tx(Transaction &tx) {
     this->transactions.emplace_back(std::move(tx));
 }
 

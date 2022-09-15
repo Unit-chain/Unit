@@ -193,7 +193,7 @@ bool unit::DB::push_transactions(Block *block) {
             goto leave;
         }
 
-        Token token_created = Token(boost::json::value_to<std::string>(bytecode_parsed["name"]), transaction.extra_data["bytecode"], transaction.from, boost::json::value_to<double>(bytecode_parsed["supply"]));
+        Token token_created = Token(boost::json::value_to<std::string>(bytecode_parsed["name"]), boost::json::value_to<std::string>(transaction.extra.at("bytecode")), transaction.from, boost::json::value_to<double>(bytecode_parsed["supply"]));
         s = txn->PutUntracked(handles[1], rocksdb::Slice(token_created.name), rocksdb::Slice(token_created.to_json_string()));
         transaction.setTo(token_created.token_hash);
 
