@@ -72,28 +72,28 @@ std::optional<std::string> unit::DB::get_balance(std::string &address) {
     std::vector<rocksdb::ColumnFamilyHandle*> handles;
     rocksdb::Status status = rocksdb::DB::OpenForReadOnly(unit::DB::get_db_options(), kkDBPath, unit::DB::get_column_families(), &handles, &db);
     if (!status.ok()) {
+        std::cout << "db code: " << status.code() << std::endl;
+        while (status.code() != rocksdb::Status::Code::kOk) {
+            status = rocksdb::DB::OpenForReadOnly(unit::DB::get_db_options(), kkDBPath, unit::DB::get_column_families(), &handles, &db);
+            std::this_thread::sleep_for(std::chrono::milliseconds( 2000));
+        }
         delete db;
         return std::nullopt;
     }
-    rocksdb::ReadOptions read_options;
-    read_options.auto_prefix_mode = true;
-    read_options.total_order_seek = true;
-    std::vector<rocksdb::Iterator*> iterators;
-    status = db->NewIterators(read_options, handles, &iterators);
+    std::string balance;
+    status = db->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(address), &balance);
     if (!status.ok()) {
-        close_iterators_DB(db, &handles, &iterators);
-        return std::nullopt;
-    }
-    std::string response;
-    for (iterators.at(4)->Seek(address); iterators.at(4)->Valid(); iterators.at(4)->Next()) {
-        if (iterators.at(4)->key() == address)
-            response = iterators.at(4)->value().ToString();
-    }
+        if (status.code() == rocksdb::Status::Code::kNotFound) {
+            delete db;
+            return std::nullopt;
+        }
 
-    close_iterators_DB(db, &handles, &iterators);
-    if (response.empty())
-        return std::nullopt;
-    return response;
+        while (status.code() != rocksdb::Status::Code::kOk) {
+            status = db->Get(rocksdb::ReadOptions(), handles[4], rocksdb::Slice(address), &balance);
+            std::this_thread::sleep_for(std::chrono::milliseconds( 2000));
+        }
+    }
+    return balance;
 }
 
 bool unit::DB::push_transactions(Block *block) {
