@@ -28,9 +28,8 @@ private:
     unit::list<Transaction> transactions_deque;
     Block currentblock = Block(1);
     bool block_lock = false;
-    bool high_load = false;
 
-    [[noreturn]] static void generate_block(Block *current, bool *lock, bool *high_load);
+    [[noreturn]] static void generate_block(Block *current, bool *lock);
 };
 
 
