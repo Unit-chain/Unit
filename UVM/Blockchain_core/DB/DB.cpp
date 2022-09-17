@@ -11,7 +11,7 @@ rocksdb::Options unit::DB::get_db_options() {
     rocksdb::Options options;
     options.create_if_missing = false;
     options.error_if_exists = false;
-    options.IncreaseParallelism(cpuss / 2);
+    options.IncreaseParallelism(cpuss);
     options.OptimizeLevelStyleCompaction();
     options.bottommost_compression = rocksdb::kZSTD;
     options.compression = rocksdb::kLZ4Compression;
@@ -20,20 +20,18 @@ rocksdb::Options unit::DB::get_db_options() {
     options.max_background_jobs = cpuss;
     options.env->SetBackgroundThreads(cpuss);
     options.num_levels = 2;
+    options.merge_operator = nullptr;
+    options.compaction_filter = nullptr;
+    options.compaction_filter_factory = nullptr;
+    options.rate_limiter = nullptr;
+    options.max_open_files = -1;
     options.max_write_buffer_number = 6;
     options.max_background_flushes = cpuss;
     options.level0_stop_writes_trigger = -1;
     options.level0_slowdown_writes_trigger = -1;
-    options.max_open_files = 300;
+    options.max_open_files = 5000;
     options.create_if_missing = true;
     options.create_missing_column_families = true;
-    options.max_write_buffer_number=3;
-    options.optimize_filters_for_hits = true;
-    rocksdb::BlockBasedTableOptions tableOptions;
-    tableOptions.block_cache = rocksdb::NewLRUCache(64, 2);
-    tableOptions.block_cache_compressed = rocksdb::NewLRUCache(64, 2);
-    tableOptions.cache_index_and_filter_blocks= true;
-    options.table_factory.reset(rocksdb::NewBlockBasedTableFactory(tableOptions));
 
     return options;
 }
@@ -73,10 +71,6 @@ std::optional<std::string> unit::DB::get_balance(std::string &address) {
     rocksdb::Status status = rocksdb::DB::OpenForReadOnly(unit::DB::get_db_options(), kkDBPath, unit::DB::get_column_families(), &handles, &db);
     if (!status.ok()) {
         std::cout << "db code: " << status.code() << std::endl;
-//        if (status.code() == rocksdb::Status::Code::kNotFound) {
-//            close_db(db, &handles);
-//            return std::nullopt;
-//        }
         while (status.code() != rocksdb::Status::Code::kOk) {
             status = rocksdb::DB::OpenForReadOnly(unit::DB::get_db_options(), kkDBPath, unit::DB::get_column_families(), &handles, &db);
             std::this_thread::sleep_for(std::chrono::milliseconds( 2000));
@@ -367,10 +361,9 @@ bool unit::DB::push_block(Block block) {
         goto await;
 };
 
-    for (auto handle : handles) {
-        handle = nullptr;
+    for (auto &handle : handles)
         txn_db->DestroyColumnFamilyHandle(handle);
-    }
+
     delete txn;
     delete txn_db;
 
@@ -395,15 +388,7 @@ std::optional<std::string> unit::DB::find_transaction(std::string tx_hash) {
 
 
 void unit::DB::close_db(rocksdb::DB* db, std::vector<rocksdb::ColumnFamilyHandle*> *handles) {
-    for (auto handle : *handles) {
-        handle = nullptr;
+    for (auto handle : *handles)
         db->DestroyColumnFamilyHandle(handle);
-    }
-    delete db;
-}
-
-void unit::DB::close_iterators_DB(rocksdb::DB* db, std::vector<rocksdb::ColumnFamilyHandle*> *handles, std::vector<rocksdb::Iterator*> *iterators) {
-    for (auto &iterator : *iterators) delete iterator;
-    for (auto handle : *handles) db->DestroyColumnFamilyHandle(handle);
     delete db;
 }
