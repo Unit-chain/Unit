@@ -39,7 +39,7 @@ void Block::generate_hash() {
         std::ostringstream string_stream;
         string_stream << R"({"index":)" << this->index << R"({, "prev_hash":")" << this->prev_hash << R"({", "timestamp":)" << this->date << "}";
         std::string doubled_hash = sha3(sha3(string_stream.str()));
-        this->hash = "0x" + doubled_hash;
+        this->hash = doubled_hash;
         return;
     }
 

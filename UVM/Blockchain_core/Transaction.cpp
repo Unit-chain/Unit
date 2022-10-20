@@ -30,7 +30,7 @@ void Transaction::generate_tx_hash() {
     std::string tx_as_str = this->to_json_string_test();
     SHA3 sha3 = SHA3(SHA3::Bits256);
     std::string tx_hash = sha3(tx_as_str);
-    this->hash = "0x"+sha3(tx_hash);
+    this->hash = sha3(tx_hash);
 }
 
 std::ostream &operator<<(std::ostream &out, const Transaction &transaction) {
