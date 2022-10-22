@@ -6,6 +6,7 @@
 #define UNIT_GLOBALVARIABLES_H
 #include "../libdevcore/crypto/SHA3/sha3.h"
 #define logger std::cout
+#define DEBUG true
 
 namespace hash {
     [[maybe_unused]] SHA3 sha3_224 = SHA3(SHA3::Bits224);

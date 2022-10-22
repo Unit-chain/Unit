@@ -1,12 +1,25 @@
 #include <iostream>
-#include "sstream"
 #include "libdevcore/datastructures/blockchain/transaction/ValidTransaction.h"
 #include "libdevcore/datastructures/request/RawTransaction.h"
 #include "libdevcore/utils/StringUtil.h"
+#if 0
+    #include "libdevcore/pointers/lazy_pointer.h"
+#endif
 
 int main() {
     std::cout << "Hello, World!" << std::endl;
-    #if 1
+    #if 0
+        std::string str = "aawd";
+        lazy_pointer<std::string> a = lazy_pointer<std::string>(str);
+        lazy_pointer<std::string> b = lazy_pointer<std::string>(a);
+        lazy_pointer<std::string> c = lazy_pointer<std::string>(b);
+        std::cout << "a :" << a.getValue() << std::endl;
+        std::cout << "b :" << b.getValue() << std::endl;
+        std::cout << "c :" << c.getValue() << std::endl;
+        std::cout << "a.cnt :" << c.getCnt() << std::endl;
+        std::cout << "a.status :" << a.getStatus() << std::endl;
+    #endif
+    #if 0
         std::string str = R"({
           "instruction": "i_push_transaction",
           "data": {
