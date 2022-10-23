@@ -8,16 +8,24 @@
 
 int main() {
     std::cout << "Hello, World!" << std::endl;
+    std::vector<char> vec(32, '\0');
+    std::string s(vec.begin(), vec.end());
+    std::cout << "vector.length = " << vec.size() << ", string.length = " << s.length() << std::endl;
     #if 0
         std::string str = "aawd";
         lazy_pointer<std::string> a = lazy_pointer<std::string>(str);
         lazy_pointer<std::string> b = lazy_pointer<std::string>(a);
         lazy_pointer<std::string> c = lazy_pointer<std::string>(b);
-        std::cout << "a :" << a.getValue() << std::endl;
-        std::cout << "b :" << b.getValue() << std::endl;
-        std::cout << "c :" << c.getValue() << std::endl;
-        std::cout << "a.cnt :" << c.getCnt() << std::endl;
-        std::cout << "a.status :" << a.getStatus() << std::endl;
+        std::cout << "a: " << a.getValue() << std::endl;
+        std::cout << "b: " << b.getValue() << std::endl;
+        std::cout << "c: " << c.getValue() << std::endl;
+        b.destroy_current();
+        std::cout << "b.value == nullptr: " << (b.getValue() == nullptr) << ", a.cnt = " << a.getCnt() << std::endl;
+        std::cout << "a.cnt: " << c.getCnt() << std::endl;
+        std::cout << "a.status: " << a.getStatus() << std::endl;
+        c.destroy_current();
+        std::cout << "a.destroy: " << a.destroy() << std::endl;
+        std::cout << "a.value == nullptr: " << (a.getValue() == nullptr) << std::endl;
     #endif
     #if 0
         std::string str = R"({

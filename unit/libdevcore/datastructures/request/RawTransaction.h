@@ -5,13 +5,12 @@
 #ifndef UNIT_RAWTRANSACTION_H
 #define UNIT_RAWTRANSACTION_H
 
-#include <utility>
-
 #include "utility"
 #include "sstream"
 #include "iostream"
 #include "optional"
 #include "boost/json.hpp"
+#include "sstream"
 #include "boost/json/src.hpp"
 #include "../../../global/GlobalVariables.h"
 #include "../../utils/StringUtil.h"
@@ -64,8 +63,9 @@ public:
 
     std::string from;
     std::string to;
-    uint64_t type{};
+    uint32_t type{};
     uint64_t date = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    uint32_t confirmations{};
     json::value extra;
     std::string hash;
     std::string sign;
@@ -88,30 +88,32 @@ public:
     }
 
     inline void generateHash() {
-        this->hash = hash::sha3_256(hash::sha3_256(*this->serializeToRawTransaction()));
+        SHA3 sha3 = SHA3(SHA3::Bits256);
+        this->hash = sha3(sha3(*this->serializeToRawTransaction()));
     }
 
-    inline std::shared_ptr<std::string> serializeToRawTransaction() {
-        std::string mainString = R"({"from":"%s", "to":"%s", "amount":%d, "type":%d, "date":%llu, "extradata": {"name":"%s", "value":"%s", "bytecode":"%s"},"sign":"%s", "r":"%s", "s":"%s", "signP":"%s", "rP":"%s", "sP":"%s", "fee":%d})";
+    [[nodiscard]] inline std::shared_ptr<std::string> serializeToRawTransaction() const {
         auto name = json::value_to<std::string>(this->extra.at("name"));
         auto value = json::value_to<double>(this->extra.at("value"));
         auto bytecode = json::value_to<std::string>(this->extra.at("bytecode"));
-        return StringUtil::insertSubElement(&mainString, &(this->from), &(this->to), &(this->amount),
-                                            &(this->type), &(this->date), &(name), &(value), &(bytecode),
-                                            &(this->sign), &(this->r), &(this->s),
-                                            &(this->signP), &(this->rP), &(this->sP), &(this->fee));
+        std::stringstream ss;
+        ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)" << std::scientific << this->amount << R"(, "type":)"
+           << this->type << R"(, "date":)" << this->date << R"(, "extradata":{)" << R"("name":")" << name << R"(", "value":)" << value << R"(, "bytecode": ")" << bytecode
+           << R"("}, "sign":")" << this->sign << R"(", "r":")" << this->r << R"(", "s":")" << this->s << R"(", "signP":")" << this->signP << R"(", "rP":")" << this->rP
+           << R"(", "sP":")" << this->sP << R"(", "fee":)" << this->fee << R"(})";
+        return std::make_shared<std::string>(ss.str());
     }
-    inline std::shared_ptr<std::string> serializeToJsonTransaction() {
-        std::cout << this->date << std::endl;
-        std::string mainString = R"({"hash":"%s", "from":"%s", "to":"%s", "amount":%f, "type":%d, "date":%llu, "extradata": {"name":"%s", "value":"%s", "bytecode":"%s"},"sign":"%s", "r":"%s", "s":"%s", "signP":"%s", "rP":"%s", "sP":"%s", "fee":%f})";
+
+    [[nodiscard]] inline std::shared_ptr<std::string> serializeToJsonTransaction() const {
         auto name = json::value_to<std::string>(this->extra.at("name"));
         auto value = json::value_to<double>(this->extra.at("value"));
         auto bytecode = json::value_to<std::string>(this->extra.at("bytecode"));
-        std::cout << this->hash << std::endl;
-        return StringUtil::insertSubElement(&mainString, &(this->hash), &(this->from), &(this->to), &(this->amount),
-                                            &(this->type), &(this->date), &(name), &(value), &(bytecode),
-                                            &(this->sign), &(this->r), &(this->s),
-                                            &(this->signP), &(this->rP), &(this->sP), &(this->fee));
+        std::stringstream ss;
+        ss << R"({"hash":")" << this->hash << R"(", "from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)" << std::scientific << this->amount << R"(, "type":)"
+        << this->type << R"(, "date":)" << this->date << R"(, "extradata":{)" << R"("name":")" << name << R"(", "value":)" << value << R"(, "bytecode": ")" << bytecode
+        << R"("}, "sign":")" << this->sign << R"(", "r":")" << this->r << R"(", "s":")" << this->s << R"(", "signP":")" << this->signP << R"(", "rP":")" << this->rP
+        << R"(", "sP":")" << this->sP << R"(", "fee":)" << this->fee << R"(})";
+        return std::make_shared<std::string>(ss.str());
     }
 
     static RawTransaction *parse(std::string *request) {
@@ -165,6 +167,10 @@ public:
             logger << "################## RawTransaction.h parsing error: " << ec.message() << std::endl;
             return nullptr;
         }
+    }
+
+    void setConfirmations(uint32_t confirmations) {
+        RawTransaction::confirmations = confirmations;
     }
 };
 #endif //UNIT_RAWTRANSACTION_H

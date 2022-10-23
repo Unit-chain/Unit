@@ -33,6 +33,7 @@ public:
     std::string signP; // prover signature
     std::string rP; // prover signature
     std::string sP; // prover signature
+    uint32_t index;
     double amount{};
     double fee{};
 
@@ -50,6 +51,10 @@ public:
                                             &(this->type), &(this->date), &(name), &(value), &(bytecode),
                                             &(this->sign), &(this->r), &(this->s),
                                             &(this->signP), &(this->rP), &(this->sP), &(this->fee));
+    }
+
+    void setIndex(uint32_t index) {
+        ValidTransaction::index = index;
     }
 
     [[deprecated("Not implemented yet")]]

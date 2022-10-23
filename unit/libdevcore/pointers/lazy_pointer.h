@@ -18,6 +18,7 @@ public:
 
     T *getValue() const;
     bool destroy();
+    bool destroy_current();
     void setStatus(short status);
     [[nodiscard]] int getCnt();
 
@@ -33,7 +34,7 @@ private:
 };
 
 template<class T>
-lazy_pointer<T>::lazy_pointer(T value) : value(&value)  {
+lazy_pointer<T>::lazy_pointer(T value) : value(new T(value))  {
     this->cnt = new int(1);
 }
 
@@ -44,7 +45,7 @@ lazy_pointer<T>::lazy_pointer(lazy_pointer<T> &a) noexcept : value(a.value), cnt
 
 template<class T>
 lazy_pointer<T>::~lazy_pointer() {
-    --(*(this->cnt));
+    if (this->cnt != nullptr) --(*(this->cnt));
     #if DEBUG
         std::cout << "cnt in thread: #" << std::this_thread::get_id() << std::endl;
     #endif
@@ -67,17 +68,29 @@ short lazy_pointer<T>::getStatus() const {
 
 template<class T>
 bool lazy_pointer<T>::destroy() {
-    if (*(this->cnt) > 0) return false;
-    delete this->cnt;
-    delete this->value;
-    delete this->cnt_mutex;
-    delete this->status_mutex;
+    if (--(*(this->cnt)) > 0) return false;
+    if (this->cnt != nullptr) {
+        delete (this->cnt);
+        this->cnt = nullptr;
+    }
+    if (this->value != nullptr) {
+        delete (this->value);
+        this->value = nullptr;
+    }
     return true;
 }
 
 template<class T>
 void lazy_pointer<T>::setStatus(short status) {
     lazy_pointer::status = status;
+}
+
+template<class T>
+bool lazy_pointer<T>::destroy_current() {
+    this->value = nullptr;
+    --(*(this->cnt));
+    this->cnt = nullptr;
+    return true;
 }
 
 #endif //UNIT_LAZY_POINTER_H

@@ -5,6 +5,7 @@
 #ifndef UNIT_STRINGUTIL_H
 #define UNIT_STRINGUTIL_H
 
+#include "cinttypes"
 #include "iostream"
 #include "optional"
 #include "boost/archive/iterators/binary_from_base64.hpp"

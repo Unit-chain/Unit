@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 project(unit)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 if(UNIX AND NOT APPLE)
     set(LINUX TRUE)
@@ -18,7 +18,8 @@ add_executable(unit main.cpp libdevcore/bip44/BIP44.hpp libdevcore/bip44/BIP39.h
         libdevcore/bip44/BIP44.hpp libdevcore/bip44/BIP39.hpp libdevcore/bip44/BIP32.hpp libdevcore/bip44/SHA256.cpp libdevcore/bip44/SHA256.h
         libdevcore/bip44/base58.hpp libdevcore/bip44/addresses.hpp libdevcore/datastructures/request/RawTransaction.h
         global/GlobalVariables.h libdevcore/utils/StringUtil.h libdevcore/utils/StringUtil.cpp libdevcore/datastructures/blockchain/transaction/ValidTransaction.h
-        libdevcore/pointers/lazy_pointer.h)
+        libdevcore/pointers/lazy_pointer.h libdevcore/datastructures/blockchain/block/Block.h libdevcore/datastructures/blockchain/block/BlockHeader.h
+        libdevcore/datastructures/containers/list.h libdevcore/datastructures/account/WalletAccount.h)
 
 if(LINUX)
     message(STATUS ">>> Linux found")
