@@ -35,6 +35,8 @@ public:
     std::string serializeBlock();
     std::string generateMerkleRoot();
     std::string generateHash();
+    uint64_t getSize();
+    const unit::list<ValidTransaction> *getTxList() const;
 };
 
 std::string Block::serializeBlock() {
@@ -71,6 +73,16 @@ std::string Block::generateHash() {
     SHA3 sha3 = SHA3(SHA3::Bits256);
     this->blockHeader.hash = sha3(sha3(this->serializeBlock()));
     return this->blockHeader.hash;
+}
+
+uint64_t Block::getSize() {
+    if(txList.empty()) return 0;
+    for(auto & it : this->txList) this->blockHeader.size += it.getSize();
+    return this->blockHeader.size;
+}
+
+const unit::list<ValidTransaction> *Block::getTxList() const {
+    return &txList;
 }
 
 #endif //UNIT_BLOCK_H

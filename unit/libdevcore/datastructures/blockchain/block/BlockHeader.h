@@ -23,11 +23,13 @@ struct BlockHeader {
     uint64_t version{};
     uint64_t transactionCount{};
     uint64_t index{};
-    uint32_t size{};
+    uint32_t size = 0;
     int nonce{};
 
     std::string generateHash();
     std::string serializeBlockHeader();
+
+    uint64_t getSize();
 };
 
 std::string BlockHeader::serializeBlockHeader() {

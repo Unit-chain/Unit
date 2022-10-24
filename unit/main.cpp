@@ -1,16 +1,37 @@
 #include <iostream>
-#include "libdevcore/datastructures/blockchain/transaction/ValidTransaction.h"
-#include "libdevcore/datastructures/request/RawTransaction.h"
-#include "libdevcore/utils/StringUtil.h"
 #if 0
+    #include "libdevcore/datastructures/account/WalletAccount.h"
+    #include "libdevcore/datastructures/blockchain/transaction/ValidTransaction.h"
+    #include "libdevcore/datastructures/request/RawTransaction.h"
+    #include "libdevcore/utils/StringUtil.h"
+    #include "libdevcore/crypto/SHA3/sha3.h"
     #include "libdevcore/pointers/lazy_pointer.h"
 #endif
 
 int main() {
     std::cout << "Hello, World!" << std::endl;
-    std::vector<char> vec(32, '\0');
-    std::string s(vec.begin(), vec.end());
-    std::cout << "vector.length = " << vec.size() << ", string.length = " << s.length() << std::endl;
+    #if 0
+        std::string str = R"({"address":"UNTufAafm3iZSjoLhjWq4bjwbb45qgw","balance":111000.0, "tokensBalance":{"token":10.0, "token2":111.1213}})";
+        std::string strH = R"({"in":["test", "1312","132132","cdcsdcsdc", "wadawdadwda"], "out":["1312","132132","cdcsdcsdc", "wadawdadwda"]})";
+        std::optional<WalletAccount*> anOptional = WalletAccount::parseWallet(&str);
+        std::cout << anOptional.value()->serialize() << std::endl;
+        WalletAccount *walletAccount = anOptional.value();
+        walletAccount->parseHistory(&strH);
+        walletAccount->subtractToken(1.9, "wadawda", "token");
+        walletAccount->subtract(91111.01121, "wadawda");
+        std::cout << walletAccount->tokensBalance << std::endl;
+        std::cout << walletAccount->serialize() << std::endl;
+        std::cout << walletAccount->serializeHistory() << std::endl;
+    #endif
+    #if 0
+        boost::json::object object = boost::json::parse(R"({"test":{}})").as_object();
+        object["test"].as_object()["token"] = 12123.123;
+        object["test"].as_object()["token2"] = 123.123;
+        object["test"].as_object()["token3"] = 123.123;
+        object["test"].as_object()["token3"] = object["test"].as_object()["token3"].as_double() - 10;
+        auto str = boost::json::serialize(object);
+        std::cout << str << std::endl;
+    #endif
     #if 0
         std::string str = "aawd";
         lazy_pointer<std::string> a = lazy_pointer<std::string>(str);

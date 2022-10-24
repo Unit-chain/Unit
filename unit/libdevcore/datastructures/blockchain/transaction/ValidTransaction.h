@@ -41,16 +41,20 @@ public:
         return std::make_shared<std::string>(this->hash);
     }
 
-    inline std::shared_ptr<std::string> serializeToRawTransaction() {
-        std::string mainString = R"({"from":"%s", "to":"%s", "amount":%d, "type":%d, "date":%d, "extradata": {"name":"%s", "value":"%s", "bytecode":"%s"},
-        "sign":"%s", "r":"%s", "s":"%s", "signP":"%s", "rP":"%s", "sP":"%s", "fee":%d})";
+    [[nodiscard]] inline std::shared_ptr<std::string> serializeToJsonTransaction() const {
         auto name = json::value_to<std::string>(this->extra.at("name"));
-        auto value = json::value_to<std::string>(this->extra.at("value"));
+        auto value = json::value_to<double>(this->extra.at("value"));
         auto bytecode = json::value_to<std::string>(this->extra.at("bytecode"));
-        return StringUtil::insertSubElement(&mainString, &(this->from), &(this->to), &(this->amount),
-                                            &(this->type), &(this->date), &(name), &(value), &(bytecode),
-                                            &(this->sign), &(this->r), &(this->s),
-                                            &(this->signP), &(this->rP), &(this->sP), &(this->fee));
+        std::stringstream ss;
+        ss << R"({"hash":")" << this->hash << R"(", "from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)" << std::scientific << this->amount << R"(, "type":)"
+           << this->type << R"(, "date":)" << this->date << R"(, "extradata":{)" << R"("name":")" << name << R"(", "value":)" << value << R"(, "bytecode": ")" << bytecode
+           << R"("}, "sign":")" << this->sign << R"(", "r":")" << this->r << R"(", "s":")" << this->s << R"(", "signP":")" << this->signP << R"(", "rP":")" << this->rP
+           << R"(", "sP":")" << this->sP << R"(", "fee":)" << this->fee << R"(})";
+        return std::make_shared<std::string>(ss.str());
+    }
+
+    [[nodiscard]] inline uint32_t getSize() const {
+        return static_cast<uint32_t>((this->serializeToJsonTransaction())->size());
     }
 
     void setIndex(uint32_t index) {

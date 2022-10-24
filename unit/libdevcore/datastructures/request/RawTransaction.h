@@ -137,7 +137,7 @@ public:
                                   boost::json::value_to<double>(transactionRequestJson.at("amount")),
                                   boost::json::value_to<double>(transactionRequestJson.at("fee")));
         } catch (const boost::exception &o) {
-            logger << "################## RawTransaction.h parsing error: " << ec.message() << std::endl;
+            logger <<  "RawTransaction.h parsing error: " << ec.message() << std::endl;
             return nullptr;
         }
     }
