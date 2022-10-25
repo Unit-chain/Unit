@@ -2103,7 +2103,7 @@ private:
         "wreck",
         "wrestle",
         "wrist",
-        "write",
+        "singleWrite",
         "wrong",
         "yard",
         "year",

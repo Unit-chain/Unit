@@ -1,5 +1,6 @@
 #include <iostream>
 #if 0
+    #include "libdevcore/db/DBWriter.h"
     #include "libdevcore/datastructures/account/WalletAccount.h"
     #include "libdevcore/datastructures/blockchain/transaction/ValidTransaction.h"
     #include "libdevcore/datastructures/request/RawTransaction.h"
@@ -9,7 +10,16 @@
 #endif
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
+    #if 0
+        std::cout << "Hello, World!" << std::endl;
+        std::string key = "test";
+        std::string path = "/Users/kirillzhukov/Documents/unit_db/";
+        dbProvider::BatchProvider batchProvider = dbProvider::BatchProvider(path);
+        std::shared_ptr<rocksdb::WriteBatch> writeBatch = dbProvider::BatchProvider::getBatch();
+        writeBatch->Put(rocksdb::Slice(key), rocksdb::Slice("value"));
+        operationDBStatus::DBCode dbCode = batchProvider.commitBatch(writeBatch);
+        std::cout <<  *batchProvider.read<std::string>(&key).value << std::endl;
+    #endif
     #if 0
         std::string str = R"({"address":"UNTufAafm3iZSjoLhjWq4bjwbb45qgw","balance":111000.0, "tokensBalance":{"token":10.0, "token2":111.1213}})";
         std::string strH = R"({"in":["test", "1312","132132","cdcsdcsdc", "wadawdadwda"], "out":["1312","132132","cdcsdcsdc", "wadawdadwda"]})";
