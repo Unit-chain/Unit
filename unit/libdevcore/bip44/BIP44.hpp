@@ -1,6 +1,7 @@
+#pragma once
 #include "BIP39.hpp"
 #include "BIP32.hpp"
-#include "addresses.hpp"
+#include "utils.hpp"
 
 #define PHRASE_12 12
 #define PHRASE_24 24

@@ -1,7 +1,5 @@
+#pragma once
 #include "vector"
-
-#ifndef UNIT_BASE58_H
-#define UNIT_BASE58_H
 
 class base58
 {
@@ -47,5 +45,3 @@ public:
         return result;
     }
 };
-
-#endif //UNIT_MERKLETREE_H

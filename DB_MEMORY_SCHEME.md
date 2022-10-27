@@ -27,3 +27,11 @@ writing_user_thread --|> DB : commit changes
 
 ```
 
+
+
+```markdown
+**thread accessor** asks writing_thread for stack's size and choosing thread depending on stack's loadfactor but not more than twice
+```
+
+
+

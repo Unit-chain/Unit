@@ -4,6 +4,11 @@
 
 #ifndef UNIT_DBSTATUS_H
 #define UNIT_DBSTATUS_H
+#include "rocksdb/db.h"
+
+using namespace rocksdb;
+using namespace std;
+
 namespace operationDBStatus {
     enum DBCode {
         cOk = 0,
@@ -28,6 +33,23 @@ namespace operationDBStatus {
         DBCode errorResponse;
         bool error = false;
         T *value;
+    };
+
+    class [[maybe_unused]] DBTupleResponse {
+    public:
+        DBTupleResponse(vector<Status> *statuses, vector<string> *values) : value(statuses, values) {}
+        DBTupleResponse(bool error, DBCode dbCode) : error(error), dbCode(dbCode) {}
+        /// structures below
+        std::tuple<vector<Status>*, vector<string>*> value;
+        bool error{};
+        DBCode dbCode;
+        /// functions
+        bool hasValue () const {
+            return !error;
+        }
+        [[nodiscard]] const tuple<vector<Status> *, vector<string> *> &getValue() const {
+            return value;
+        }
     };
 }
 #endif //UNIT_DBSTATUS_H

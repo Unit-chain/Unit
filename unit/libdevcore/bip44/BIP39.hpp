@@ -1,8 +1,9 @@
 //
 // Created by Simon on 10/4/2022.
 //
-#ifndef UNIT_BIP39_HPP
-#define UNIT_BIP39_HPP
+#pragma once
+#ifndef BIP39_BIP39_HPP
+#define BIP39_BIP39_HPP
 
 #include "string"
 #include "cstring"
@@ -2103,7 +2104,7 @@ private:
         "wreck",
         "wrestle",
         "wrist",
-        "singleWrite",
+        "write",
         "wrong",
         "yard",
         "year",
@@ -2128,7 +2129,7 @@ BIP39Result BIP39::generateMnemonic(std::string passphrase)
     for (int i = 0; i < 256; i++)
     {
         // randomize 256 bits
-        bits[i] = ((uint8_t)r_buf[i]) % 2;
+        bits[i] = (r_buf[i]) % 2;
     }
     // std::cout << bits << std::endl;
 
@@ -2182,16 +2183,17 @@ BIP39Result BIP39::generateMnemonic(std::string passphrase)
         final_mnemonic.append(words[i] + (i == 23 ? "" : " "));
     }
 
-    std::string mnemonic_salt = "phrase"+passphrase;
+    std::string mnemonic_salt = "mnemonic"+passphrase;
+    // std::cout << "SALT LENGTH:" << mnemonic_salt.length() << std::endl;
     unsigned char slt[mnemonic_salt.length()];
     strcpy((char*)slt, mnemonic_salt.c_str());
     unsigned char result[64];
     PKCS5_PBKDF2_HMAC(final_mnemonic.c_str(), final_mnemonic.length(), slt, mnemonic_salt.length(), 2048, EVP_sha512(), 64, result);
 
-    std::stringstream ss;
-    for (uint8_t i = 0; i < 64; i++)
-        ss << std::setfill('0') << std::setw(2) << std::hex << (int)result[i];
-    std::string res(ss.str());
+    BIGNUM* bn_seed = BN_new();
+    BN_bin2bn(result, 64, bn_seed);
+    std::string res(BN_bn2hex(bn_seed));
+    BN_free(bn_seed);
 
     return BIP39Result(final_mnemonic, res);
 }
@@ -2268,22 +2270,27 @@ BIP39Result BIP39::generateMnemonic_12(std::string passphrase)
 
     // std::cout << bits << std::endl;
     std::vector<std::string> words = bitsToWords_12(bits);
-    std::string final_mnemonic = "";
+    std::string final_mnemonic;
     for (int i = 0; i < 12; ++i)
     {
         final_mnemonic.append(words[i] + (i == 11 ? "" : " "));
     }
 
-    std::string mnemonic_salt = "phrase"+passphrase;
+    std::string mnemonic_salt = "mnemonic"+passphrase;
     unsigned char slt[mnemonic_salt.length()];
     strcpy((char*)slt, mnemonic_salt.c_str());
     unsigned char result[64];
     PKCS5_PBKDF2_HMAC(final_mnemonic.c_str(), final_mnemonic.length(), slt, mnemonic_salt.length(), 2048, EVP_sha512(), 64, result);
 
-    std::stringstream ss;
-    for (uint8_t i = 0; i < 64; i++)
-        ss << std::setfill('0') << std::setw(2) << std::hex << (int)result[i];
-    std::string res(ss.str());
+    BIGNUM* bn_seed = BN_new();
+    BN_bin2bn(result, 64, bn_seed);
+    std::string res(BN_bn2hex(bn_seed));
+    BN_free(bn_seed);
+
+    // std::stringstream ss;
+    // for (uint8_t i = 0; i < 64; i++)
+    //     ss << std::setfill('0') << std::setw(2) << std::hex << (int)result[i];
+    // std::string res(ss.str());
 
     return BIP39Result(final_mnemonic, res);
 }
