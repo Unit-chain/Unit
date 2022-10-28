@@ -20,7 +20,7 @@ public:
                                                                    hash(rawPointer->hash),
                                                                    sign(rawPointer->sign), r(rawPointer->r), s(rawPointer->s),
                                                                    signP(rawPointer->signP), rP(rawPointer->rP), sP(rawPointer->sP),
-                                                                   amount(rawPointer->amount), fee(rawPointer->fee) {}
+                                                                   amount(rawPointer->amount), fee(rawPointer->fee), nonce(rawPointer->nonce) {}
     std::string from;
     std::string to;
     uint64_t type{};
@@ -34,6 +34,7 @@ public:
     std::string rP; // prover signature
     std::string sP; // prover signature
     uint32_t index;
+    long nonce;
     double amount{};
     double fee{};
 
@@ -49,7 +50,7 @@ public:
         ss << R"({"hash":")" << this->hash << R"(", "from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)" << std::scientific << this->amount << R"(, "type":)"
            << this->type << R"(, "date":)" << this->date << R"(, "extradata":{)" << R"("name":")" << name << R"(", "value":)" << value << R"(, "bytecode": ")" << bytecode
            << R"("}, "sign":")" << this->sign << R"(", "r":")" << this->r << R"(", "s":")" << this->s << R"(", "signP":")" << this->signP << R"(", "rP":")" << this->rP
-           << R"(", "sP":")" << this->sP << R"(", "fee":)" << this->fee << R"(})";
+           << R"(", "sP":")" << this->sP << R"(", "fee":)" << this->fee << R"(, "nonce":)" << this->nonce << R"(})";
         return std::make_shared<std::string>(ss.str());
     }
 

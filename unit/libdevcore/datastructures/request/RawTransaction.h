@@ -61,6 +61,27 @@ public:
             amount(amount),
             fee(fee) {}
 
+    RawTransaction(std::string from,
+                   std::string to,
+                   uint64_t type,
+                   json::value extra,
+                   std::string sign,
+                   std::string r,
+                   std::string s,
+                   double amount,
+                   double fee,
+                   long nonce) :
+            from(std::move(from)),
+            to(std::move(to)),
+            type(type),
+            extra(std::move(extra)),
+            sign(std::move(sign)),
+            r(std::move(r)),
+            s(std::move(s)),
+            amount(amount),
+            fee(fee),
+            nonce(nonce) {}
+
     std::string from;
     std::string to;
     uint32_t type{};
@@ -74,6 +95,7 @@ public:
     std::string signP; // prover signature
     std::string rP; // prover signature
     std::string sP; // prover signature
+    long nonce;
     double amount{};
     double fee{};
 
@@ -100,7 +122,7 @@ public:
         ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)" << std::scientific << this->amount << R"(, "type":)"
            << this->type << R"(, "date":)" << this->date << R"(, "extradata":{)" << R"("name":")" << name << R"(", "value":)" << value << R"(, "bytecode": ")" << bytecode
            << R"("}, "sign":")" << this->sign << R"(", "r":")" << this->r << R"(", "s":")" << this->s << R"(", "signP":")" << this->signP << R"(", "rP":")" << this->rP
-           << R"(", "sP":")" << this->sP << R"(", "fee":)" << this->fee << R"(})";
+           << R"(", "sP":")" << this->sP << R"(", "fee":)" << this->fee << R"(, "nonce":)" << this->nonce << R"(})";
         return std::make_shared<std::string>(ss.str());
     }
 
@@ -112,7 +134,7 @@ public:
         ss << R"({"hash":")" << this->hash << R"(", "from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)" << std::scientific << this->amount << R"(, "type":)"
         << this->type << R"(, "date":)" << this->date << R"(, "extradata":{)" << R"("name":")" << name << R"(", "value":)" << value << R"(, "bytecode": ")" << bytecode
         << R"("}, "sign":")" << this->sign << R"(", "r":")" << this->r << R"(", "s":")" << this->s << R"(", "signP":")" << this->signP << R"(", "rP":")" << this->rP
-        << R"(", "sP":")" << this->sP << R"(", "fee":)" << this->fee << R"(})";
+        << R"(", "sP":")" << this->sP << R"(", "fee":)" << this->fee << R"(, "nonce":)" << this->nonce << R"(})";
         return std::make_shared<std::string>(ss.str());
     }
 
@@ -124,7 +146,7 @@ public:
             if (!transactionRequestJson.contains("from") || !transactionRequestJson.contains("to")
                 || !transactionRequestJson.contains("type") || !transactionRequestJson.contains("extradata")
                 || !transactionRequestJson.contains("sign") || !transactionRequestJson.contains("r") || !transactionRequestJson.contains("s")
-                || !transactionRequestJson.contains("amount") || !transactionRequestJson.contains("fee"))
+                || !transactionRequestJson.contains("amount") || !transactionRequestJson.contains("fee") || !transactionRequestJson.contains("nonce"))
                 return nullptr;
             return new RawTransaction(
                                   boost::json::value_to<std::string>(transactionRequestJson.at("from")),
@@ -135,7 +157,8 @@ public:
                                   boost::json::value_to<std::string>(transactionRequestJson.at("r")),
                                   boost::json::value_to<std::string>(transactionRequestJson.at("s")),
                                   boost::json::value_to<double>(transactionRequestJson.at("amount")),
-                                  boost::json::value_to<double>(transactionRequestJson.at("fee")));
+                                  boost::json::value_to<double>(transactionRequestJson.at("fee")),
+                                  boost::json::value_to<long>(transactionRequestJson.at("nonce")));
         } catch (const boost::exception &o) {
             logger <<  "RawTransaction.h parsing error: " << ec.message() << std::endl;
             return nullptr;

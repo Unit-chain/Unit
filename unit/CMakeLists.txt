@@ -20,7 +20,7 @@ add_executable(unit main.cpp libdevcore/bip44/BIP44.hpp libdevcore/bip44/BIP39.h
         global/GlobalVariables.h libdevcore/utils/StringUtil.h libdevcore/utils/StringUtil.cpp libdevcore/datastructures/blockchain/transaction/ValidTransaction.h
         libdevcore/pointers/lazy_pointer.h libdevcore/datastructures/blockchain/block/Block.h libdevcore/datastructures/blockchain/block/BlockHeader.h
         libdevcore/datastructures/containers/list.h libdevcore/datastructures/account/WalletAccount.h global/errors/WalletErrors.h
-        libdevcore/db/DBWriter.h libdevcore/db/DBStatus.h)
+        libdevcore/db/DBWriter.h libdevcore/db/DBStatus.h libdevcore/datastructures/concurrency/ThreadPool.h)
 
 if(LINUX)
     message(STATUS ">>> Linux found")
