@@ -1,11 +1,12 @@
 #include <iostream>
-#include "libdevcore/bip44/ecdsa.hpp"
-#include "libdevcore/bip44/BIP32.hpp"
-#include "libdevcore/bip44/BIP39.hpp"
-#include "libdevcore/bip44/BIP44.hpp"
-#include "libdevcore/bip44/utils.hpp"
-#include "libdevcore/db/DBWriter.h"
+#include "libdevcore/datastructures/concurrency/DBWriter.h"
 #if 0
+    #include "libdevcore/bip44/ecdsa.hpp"
+    #include "libdevcore/bip44/BIP32.hpp"
+    #include "libdevcore/bip44/BIP39.hpp"
+    #include "libdevcore/bip44/BIP44.hpp"
+    #include "libdevcore/bip44/utils.hpp"
+    #include "libdevcore/db/DBProvider.h"
     #include "libdevcore/datastructures/account/WalletAccount.h"
     #include "libdevcore/datastructures/blockchain/transaction/ValidTransaction.h"
     #include "libdevcore/datastructures/request/RawTransaction.h"
@@ -15,27 +16,61 @@
 #endif
 
 int main() {
+    std::cout << "Hello, World!" << std::endl;
     #if 0
-        std::cout << "Hello, World!" << std::endl;
         std::string key = "test";
         std::string str = R"({
-              "instruction": "i_push_transaction",
-              "data": {
-                "from": "g2px1",
-                "to": "merchant",
-                "amount": 1.000003,
-                "type": 0,
-                "extradata": {
-                  "name": "a",
-                  "value": 1,
-                  "bytecode":"a"
-                },
-                "sign":"sadwa",
-                "r":"sadwa",
-                "s":"sadwa",
-                "fee":0.0001
-              }
-            })";
+                  "instruction": "i_push_transaction",
+                  "data": {
+                    "from": "g2px1",
+                    "to": "merchant",
+                    "amount": 1.000003,
+                    "type": 0,
+                    "extradata": {
+                      "name": "a",
+                      "value": 1,
+                      "bytecode":"a"
+                    },
+                    "sign":"sadwa",
+                    "r":"sadwa",
+                    "s":"sadwa",
+                    "fee":0.0001
+                  }
+                })";
+        std::string path = "/Users/kirillzhukov/Documents/unit_db/";
+        DBWriter blockWriter = DBWriter(path);
+        std::deque<WriteBatch *> *deque = blockWriter.getDeque();
+        std::shared_ptr<rocksdb::WriteBatch> writeBatch = blockWriter.getProvider()->getBatch();
+        blockWriter.init();
+        for (int i = 0; i < 100000; i++) writeBatch->Put(
+                rocksdb::Slice(key+std::to_string(i)),
+                rocksdb::Slice(str));
+        deque->emplace_back(writeBatch.get());
+        std::string testKey = key+"1";
+        operationDBStatus::DBResponse<std::string> dbResponse = blockWriter.getProvider()->read<std::string>(&testKey);
+        std::cout << std::endl << "reading error: " << (int) dbResponse.errorResponse << std::endl;
+        std::cout << std::endl << "reading value: " <<  *dbResponse.value << std::endl;
+    #endif
+    #if 0
+        std::string key = "test";
+        std::string str = R"({
+                  "instruction": "i_push_transaction",
+                  "data": {
+                    "from": "g2px1",
+                    "to": "merchant",
+                    "amount": 1.000003,
+                    "type": 0,
+                    "extradata": {
+                      "name": "a",
+                      "value": 1,
+                      "bytecode":"a"
+                    },
+                    "sign":"sadwa",
+                    "r":"sadwa",
+                    "s":"sadwa",
+                    "fee":0.0001
+                  }
+                })";
         std::string path = "/Users/kirillzhukov/Documents/unit_db/";
         dbProvider::BatchProvider batchProvider = dbProvider::BatchProvider(path);
         std::shared_ptr<rocksdb::WriteBatch> writeBatch = dbProvider::BatchProvider::getBatch();

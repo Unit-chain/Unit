@@ -15,12 +15,13 @@ endif()
 add_executable(unit main.cpp libdevcore/bip44/BIP44.hpp libdevcore/bip44/BIP39.hpp libdevcore/bip44/BIP32.hpp libdevcore/bip44/SHA256.cpp libdevcore/bip44/SHA256.h
         libdevcore/bip44/base58.hpp libdevcore/bip44/addresses.hpp libdevcore/crypto/keccak/kec256.cpp libdevcore/crypto/keccak/kec256.h libdevcore/crypto/Hex.h
         libdevcore/datastructures/trees/MerkleTree.h libdevcore/datastructures/trees/MerkleTree.cpp libdevcore/crypto/SHA3/sha3.h libdevcore/crypto/SHA3/sha3.cpp
-        libdevcore/bip44/BIP44.hpp libdevcore/bip44/BIP39.hpp libdevcore/bip44/BIP32.hpp libdevcore/bip44/SHA256.cpp libdevcore/bip44/SHA256.h
+        libdevcore/bip44/BIP44.hpp libdevcore/bip44/BIP39.hpp libdevcore/bip44/BIP32.hpp libdevcore/bip44/SHA256.cpp libdevcore/bip44/SHA256.h libdevcore/bip44/ecdsa.hpp
         libdevcore/bip44/base58.hpp libdevcore/bip44/addresses.hpp libdevcore/bip44/utils.hpp libdevcore/datastructures/request/RawTransaction.h
         global/GlobalVariables.h libdevcore/utils/StringUtil.h libdevcore/utils/StringUtil.cpp libdevcore/datastructures/blockchain/transaction/ValidTransaction.h
         libdevcore/pointers/lazy_pointer.h libdevcore/datastructures/blockchain/block/Block.h libdevcore/datastructures/blockchain/block/BlockHeader.h
         libdevcore/datastructures/containers/list.h libdevcore/datastructures/account/WalletAccount.h global/errors/WalletErrors.h
-        libdevcore/db/DBWriter.h libdevcore/db/DBStatus.h libdevcore/datastructures/concurrency/ThreadPool.h)
+        libdevcore/db/DBProvider.h libdevcore/db/DBStatus.h libdevcore/datastructures/concurrency/ThreadPool.h libdevcore/datastructures/concurrency/DBWriter.h
+        blockHandler/BlockHandler.h libdevcore/datastructures/blockchain/block/BlockBuilder.h)
 
 if(LINUX)
     message(STATUS ">>> Linux found")

@@ -44,7 +44,7 @@ namespace operationDBStatus {
         bool error{};
         DBCode dbCode;
         /// functions
-        bool hasValue () const {
+        [[nodiscard]] bool hasValue () const {
             return !error;
         }
         [[nodiscard]] const tuple<vector<Status> *, vector<string> *> &getValue() const {

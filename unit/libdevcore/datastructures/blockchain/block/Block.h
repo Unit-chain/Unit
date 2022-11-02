@@ -24,24 +24,63 @@ public:
                                                                          message(std::move(message)), signP(std::move(signP)),
                                                                          rewardProverAddress(std::move(rewardP)), txList(txList),
                                                                          reward(reward) {}
-
     BlockHeader blockHeader;
     std::string message;
     std::string signP;
+    std::string rP;
+    std::string sP;
     std::string rewardProverAddress;
     unit::list<ValidTransaction> txList;
     uint64_t reward{};
 
     std::string serializeBlock();
+    std::string serializeForSigning();
     std::string generateMerkleRoot();
     std::string generateHash();
     uint64_t getSize();
     const unit::list<ValidTransaction> *getTxList() const;
+
+    const BlockHeader &getBlockHeader() const;
+
+    void setBlockHeader(const BlockHeader &blockHeader);
+
+    const std::string &getMessage() const;
+
+    void setMessage(const std::string &message);
+
+    const std::string &getSignP() const;
+
+    void setSignP(const std::string &signP);
+
+    const std::string &getRewardProverAddress() const;
+
+    void setRewardProverAddress(const std::string &rewardProverAddress);
+
+    void setTxList(const unit::list<ValidTransaction> &txList);
+
+    uint64_t getReward() const;
+
+    void setReward(uint64_t reward);
+
+    const std::string &getRp() const;
+
+    void setRp(const std::string &rP);
+
+    const std::string &getSp() const;
+
+    void setSp(const std::string &sP);
 };
 
 std::string Block::serializeBlock() {
     std::stringstream ss(blockHeader.serializeBlockHeader());
-    ss << R"(", "message":")" << this->message << R"(", "signP":")" << this->signP << R"(", "rewardProverAddress":")"
+    ss << R"(", "message":")" << this->message << R"(", "signP":")" << this->signP << R"(", "rP":")" << this->rP << R"(", "sP":")" << this->sP << R"(", "rewardProverAddress":")"
+       << this->rewardProverAddress << R"(", "reward":)" << this->reward << R"(})";
+    return ss.str();
+}
+
+std::string Block::serializeForSigning() {
+    std::stringstream ss(blockHeader.serializeBlockHeader());
+    ss << R"(", "message":")" << this->message << R"(", "rewardProverAddress":")"
        << this->rewardProverAddress << R"(", "reward":)" << this->reward << R"(})";
     return ss.str();
 }
@@ -83,6 +122,66 @@ uint64_t Block::getSize() {
 
 const unit::list<ValidTransaction> *Block::getTxList() const {
     return &txList;
+}
+
+const BlockHeader &Block::getBlockHeader() const {
+    return blockHeader;
+}
+
+void Block::setBlockHeader(const BlockHeader &blockHeader) {
+    Block::blockHeader = blockHeader;
+}
+
+const std::string &Block::getMessage() const {
+    return message;
+}
+
+void Block::setMessage(const std::string &message) {
+    Block::message = message;
+}
+
+const std::string &Block::getSignP() const {
+    return signP;
+}
+
+void Block::setSignP(const std::string &signP) {
+    Block::signP = signP;
+}
+
+const std::string &Block::getRewardProverAddress() const {
+    return rewardProverAddress;
+}
+
+void Block::setRewardProverAddress(const std::string &rewardProverAddress) {
+    Block::rewardProverAddress = rewardProverAddress;
+}
+
+void Block::setTxList(const unit::list<ValidTransaction> &txList) {
+    Block::txList = txList;
+}
+
+uint64_t Block::getReward() const {
+    return reward;
+}
+
+void Block::setReward(uint64_t reward) {
+    Block::reward = reward;
+}
+
+const std::string &Block::getRp() const {
+    return rP;
+}
+
+void Block::setRp(const std::string &rP) {
+    Block::rP = rP;
+}
+
+const std::string &Block::getSp() const {
+    return sP;
+}
+
+void Block::setSp(const std::string &sP) {
+    Block::sP = sP;
 }
 
 #endif //UNIT_BLOCK_H

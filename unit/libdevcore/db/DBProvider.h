@@ -2,8 +2,8 @@
 // Created by Kirill Zhukov on 24.10.2022.
 //
 
-#ifndef UNIT_DBWRITER_H
-#define UNIT_DBWRITER_H
+#ifndef UNIT_DBPROVIDER_H
+#define UNIT_DBPROVIDER_H
 #include <memory>
 #include <utility>
 #include "thread"
@@ -98,7 +98,6 @@ namespace dbProvider {
         this->options.create_missing_column_families = true;
         this->options.unordered_write=true;
         this->options.bottommost_compression = rocksdb::kZSTD;
-        this->options.create_if_missing = false;
         this->options.compression = rocksdb::kLZ4Compression;
         this->options.IncreaseParallelism(cpuPiece);
         this->options.max_background_jobs = (cpuPiece / 2  <= 2) ? 2 : cpuPiece / 2;
@@ -175,11 +174,11 @@ namespace dbProvider {
             status = rocksdb::DB::OpenForReadOnly(this->options, this->path, &db);
             if (status.code() != rocksdb::Status::Code::kOk) std::this_thread::sleep_for(std::chrono::seconds(3));
         }
-        std::vector<std::string> response;
         std::vector<rocksdb::Slice> slices(keys->size());
         for (auto &key : (*keys)) slices.emplace_back(rocksdb::Slice(key));
+        std::vector<std::string> response;
         std::vector<rocksdb::Status> statuses = db->MultiGet(rocksdb::ReadOptions(), slices, &response);
         return {&statuses, &response};
     }
 }
-#endif //UNIT_DBWRITER_H
+#endif //UNIT_DBPROVIDER_H

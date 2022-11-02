@@ -24,7 +24,7 @@
 class Task {
 public:
     template <typename FuncRetType, typename ...Args, typename ...FuncTypes>
-    Task(FuncRetType(*func)(FuncTypes...), Args&&... args) :
+    explicit Task(FuncRetType(*func)(FuncTypes...), Args&&... args) :
             is_void{ std::is_void_v<FuncRetType> } {
 
         if constexpr (std::is_void_v<FuncRetType>) {
