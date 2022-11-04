@@ -4,6 +4,8 @@
 
 #ifndef UNIT_DBSTATUS_H
 #define UNIT_DBSTATUS_H
+#include <utility>
+
 #include "rocksdb/db.h"
 
 using namespace rocksdb;
@@ -37,18 +39,19 @@ namespace operationDBStatus {
 
     class [[maybe_unused]] DBTupleResponse {
     public:
-        DBTupleResponse(vector<Status> *statuses, vector<string> *values) : value(statuses, values) {}
+        DBTupleResponse(std::vector<Status> statuses, std::vector<string> values) : statuses(std::move(statuses)) , responses(std::move(values)) {}
         DBTupleResponse(bool error, DBCode dbCode) : error(error), dbCode(dbCode) {}
         /// structures below
-        std::tuple<vector<Status>*, vector<string>*> value;
+        std::vector<Status> statuses;
+        std::vector<string> responses;
         bool error{};
         DBCode dbCode;
         /// functions
         [[nodiscard]] bool hasValue () const {
             return !error;
         }
-        [[nodiscard]] const tuple<vector<Status> *, vector<string> *> &getValue() const {
-            return value;
+        [[nodiscard]] std::tuple<std::vector<Status>, std::vector<string>> getValue() const {
+            return std::make_tuple(statuses, responses);
         }
     };
 }

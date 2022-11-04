@@ -26,6 +26,10 @@ public:
                                                               txInputs(txInputs.storage()), tokensBalance(std::move(tokensBalance)), nonce(nonce) {}
     WalletAccount(std::string address, double balance, json::object tokensBalance);
     WalletAccount(std::string address, double balance, json::object tokensBalance, long nonce);
+    explicit WalletAccount(const std::string &address) : address(address) {
+        this->balance = 0.0;
+        this->nonce = 0;
+    }
     virtual ~WalletAccount() = default;
 
     std::string address;
@@ -37,8 +41,9 @@ public:
     bool changed = false;
 
     static std::optional<WalletAccount*> parseWallet(std::string *ptr);
+    static WalletAccount* createEmptyWallet(const std::string &);
     bool parseHistory(std::string *ptr);
-    operationStatus::WalletErrorsCode subtract(double value, const std::string& inputHash);
+    operationStatus::WalletErrorsCode subtract(double value, const std::string& outputHash);
     operationStatus::WalletErrorsCode subtractToken(double value, const std::string& inputHash, const std::string &tokenName);
     void increase(double value, const std::string& inputHash);
     void increaseToken(double value, const std::string& inputHash, const std::string &tokenName);
@@ -78,10 +83,10 @@ void WalletAccount::increase(double value, const std::string& inputHash) {
     this->changed = true;
 }
 
-operationStatus::WalletErrorsCode WalletAccount::subtract(double value, const std::string& inputHash) {
+operationStatus::WalletErrorsCode WalletAccount::subtract(double value, const std::string& outputHash) {
     if (this->balance < value) return operationStatus::WalletErrorsCode::cLowNativeTokenBalance;
     this->balance -= value;
-    this->txOutputs.emplace_back(inputHash);
+    this->txOutputs.emplace_back(outputHash);
     this->changed = true;
     return operationStatus::WalletErrorsCode::cOk;
 }
@@ -149,6 +154,10 @@ WalletAccount::WalletAccount(std::string address, double balance, json::object t
 
 bool WalletAccount::isValidNonce(RawTransaction *rawPointer) const {
     return this->nonce != rawPointer->nonce;
+}
+
+WalletAccount* WalletAccount::createEmptyWallet(const string &address) {
+    return std::make_shared<WalletAccount>(WalletAccount()).get();
 }
 
 

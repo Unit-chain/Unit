@@ -64,6 +64,29 @@ public:
 
     [[deprecated("Not implemented yet")]]
     void setZKProveData() {}
+
+    bool operator==(const ValidTransaction &rhs) const {
+        return from == rhs.from &&
+               to == rhs.to &&
+               type == rhs.type &&
+               date == rhs.date &&
+               extra == rhs.extra &&
+               hash == rhs.hash &&
+               sign == rhs.sign &&
+               r == rhs.r &&
+               s == rhs.s &&
+               signP == rhs.signP &&
+               rP == rhs.rP &&
+               sP == rhs.sP &&
+               index == rhs.index &&
+               nonce == rhs.nonce &&
+               amount == rhs.amount &&
+               fee == rhs.fee;
+    }
+
+    bool operator!=(const ValidTransaction &rhs) const {
+        return !(rhs == *this);
+    }
 };
 
 

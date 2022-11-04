@@ -1,5 +1,4 @@
 #include <iostream>
-#include "libdevcore/datastructures/concurrency/DBWriter.h"
 #if 0
     #include "libdevcore/bip44/ecdsa.hpp"
     #include "libdevcore/bip44/BIP32.hpp"
@@ -17,6 +16,17 @@
 
 int main() {
     std::cout << "Hello, World!" << std::endl;
+    #if 0
+        std::string testKey = "test0";
+        std::string path = "/Users/kirillzhukov/Documents/unit_db/";
+        DBWriter blockWriter = DBWriter(path);
+        std::vector<std::string> vec;
+        vec.reserve(10000);
+        for (int i = 0; i < 10000; ++i) vec.emplace_back("test"+std::to_string(i));
+        vec.insert(vec.begin(), testKey);
+        operationDBStatus::DBTupleResponse tuple = blockWriter.getProvider()->multiRead(&vec);
+        std::cout << "size in main: " << (int) tuple.statuses.at(0).code() << std::endl;
+    #endif
     #if 0
         std::string key = "test";
         std::string str = R"({

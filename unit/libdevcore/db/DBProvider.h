@@ -170,15 +170,20 @@ namespace dbProvider {
         rocksdb::Status status = rocksdb::DB::OpenForReadOnly(this->options, this->path, &db);
         if (status.code() == rocksdb::Status::Code::kCorruption) return {true, operationDBStatus::DBCode::cCorruption};
         if (status.code() == rocksdb::Status::Code::kIOError) return {true, operationDBStatus::DBCode::cIOError};
+        std::vector<rocksdb::Slice> slices{};
+        slices.reserve(keys->size());
         while (status.code() != rocksdb::Status::Code::kOk) {
             status = rocksdb::DB::OpenForReadOnly(this->options, this->path, &db);
-            if (status.code() != rocksdb::Status::Code::kOk) std::this_thread::sleep_for(std::chrono::seconds(3));
+            if (status.code() != rocksdb::Status::Code::kOk) {
+                if (slices.empty()) for (auto &key : (*keys)) slices.emplace_back(rocksdb::Slice(key));
+                else std::this_thread::sleep_for(std::chrono::seconds(3));
+                std::this_thread::sleep_for(std::chrono::seconds(3));
+            }
         }
-        std::vector<rocksdb::Slice> slices(keys->size());
-        for (auto &key : (*keys)) slices.emplace_back(rocksdb::Slice(key));
+        if (slices.empty()) for (const auto& key : *keys) slices.emplace_back(rocksdb::Slice(key));
         std::vector<std::string> response;
         std::vector<rocksdb::Status> statuses = db->MultiGet(rocksdb::ReadOptions(), slices, &response);
-        return {&statuses, &response};
+        return {statuses, response};
     }
 }
 #endif //UNIT_DBPROVIDER_H
