@@ -16,11 +16,7 @@
 
 class JsonMergeOperator : public  rocksdb::MergeOperator{
 public:
-    virtual bool FullMerge(const rocksdb::Slice& key,
-                           const rocksdb::Slice* existing_value,
-                           const std::deque<std::string>& operand_list,
-                           std::string* new_value,
-                           rocksdb::Logger* logger) const override;
+    virtual bool FullMergeV2(const MergeOperationInput &merge_in, MergeOperationOutput *merge_out) const override;
 
     virtual bool PartialMerge(const rocksdb::Slice& key,
                               const rocksdb::Slice& left_operand,
@@ -49,25 +45,23 @@ std::vector<std::string> JsonMergeOperator::split(std::string str, char del){
     return words;
 }
 
-bool JsonMergeOperator::FullMerge(const rocksdb::Slice &key, const rocksdb::Slice *existing_value,
-                                  const std::deque<std::string> &operand_list, std::string *new_value,
-                                  rocksdb::Logger *logger) const {
+bool JsonMergeOperator::FullMergeV2(const MergeOperationInput &merge_in, MergeOperationOutput *merge_out) const {
     boost::json::value obj{};
-    if (existing_value) {
+    if (merge_in.existing_value) {
         try {
-            obj = boost::json::parse(existing_value->ToString());
+            obj = boost::json::parse(merge_in.existing_value->ToString());
         } catch (std::exception &e) {
-            rocksdb::Log(logger, "Invalid json string after parsing: %s", existing_value->ToString().c_str());
+            rocksdb::Log(merge_in.logger, "Invalid json string after parsing: %s", merge_in.existing_value->ToString().c_str());
             return false;
         }
     }
 
-    for (const auto &value : operand_list) {
-        std::vector<std::string> split_vector = JsonMergeOperator::split(value, '=');
+    for (const auto &value : merge_in.operand_list) {
+        std::vector<std::string> split_vector = JsonMergeOperator::split(value.data_, '=');
         obj.as_object()[split_vector[0]] = split_vector[1];
     }
 
-    *new_value =  boost::json::value_to<std::string>(obj);
+    merge_out->new_value =  boost::json::value_to<std::string>(obj);
     return true;
 }
 

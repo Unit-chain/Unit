@@ -17,7 +17,7 @@ public:
     explicit BlockBuilder(BIP44Result bip44Result) : bip44Result(std::move(bip44Result)) {}
 
     inline BlockBuilder *setBlock(Block *block) {
-        this->currentBlock = *block;
+        this->currentBlock = block;
         return this;
     }
 
@@ -47,47 +47,47 @@ public:
     }
 
     inline BlockBuilder *setBlockHeader() {
-        this->currentBlock.setBlockHeader(this->blockHeader);
+        this->currentBlock->setBlockHeader(this->blockHeader);
         return this;
     }
 
     inline BlockBuilder *setRewardProverAddress(const std::string &proverAddress) {
-        this->currentBlock.setRewardProverAddress(proverAddress);
+        this->currentBlock->setRewardProverAddress(proverAddress);
         return this;
     }
 
     inline BlockBuilder *setMessage(const std::string &message) {
-        this->currentBlock.setMessage(message);
+        this->currentBlock->setMessage(message);
         return this;
     }
 
     inline BlockBuilder *generateHash() {
-        this->currentBlock.generateHash();
+        this->currentBlock->generateHash();
         return this;
     }
 
     inline BlockBuilder *generateRoot() {
-        this->currentBlock.generateMerkleRoot();
+        this->currentBlock->generateMerkleRoot();
         return this;
     }
 
     inline BlockBuilder *setProverSign() {
-        ECDSASignResult sig = ecdsa_sign_message(this->currentBlock.serializeForSigning(), this->bip44Result.prv);
-        this->currentBlock.setRp(sig.r);
-        this->currentBlock.setSp(sig.s);
-        this->currentBlock.setSignP(sig.message_hash);
+        ECDSASignResult sig = ecdsa_sign_message(this->currentBlock->serializeForSigning(), this->bip44Result.prv);
+        this->currentBlock->setRp(sig.r);
+        this->currentBlock->setSp(sig.s);
+        this->currentBlock->setSignP(sig.message_hash);
         return this;
     }
 
     inline Block *build() {
-        return &(this->currentBlock);
+        return this->currentBlock;
     }
 
-    const Block &getCurrentBlock() const {
-        return currentBlock;
+    [[nodiscard]] Block getCurrentBlock() const {
+        return *currentBlock;
     }
-    void setCurrentBlock(const Block &currentBlock) {
-        BlockBuilder::currentBlock = currentBlock;
+    void setCurrentBlock(Block *currentBlock) {
+        this->currentBlock = currentBlock;
     }
     const BlockHeader &getBlockHeader() const {
         return blockHeader;
@@ -96,7 +96,7 @@ public:
         BlockBuilder::blockHeader = blockHeader;
     }
 private:
-    Block currentBlock;
+    Block *currentBlock;
     BlockHeader blockHeader;
     BIP44Result bip44Result;
 };

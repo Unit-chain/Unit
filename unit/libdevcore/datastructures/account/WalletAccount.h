@@ -40,7 +40,7 @@ public:
     json::array txInputs{};
     bool changed = false;
 
-    static std::optional<WalletAccount*> parseWallet(std::string *ptr);
+    static std::optional<std::shared_ptr<WalletAccount>> parseWallet(std::string *ptr);
     static WalletAccount* createEmptyWallet(const std::string &);
     bool parseHistory(std::string *ptr);
     operationStatus::WalletErrorsCode subtract(double value, const std::string& outputHash);
@@ -54,14 +54,14 @@ public:
     [[nodiscard]] std::string serializeHistory() const;
 };
 
-std::optional<WalletAccount*> WalletAccount::parseWallet(std::string *ptr) {
+std::optional<std::shared_ptr<WalletAccount>> WalletAccount::parseWallet(std::string *ptr) {
     if (ptr == nullptr) return std::nullopt;
     json::error_code ec;
     try {
         json::value value = json::parse(*ptr, ec);
         auto address = boost::json::value_to<std::string>(value.at("address"));
         auto tokensBalance = value.at("tokensBalance").as_object();
-        return new WalletAccount(address, value.at("balance").as_double(), tokensBalance, value.at("nonce").as_int64());
+        return std::make_shared<WalletAccount>(WalletAccount(address, value.at("balance").as_double(), tokensBalance, value.at("nonce").as_int64()));
     } catch (const boost::exception &o) {
         logger << ec.message() << std::endl;
         return std::nullopt;
@@ -156,7 +156,7 @@ bool WalletAccount::isValidNonce(RawTransaction *rawPointer) const {
     return this->nonce != rawPointer->nonce;
 }
 
-WalletAccount* WalletAccount::createEmptyWallet(const string &address) {
+WalletAccount* WalletAccount::createEmptyWallet(const std::string &address) {
     return std::make_shared<WalletAccount>(WalletAccount()).get();
 }
 

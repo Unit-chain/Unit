@@ -51,17 +51,17 @@ public:
     std::string name;
     std::string bytecode;
     double supply;
-    static std::optional<Token*> parse(boost::json::value *extra);
+    static std::optional<std::shared_ptr<Token>> parse(boost::json::value *extra);
     std::string serialize() const;
 };
 
-std::optional<Token *> Token::parse(boost::json::value *extra) {
+std::optional<std::shared_ptr<Token>> Token::parse(boost::json::value *extra) {
     boost::json::value parsedData{};
     try {
         auto bytecode = boost::json::value_to<std::string>(extra->at("bytecode"));
         parsedData = boost::json::parse(hex_to_ascii(bytecode));
         Token newToken = Token(boost::json::value_to<std::string>(parsedData.at("name")), bytecode, boost::json::value_to<double>(parsedData.at("supply")));
-        return {std::make_shared<Token>(newToken).get()};
+        return {std::make_shared<Token>(newToken)};
     } catch (std::exception &e) {
         logger << e.what() << std::endl;
         return std::nullopt;

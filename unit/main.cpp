@@ -1,5 +1,6 @@
 #include <iostream>
 #if 0
+    #include "boost/unordered_map.hpp"
     #include "libdevcore/bip44/ecdsa.hpp"
     #include "libdevcore/bip44/BIP32.hpp"
     #include "libdevcore/bip44/BIP39.hpp"
@@ -16,6 +17,11 @@
 
 int main() {
     std::cout << "Hello, World!" << std::endl;
+    #if 0
+        boost::unordered_map<std::string, std::string> map;
+        map["test"] = "tesst";
+        for (auto& [key, value]: map) std::cout << key << " has value " << value << std::endl;
+    #endif
     #if 0
         std::string testKey = "test0";
         std::string path = "/Users/kirillzhukov/Documents/unit_db/";
