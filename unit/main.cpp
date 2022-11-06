@@ -1,4 +1,6 @@
 #include <iostream>
+#include "thread"
+
 #if 0
     #include "boost/unordered_map.hpp"
     #include "libdevcore/bip44/ecdsa.hpp"
@@ -15,8 +17,20 @@
     #include "libdevcore/pointers/lazy_pointer.h"
 #endif
 
+void bar(int x)
+{
+    std::cout << x << std::endl;
+}
+
+class test{
+public:
+    static void test1(int x) {std::cout << x << std::endl;}
+};
+
 int main() {
     std::cout << "Hello, World!" << std::endl;
+    std::thread first (test::test1, 10);
+    first.join();
     #if 0
         boost::unordered_map<std::string, std::string> map;
         map["test"] = "tesst";

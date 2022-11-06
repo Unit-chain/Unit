@@ -11,7 +11,7 @@
 struct BlockHeader {
     BlockHeader() = default;
     BlockHeader(std::string hash, std::string previousHash, std::string merkleRoot,
-                uint64_t time, uint64_t version, uint64_t transactionCount, uint64_t index, uint32_t size,
+                uint64_t time, uint64_t version, uint64_t transactionCount, uint64_t index, uint64_t size,
                 int nonce) : hash(std::move(hash)), previousHash(std::move(previousHash)), merkleRoot(std::move(merkleRoot)), time(time),
                              version(version), transactionCount(transactionCount), index(index), size(size),
                              nonce(nonce) {}
@@ -24,7 +24,7 @@ struct BlockHeader {
     uint64_t version{};
     uint64_t transactionCount{};
     uint64_t index{};
-    uint32_t size = 0;
+    uint64_t size = 0;
     int nonce{};
 
     std::string generateHash();
@@ -59,7 +59,7 @@ struct BlockHeader {
 
     void setIndex(uint64_t index);
 
-    void setSize(uint32_t size);
+    void setSize(uint64_t size);
 
     int getNonce() const;
 
@@ -133,7 +133,7 @@ void BlockHeader::setIndex(uint64_t index) {
     BlockHeader::index = index;
 }
 
-void BlockHeader::setSize(uint32_t size) {
+void BlockHeader::setSize(uint64_t size) {
     BlockHeader::size = size;
 }
 

@@ -6,6 +6,7 @@
 #define UNIT_BLOCKHANDLER_H
 #include <iostream>
 #include <utility>
+#include "thread"
 #include "cassert"
 #include "random"
 #include "deque"
@@ -22,12 +23,16 @@
 #include "../libdevcore/bip44/BIP44.hpp"
 #include "../libdevcore/bip44/BIP39.hpp"
 
+void bar(int x)
+{
+    std::cout << x << std::endl;
+}
+
 class DBStaticBatcher {
 public:
     static void setTxBatch(unit::list<ValidTransaction> *txList, rocksdb::WriteBatch *writeBatch,
                            dbProvider::BatchProvider *userDbProvider, dbProvider::BatchProvider *tokensDbProvider, uint64_t *blockSize);
 };
-
 void DBStaticBatcher::setTxBatch(unit::list<ValidTransaction> *txList, rocksdb::WriteBatch *writeBatch, dbProvider::BatchProvider *userDbProvider,
                                  dbProvider::BatchProvider *tokensDbProvider, uint64_t *blockSize) {
     *blockSize = 0;
@@ -141,7 +146,7 @@ void BlockHandler::startBlockGenerator() {
     start: {
         if (this->previousBlock == nullptr) {
             operationDBStatus::DBResponse<std::string> dbResponse = blockWriter.getProvider()->read<std::string>(&currentBlockKey);
-            if (dbResponse.error) assert((int) dbResponse.errorResponse == 1);
+            if (dbResponse.error) { assert((int) dbResponse.errorResponse == 1); }
             this->blockBuilder
                     .setPreviousHash(((int) dbResponse.errorResponse == 1) ? "genesis" : *dbResponse.value)
                     ->setMessage("test blocks")
@@ -174,16 +179,19 @@ void BlockHandler::startBlockGenerator() {
     }
     pushingBlock: {
         std::shared_ptr<rocksdb::WriteBatch> txBatch = this->blockWriter.getProvider()->getBatch();
-        std::thread txThread(DBStaticBatcher::setTxBatch, &this->currentBlock->txList, txBatch, this->userWriter.getProvider(),
-                             this->tokenWriter.getProvider(), &(this->currentBlock->blockHeader.size));
-        std::shared_ptr<WriteBatch> blockBatchPtr = this->blockWriter.getBatch();
+        std::thread txThread(DBStaticBatcher::setTxBatch, &this->currentBlock->txList, txBatch.get(),
+                             this->userWriter.getProvider(), this->tokenWriter.getProvider(), &(this->currentBlock->blockHeader.size));
+        std::thread first (bar, 10);
+        first.join();
+        std::shared_ptr<WriteBatch> blockBatchPtr = DBWriter::getBatch();
         blockBatchPtr->Put(rocksdb::Slice(this->currentBlock->blockHeader.hash), rocksdb::Slice(this->currentBlock->serializeBlock()));
-        this->blockWriter.getProvider()->commitBatch(blockBatchPtr);
         txThread.join();
+        this->blockWriter.getProvider()->commitBatch(blockBatchPtr);
         this->transactionWriter.getProvider()->commitBatch(txBatch);
     }
     *this->previousBlock = *currentBlock;
     *this->currentBlock = Block();
+    std::this_thread::sleep_for(std::chrono::seconds ( 3));
     goto start;
 }
 
