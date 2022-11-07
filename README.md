@@ -1,6 +1,6 @@
 # Requirements
 
-> Memory: 2GB (due RocksDB)
+> Memory: 2GB 
 > OS: MacOS, Linux, Windows
 
 # Installing(Unit-chain)
@@ -24,7 +24,7 @@
     5. `make`
     6. Now we can start Unit: `./UVM`
 
-# Api Requests:
+# [[ DEPRECATED - look RPC_REQUESTS.md ]]Api Requests:
 
 > Send unit transaction
 >
