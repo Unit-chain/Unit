@@ -136,7 +136,6 @@ public:
             ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)" << std::scientific << this->amount << R"(, "type":)"
                << this->type << R"(, "date":)" << this->date << R"(, "fee":)" << this->fee << R"(, "nonce":)" << this->nonce << R"(})";
         else {
-            std::cout << extra << std::endl;
             auto name = json::value_to<std::string>(this->extra.at("name"));
             auto value = json::value_to<double>(this->extra.at("value"));
             auto bytecode = json::value_to<std::string>(this->extra.at("bytecode"));
@@ -145,6 +144,31 @@ public:
                << this->type << R"(, "date":)" << this->date << R"(, "extradata":{)" << R"("name":")" << name
                << R"(", "value":)" << value << R"(, "bytecode": ")" << bytecode
                << R"("})" << R"(, "fee":)" << this->fee << R"(, "nonce":)" << this->nonce << R"(})";
+        }
+        return std::make_shared<std::string>(ss.str());
+    }
+
+    [[nodiscard]] inline std::shared_ptr<std::string> serializeForSending() const {
+        std::stringstream ss;
+        if (type == 0)
+            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)"
+            << std::scientific << this->amount << R"(, "type":)"
+               << this->type << R"(, "date":)" << this->date << R"(, "fee":)"
+               << this->fee << R"(, "nonce":)" << this->nonce << R"(, "signature":")" << this->sign << R"(", "r":")"
+               << this->r << R"(", "s":")" << this->s
+               << R"("})";
+        else {
+            auto name = json::value_to<std::string>(this->extra.at("name"));
+            auto value = json::value_to<double>(this->extra.at("value"));
+            auto bytecode = json::value_to<std::string>(this->extra.at("bytecode"));
+            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)" << std::scientific
+               << this->amount << R"(, "type":)"
+               << this->type << R"(, "date":)" << this->date << R"(, "extradata":{)" << R"("name":")" << name
+               << R"(", "value":)" << value << R"(, "bytecode": ")" << bytecode
+               << R"("})" << R"(, "fee":)" << this->fee << R"(, "nonce":)"
+               << this->nonce << R"(, "signature":")" << this->sign << R"(", "r":")"
+               << this->r << R"(", "s":")" << this->s
+               << R"("})";
         }
         return std::make_shared<std::string>(ss.str());
     }

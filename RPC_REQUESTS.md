@@ -118,4 +118,3 @@
 | -32000          | low balance.       |
 | -32001          | token exists.      |
 | -32002          | balance not found. |
-
