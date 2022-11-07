@@ -9,17 +9,30 @@
 #include "boost/json.hpp"
 #include "boost/json/src.hpp"
 #include "../libdevcore/datastructures/account/WalletAccount.h"
+#include "../libdevcore/bip44/ecdsa.hpp"
 
 class RpcMethod {
 public:
-    virtual std::variant<boost::json::value, std::shared_ptr<RawTransaction>> validateRequest(boost::json::value *params);
+    virtual std::shared_ptr<boost::json::value> validateRequest(boost::json::value *params);
+};
+
+class RpcMethodHandler {
+public:
+    RpcMethodHandler() = default;
+    explicit RpcMethodHandler(RpcMethod *method) : method(method) {}
+
+    [[nodiscard]] const std::shared_ptr<RpcMethod> &getMethod() const {return method;}
+    void setMethod(const std::shared_ptr<RpcMethod> &method) { RpcMethodHandler::method = method;}
+    inline std::shared_ptr<boost::json::value> executeValidating(boost::json::value *params) { return this->method->validateRequest(params); }
+private:
+    std::shared_ptr<RpcMethod> method;
 };
 
 class TransferMethod : public RpcMethod {
-    std::variant<boost::json::value, std::shared_ptr<RawTransaction>> validateRequest(boost::json::value *params) override;
+    std::shared_ptr<boost::json::value> validateRequest(boost::json::value *params) override;
 };
 
-std::variant<boost::json::value, std::shared_ptr<RawTransaction>> TransferMethod::validateRequest(boost::json::value *params) {
+std::shared_ptr<boost::json::value> TransferMethod::validateRequest(boost::json::value *params) {
     boost::json::value responseJSON = boost::json::parse(R"({"jsonrpc": "2.0"})");
     if (!params->as_object().contains("from") || !params->as_object().contains("to") || !params->as_object().contains("amount") || !params->as_object().contains("type") ||
     !params->as_object().contains("r") || !params->as_object().contains("s") || !params->as_object().contains("signature")
@@ -27,17 +40,27 @@ std::variant<boost::json::value, std::shared_ptr<RawTransaction>> TransferMethod
         responseJSON.as_object()["error"].as_object().emplace("code", -32602);
         responseJSON.as_object()["error"].as_object().emplace("message", "request doesn't have enough fields");
         responseJSON.as_object()["error"].as_object().emplace("id", "null");
-        return responseJSON;
+        return std::make_shared<boost::json::value>(responseJSON);
     }
     if (params->at("type").as_int64() == 1 && (!params->as_object().contains("extradata") || !params->as_object()["extradata"].as_object().contains("name")
                                                || !params->as_object()["extradata"].as_object().contains("value"))) {
         responseJSON.as_object()["error"].as_object().emplace("code", -32602);
         responseJSON.as_object()["error"].as_object().emplace("message", "request for transfer tokens should contains \'extradata\' field");
         responseJSON.as_object()["error"].as_object().emplace("id", "null");
-        return responseJSON;
+        return std::make_shared<boost::json::value>(responseJSON);
     }
-    std::shared_ptr<RawTransaction> rawTransaction = RawTransaction::parse(params);
-
+    return nullptr;
 }
 
 #endif //UNIT_RPCMETHOD_H
+
+
+//std::shared_ptr<RawTransaction> rawTransaction = RawTransaction::parse(params);
+//if (!ecdsa_verify_signature(boost::json::value_to<std::string>(params->at("r")), boost::json::value_to<std::string>(params->at("s")),
+//        *rawTransaction->serializeWithoutSignatures(), boost::json::value_to<std::string>(params->at("from")))) {
+//responseJSON.as_object()["error"].as_object().emplace("code", -32602);
+//responseJSON.as_object()["error"].as_object().emplace("message", "invalid signature");
+//responseJSON.as_object()["error"].as_object().emplace("id", "null");
+//return responseJSON;
+//}
+//return rawTransaction;

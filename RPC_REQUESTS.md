@@ -30,7 +30,8 @@
         "type": 0,
         "signature": "334D016F755CD6DC58C53A86E183882F8EC14F52FB05345887C8A5EDD42C87B7",
         "r": "00CFEB4CE50DDD93625C2BD1F6D339430A520725285C73064A1C213F7EE70737A5",
-        "s": "5C94352C2BC5679158CC31C174A045D51343FBF1A28693299423305D5834A52B"
+        "s": "5C94352C2BC5679158CC31C174A045D51343FBF1A28693299423305D5834A52B",
+      	"nonce": 1
     },
     "id": "1"
 }
@@ -48,6 +49,7 @@
         "signature": "334D016F755CD6DC58C53A86E183882F8EC14F52FB05345887C8A5EDD42C87B7",
         "r": "00CFEB4CE50DDD93625C2BD1F6D339430A520725285C73064A1C213F7EE70737A5",
         "s": "5C94352C2BC5679158CC31C174A045D51343FBF1A28693299423305D5834A52B",
+      	"nonce": 1,
         "extradata": {
             "name": "token",
             "value": 1e3,
@@ -109,12 +111,16 @@
 
 ## Error codes
 
-| ***Code name*** | ***Meaning***      |
-| --------------- | ------------------ |
-| -32700          | parse error.       |
-| -32600          | invalid request.   |
-| -32601          | method not found.  |
-| -32602          | invalid parameter. |
-| -32000          | low balance.       |
-| -32001          | token exists.      |
-| -32002          | balance not found. |
+| ***Code name*** | ***Meaning***                     |
+| --------------- | --------------------------------- |
+| -32700          | parse error.                      |
+| -32600          | invalid request.                  |
+| -32601          | method not found.                 |
+| -32602          | invalid parameter.                |
+| -32000          | low balance.                      |
+| -32001          | token exists.                     |
+| -32002          | balance not found.                |
+| -32003          | HTTP request method not supported |
+| -32004          | default error(undefined behavior) |
+| -32005          | bad nonce                         |
+| -32006          | invalid signature                 |

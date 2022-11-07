@@ -22,6 +22,7 @@
 
 int main() {
     std::cout << "Hello, World!" << std::endl;
+    static constexpr char httpMethodError[106] = R"({"jsonrpc": "2.0", "error": {"code": -32003, "message": "HTTP request method not supported"}, "id": null})";
     #if 0
         std::string from = "UNTxp28nf2wLJzWm49YtLKyXGYh8vJ3";
         std::string to = "UNTxp28nf2wLJzWm49YtLKyXGYh8vJ3";
