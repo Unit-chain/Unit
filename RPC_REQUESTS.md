@@ -13,78 +13,109 @@
 | unit_get_tx_pool_size       | null                                  | Returns integer value which shows how many transactions on current node in pool. |
 | unit_get_address_tx_history | address                               | Returns array of hashes of txs under two fields: **out**, **in**, out means outcominng txs, in means incoming txs. |
 | unit_get_block_height       | null                                  | Returns integer value of latest block index.                 |
+| unit_get_tx                 | hash                                  | Returns json view of transaction.                            |
 
-
+## Examples
 
 * transfer
 
 ```json
-{"jsonrpc":"2.0", "method":"transfer", "params": 
- {
-  "from": "UNTxp28nf2wLJzWm49YtLKyXGYh8vJ3",
-  "to": "UNTxspt199oNWgDTHhx153BoUPMxY6D",
-  "amount": 1e3,
-  "type": 0,
-  "signature":"334D016F755CD6DC58C53A86E183882F8EC14F52FB05345887C8A5EDD42C87B7",
-  "r":"00CFEB4CE50DDD93625C2BD1F6D339430A520725285C73064A1C213F7EE70737A5",
-  "s":"5C94352C2BC5679158CC31C174A045D51343FBF1A28693299423305D5834A52B"
- }, 
- "id":"1"
+{
+    "jsonrpc": "2.0",
+    "method": "transfer",
+    "params": {
+        "from": "UNTxp28nf2wLJzWm49YtLKyXGYh8vJ3",
+        "to": "UNTxspt199oNWgDTHhx153BoUPMxY6D",
+        "amount": 1e3,
+        "type": 0,
+        "signature": "334D016F755CD6DC58C53A86E183882F8EC14F52FB05345887C8A5EDD42C87B7",
+        "r": "00CFEB4CE50DDD93625C2BD1F6D339430A520725285C73064A1C213F7EE70737A5",
+        "s": "5C94352C2BC5679158CC31C174A045D51343FBF1A28693299423305D5834A52B"
+    },
+    "id": "1"
 }
 ```
 
 ```json
-{"jsonrpc":"2.0", "method":"transfer", "params": 
- {
-  "from": "UNTxp28nf2wLJzWm49YtLKyXGYh8vJ3",
-  "to": "UNTxspt199oNWgDTHhx153BoUPMxY6D",
-  "amount": 0,
-  "type": 1,
-  "signature":"334D016F755CD6DC58C53A86E183882F8EC14F52FB05345887C8A5EDD42C87B7",
-  "r":"00CFEB4CE50DDD93625C2BD1F6D339430A520725285C73064A1C213F7EE70737A5",
-  "s":"5C94352C2BC5679158CC31C174A045D51343FBF1A28693299423305D5834A52B",
-  "extradata": {
-  "name": "token",
-  "value": "1e3",
-  "bytecode":"null"
-  },
-  "id":"1"
- }
+{
+    "jsonrpc": "2.0",
+    "method": "transfer",
+    "params": {
+        "from": "UNTxp28nf2wLJzWm49YtLKyXGYh8vJ3",
+        "to": "UNTxspt199oNWgDTHhx153BoUPMxY6D",
+        "amount": 0,
+        "type": 1,
+        "signature": "334D016F755CD6DC58C53A86E183882F8EC14F52FB05345887C8A5EDD42C87B7",
+        "r": "00CFEB4CE50DDD93625C2BD1F6D339430A520725285C73064A1C213F7EE70737A5",
+        "s": "5C94352C2BC5679158CC31C174A045D51343FBF1A28693299423305D5834A52B",
+        "extradata": {
+            "name": "token",
+            "value": 1e3,
+            "bytecode": "null"
+        },
+        "id": "1"
+}
 ```
 
 * unit_get_balance
 
 ```json
-{"jsonrpc":"2.0", "method":"unit_get_balance", "params":"UNTxp28nf2wLJzWm49YtLKyXGYh8vJ3"}
+{
+    "jsonrpc": "2.0",
+    "method": "unit_get_balance",
+    "params": "UNTxp28nf2wLJzWm49YtLKyXGYh8vJ3"
+}
 ```
 
 * unit_get_tx_pool_size
 
 ```json
-{"jsonrpc":"2.0", "method":"unit_get_tx_pool_size", "params":null}
+{
+    "jsonrpc": "2.0",
+    "method": "unit_get_tx_pool_size",
+    "params": null
+}
 ```
 
 * unit_get_address_tx_history
 
 ```json
-{"jsonrpc":"2.0", "method":"unit_get_address_tx_history", "params":"UNTxp28nf2wLJzWm49YtLKyXGYh8vJ3"}
+{
+  "jsonrpc":"2.0",
+  "method":"unit_get_address_tx_history",
+  "params":"UNTxp28nf2wLJzWm49YtLKyXGYh8vJ3"
+}
 ```
 
 * unit_get_block_height
 
 ```json
-{"jsonrpc":"2.0", "method":"unit_get_block_height", "params":null}
+{
+  "jsonrpc":"2.0",
+  "method":"unit_get_block_height",
+  "params":null
+}
 ```
 
-# Error codes
+* unit_get_block_height
 
-| ***Code name*** | ***Meaning***     |
-| --------------- | ----------------- |
-| -32700          | parse error.      |
-| -32600          | invalid request.  |
-| -32601          | method not found. |
-| -32602          | invalid parameter |
-| -32000          | low balance       |
-| -32001          | token exists      |
-| -32002          | balance not found |
+```json
+{
+ "jsonrpc":"2.0", 
+ "method":"unit_get_tx",
+ "params":"67b176705b46206614219f47a05aee7ae6a3edbe850bbbe214c536b989aea4d2"
+}
+```
+
+## Error codes
+
+| ***Code name*** | ***Meaning***      |
+| --------------- | ------------------ |
+| -32700          | parse error.       |
+| -32600          | invalid request.   |
+| -32601          | method not found.  |
+| -32602          | invalid parameter. |
+| -32000          | low balance.       |
+| -32001          | token exists.      |
+| -32002          | balance not found. |
 

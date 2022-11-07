@@ -4,6 +4,7 @@
 
 #ifndef UNIT_RPCMETHOD_H
 #define UNIT_RPCMETHOD_H
+#include "variant"
 #include "iostream"
 #include "boost/json.hpp"
 #include "boost/json/src.hpp"
@@ -11,14 +12,14 @@
 
 class RpcMethod {
 public:
-    virtual boost::json::value validateRequest(boost::json::value *params);
+    virtual std::variant<boost::json::value, std::shared_ptr<RawTransaction>> validateRequest(boost::json::value *params);
 };
 
 class TransferMethod : public RpcMethod {
-    boost::json::value validateRequest(boost::json::value *params) override;
+    std::variant<boost::json::value, std::shared_ptr<RawTransaction>> validateRequest(boost::json::value *params) override;
 };
 
-boost::json::value TransferMethod::validateRequest(boost::json::value *params) {
+std::variant<boost::json::value, std::shared_ptr<RawTransaction>> TransferMethod::validateRequest(boost::json::value *params) {
     boost::json::value responseJSON = boost::json::parse(R"({"jsonrpc": "2.0"})");
     if (!params->as_object().contains("from") || !params->as_object().contains("to") || !params->as_object().contains("amount") || !params->as_object().contains("type") ||
     !params->as_object().contains("r") || !params->as_object().contains("s") || !params->as_object().contains("signature")
@@ -35,7 +36,8 @@ boost::json::value TransferMethod::validateRequest(boost::json::value *params) {
         responseJSON.as_object()["error"].as_object().emplace("id", "null");
         return responseJSON;
     }
-    return "test";
+    std::shared_ptr<RawTransaction> rawTransaction = RawTransaction::parse(params);
+
 }
 
 #endif //UNIT_RPCMETHOD_H

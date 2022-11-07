@@ -1,20 +1,12 @@
-#include <openssl/ec.h>
-#include "openssl/ecdsa.h"
-#include "openssl/bn.h"
-#include <openssl/obj_mac.h>
-#include <openssl/sha.h>
-#include <openssl/ripemd.h>
-#include <openssl/hmac.h>
-#include <boost/multiprecision/cpp_int.hpp>
-#include "SHA256.h"
-#include "base58.hpp"
+#pragma once
+#include "utils.hpp"
 
 #define HARDENED_VALUE 2147483648
-// #define NMODULO boost::multiprecision::uint512_t("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F")
-#define GMODULO boost::multiprecision::uint512_t("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141")
+#define NMODULO boost::multiprecision::uint512_t("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141")
 
 using uint512 = boost::multiprecision::uint512_t;
 
+/// @brief Defines BIP32 with OpenSSL cryptography
 class BIP32
 {
 private:
@@ -33,71 +25,7 @@ private:
             public_key = _pbc;
         }
     };
-    std::string to_base58();
-    secp256k1_result get_secp256k1(std::string);
-
-    inline uint8_t hex2dec(std::string hex)
-    {
-        uint8_t result = 0;
-        for (int i = 0; i < hex.length(); i++)
-        {
-            if (hex[i] >= 48 && hex[i] <= 57)
-            {
-                result += (hex[i] - 48) * pow(16, hex.length() - i - 1);
-            }
-            else if (hex[i] >= 65 && hex[i] <= 70)
-            {
-                result += (hex[i] - 55) * pow(16, hex.length() - i - 1);
-            }
-            else if (hex[i] >= 97 && hex[i] <= 102)
-            {
-                result += (hex[i] - 87) * pow(16, hex.length() - i - 1);
-            }
-        }
-        return result;
-    }
-    inline std::string to_hex(const std::string input)
-    {
-        static const char *lut = "0123456789abcdef0123456789ABCDEF";
-        const char *symbol = lut;
-        const size_t length = input.size();
-        std::string output;
-        output.reserve(2 * length);
-        for (size_t i = 0; i < length; ++i)
-        {
-            const uint8_t c = input[i];
-            output.push_back(symbol[c >> 4]);
-            output.push_back(symbol[c & 15]);
-        }
-        return output;
-    }
-    inline std::string reverse_hex_str(std::string &str)
-    {
-        std::string result;
-        result.reserve(str.size());
-
-        for (std::size_t i = str.size(); i != 0; i -= 2)
-        {
-            result.append(str, i - 2, 2);
-        }
-
-        return result;
-    }
-
-    inline std::string hmac_512(unsigned char *key, int key_length, unsigned char *message, size_t message_length)
-    {
-        unsigned char digest[64];
-        unsigned int sha_len = 64;
-        HMAC_CTX *ctx = HMAC_CTX_new();
-        HMAC_Init_ex(ctx, key, key_length, EVP_sha512(), NULL);
-        HMAC_Update(ctx, message, message_length);
-        HMAC_Final(ctx, digest, &sha_len);
-        std::string hmac_result(digest, digest + sizeof digest / sizeof digest[0]);
-        std::string hmac_result_hex = to_hex(hmac_result);
-        HMAC_CTX_free(ctx);
-        return hmac_result_hex;
-    }
-
+    secp256k1_result get_pub_from_seed_secp256k1(std::string);
 public:
     /// @brief Result of generating BIP32 node
     struct BIP32NodeResult
@@ -120,8 +48,8 @@ public:
         /// @param h_pub hex representation of extended public key
         /// @param b_prv base58 representation of extended private key
         /// @param b_pub base58 representation of extended public key
-        /// @param ecdsa_pk hex representaion of private key
-        /// @param ecdsa_pv hex representaion of public key
+        /// @param ecdsa_pk hex representaion of public key
+        /// @param ecdsa_pv hex representaion of private key
         BIP32NodeResult(std::string d, std::string pair_i, std::string h_prv, std::string h_pub, std::string b_prv, std::string b_pub, std::string ecdsa_pk, std::string ecdsa_pv)
         {
             depth = d;
@@ -150,14 +78,14 @@ public:
 
     /// @brief generating master-node for BIP32.
     /// @param seed from BIP38
-    /// @return
+    /// @return BIP32 master-node
     BIP32NodeResult gen_master(std::string seed);
 
     /// @brief generate child from parent's private key
     /// @param res parent's node
     /// @param i desired keypair index
     /// @param d desired depth of the node
-    /// @return
+    /// @return new BIP32 child node
     BIP32NodeResult gen_child_from_xprv(BIP32NodeResult res, uint32_t i, std::string d);
 };
 
@@ -190,7 +118,7 @@ BIP32::BIP32NodeResult BIP32::gen_master(std::string seed)
 
     std::string chaincode = I_right;
 
-    BIP32::secp256k1_result sign = get_secp256k1(I_left);
+    BIP32::secp256k1_result sign = get_pub_from_seed_secp256k1(I_left);
 
     if (sign.point_x == "")
         return BIP32::BIP32NodeResult();
@@ -303,7 +231,7 @@ BIP32::BIP32NodeResult BIP32::gen_child_from_xprv(BIP32::BIP32NodeResult parent_
             uint8_t byte = hex2dec(parent_chaincode.substr(i, 2));
             parent_chaincode_to_chr[i / 2] = byte;
         }
-        BIP32::secp256k1_result curve_k = get_secp256k1(parent_private_key);
+        BIP32::secp256k1_result curve_k = get_pub_from_seed_secp256k1(parent_private_key);
         if (curve_k.point_x == "")
             return BIP32::BIP32NodeResult();
         std::string G_y_last_digit_k = curve_k.point_y.substr(curve_k.point_y.length() - 1, 1);
@@ -347,10 +275,10 @@ BIP32::BIP32NodeResult BIP32::gen_child_from_xprv(BIP32::BIP32NodeResult parent_
     std::string fingerprint = ripemd160_parent_public_key_hex.substr(0, 8);
 
     uint512 parsed_I_left("0x" + I_left);
-    if (parsed_I_left >= GMODULO || parsed_I_left == 0)
+    if (parsed_I_left >= NMODULO || parsed_I_left == 0)
         return BIP32::BIP32NodeResult();
     uint512 parsed_k("0x" + parent_private_key);
-    uint512 child_prv_key_decimal = ((parsed_k + parsed_I_left) % GMODULO);
+    uint512 child_prv_key_decimal = ((parsed_k + parsed_I_left) % NMODULO);
     std::stringstream ss1;
     ss1 << std::setfill('0') << std::setw(64) << std::hex << child_prv_key_decimal;
     std::string child_data_prv = ss1.str();
@@ -378,7 +306,7 @@ BIP32::BIP32NodeResult BIP32::gen_child_from_xprv(BIP32::BIP32NodeResult parent_
     }
     std::string child_ext_private_key_base58 = b58.EncodeBase58(child_ext_private_key_bytes, b58.base58map);
 
-    BIP32::secp256k1_result curve = get_secp256k1(child_data_prv);
+    BIP32::secp256k1_result curve = get_pub_from_seed_secp256k1(child_data_prv);
     // std::cout << "^POINT X:^ " << curve.point_x << std::endl;
     if (curve.point_x == "")
     {
@@ -409,10 +337,10 @@ BIP32::BIP32NodeResult BIP32::gen_child_from_xprv(BIP32::BIP32NodeResult parent_
     }
     std::string xpub_base58_result = b58.EncodeBase58(ext_pub_bytes, b58.base58map);
 
-    return BIP32::BIP32NodeResult(depth, keypair_index_hex, child_ext_private_key, ext_pub, child_ext_private_key_base58, xpub_base58_result, first_byte + curve.point_x, child_data_prv);
+    return BIP32::BIP32NodeResult(depth, keypair_index_hex, child_ext_private_key, ext_pub, child_ext_private_key_base58, xpub_base58_result, curve.public_key, child_data_prv);
 }
 
-BIP32::secp256k1_result BIP32::get_secp256k1(std::string seed)
+BIP32::secp256k1_result BIP32::get_pub_from_seed_secp256k1(std::string seed)
 {
     EC_KEY *key_pair_obj = nullptr;
     int ret_error;

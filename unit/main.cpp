@@ -1,7 +1,6 @@
 #include <iostream>
-#include "thread"
 
-#if 1
+#if 0
     #include "libdevcore/bip44/ecdsa.hpp"
     #include "libdevcore/bip44/BIP32.hpp"
     #include "libdevcore/bip44/BIP39.hpp"
@@ -23,6 +22,20 @@
 
 int main() {
     std::cout << "Hello, World!" << std::endl;
+    #if 0
+        std::string from = "UNTxp28nf2wLJzWm49YtLKyXGYh8vJ3";
+        std::string to = "UNTxp28nf2wLJzWm49YtLKyXGYh8vJ3";
+        std::string str = "sefesfs";
+        std::string str1 = "sefesfs";
+        std::string str2 = "sefesfs";
+        boost::json::value test = boost::json::parse(R"({"extradata": {
+                "name": "token",
+                "value": 1e3,
+                "bytecode": "null"
+            }})");
+        RawTransaction rawTransaction = RawTransaction(from, to, (uint64_t) 1, test.at("extradata"), str, str1, str2, 1e3, 1e3, 1000);
+        std::cout << *rawTransaction.serializeForValidating() << std::endl;
+    #endif
     #if 0
         boost::unordered_map<std::string, std::string> map;
         map["test"] = "tesst";
@@ -172,7 +185,7 @@ int main() {
         std::string test3 = "[%s]: %s, %d";
         std::cout << *StringUtil::insertSubElement(&test3, "DEBUG", "Xyz failed", 1)  << std::endl;
     #endif
-    #if 1
+    #if 0
         BIP44 bip44;
         BIP44Result r = bip44.generateWallet(PHRASE_24, 0, EXTERNAL_CHANGE);
         cout << "WALLET PATH: " << r.path << endl;
