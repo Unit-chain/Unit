@@ -24,7 +24,7 @@
   "from": "UNTxp28nf2wLJzWm49YtLKyXGYh8vJ3",
   "to": "UNTxspt199oNWgDTHhx153BoUPMxY6D",
   "amount": 1e3,
-  "type": 1,
+  "type": 0,
   "extradata": {
   "name": "null",
   "value": "null",
@@ -39,7 +39,7 @@
   "from": "UNTxp28nf2wLJzWm49YtLKyXGYh8vJ3",
   "to": "UNTxspt199oNWgDTHhx153BoUPMxY6D",
   "amount": 0,
-  "type": 1,
+  "type": 2,
   "extradata": {
   "name": "token",
   "value": "1e3",
