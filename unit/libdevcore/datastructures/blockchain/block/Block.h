@@ -32,6 +32,7 @@ public:
     std::string rewardProverAddress;
     unit::list<ValidTransaction> txList;
     uint64_t reward{};
+    uint64_t epoch;
 
     std::string serializeBlock();
     std::string serializeForSigning();
@@ -69,6 +70,10 @@ public:
     const std::string &getSp() const;
 
     void setSp(const std::string &sP);
+
+    uint64_t getEpoch() const;
+
+    void setEpoch(uint64_t epoch);
 };
 
 std::string Block::serializeBlock() {
@@ -182,6 +187,14 @@ const std::string &Block::getSp() const {
 
 void Block::setSp(const std::string &sP) {
     Block::sP = sP;
+}
+
+uint64_t Block::getEpoch() const {
+    return epoch;
+}
+
+void Block::setEpoch(uint64_t epoch) {
+    Block::epoch = epoch;
 }
 
 #endif //UNIT_BLOCK_H

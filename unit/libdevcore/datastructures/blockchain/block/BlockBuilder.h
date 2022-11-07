@@ -61,6 +61,11 @@ public:
         return this;
     }
 
+    inline BlockBuilder *setEpoch(uint64_t epoch) {
+        this->currentBlock->setEpoch(epoch);
+        return this;
+    }
+
     inline BlockBuilder *generateHash() {
         this->currentBlock->generateHash();
         return this;

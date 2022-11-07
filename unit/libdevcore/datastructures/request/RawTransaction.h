@@ -20,10 +20,7 @@ namespace json = boost::json;
 
 class RawTransaction {
 public:
-    virtual ~RawTransaction() {
-        std::cout << "Destructor" << std::endl;
-    }
-
+    virtual ~RawTransaction() {}
     RawTransaction() = default;
     RawTransaction(std::string from, std::string to, uint64_t type, uint64_t date,
                    boost::json::value extra,
@@ -75,6 +72,25 @@ public:
             to(std::move(to)),
             type(type),
             extra(std::move(extra)),
+            sign(std::move(sign)),
+            r(std::move(r)),
+            s(std::move(s)),
+            amount(amount),
+            fee(fee),
+            nonce(nonce) {}
+
+    RawTransaction(std::string from,
+                   std::string to,
+                   uint64_t type,
+                   std::string sign,
+                   std::string r,
+                   std::string s,
+                   double amount,
+                   double fee,
+                   long nonce) :
+            from(std::move(from)),
+            to(std::move(to)),
+            type(type),
             sign(std::move(sign)),
             r(std::move(r)),
             s(std::move(s)),
@@ -138,31 +154,31 @@ public:
         return std::make_shared<std::string>(ss.str());
     }
 
-    static RawTransaction *parse(std::string *request) {
-        json::error_code ec;
-        try {
-            boost::json::object transactionRequestJson = json::parse(*request, ec).as_object();
-            transactionRequestJson = transactionRequestJson["data"].as_object();
-            if (!transactionRequestJson.contains("from") || !transactionRequestJson.contains("to")
-                || !transactionRequestJson.contains("type") || !transactionRequestJson.contains("extradata")
-                || !transactionRequestJson.contains("sign") || !transactionRequestJson.contains("r") || !transactionRequestJson.contains("s")
-                || !transactionRequestJson.contains("amount") || !transactionRequestJson.contains("fee") || !transactionRequestJson.contains("nonce"))
-                return nullptr;
-            return new RawTransaction(
-                                  boost::json::value_to<std::string>(transactionRequestJson.at("from")),
-                                  boost::json::value_to<std::string>(transactionRequestJson.at("to")),
-                                  boost::json::value_to<uint64_t>(transactionRequestJson.at("type")),
-                                  transactionRequestJson.at("extradata"),
-                                  boost::json::value_to<std::string>(transactionRequestJson.at("sign")),
-                                  boost::json::value_to<std::string>(transactionRequestJson.at("r")),
-                                  boost::json::value_to<std::string>(transactionRequestJson.at("s")),
-                                  boost::json::value_to<double>(transactionRequestJson.at("amount")),
-                                  boost::json::value_to<double>(transactionRequestJson.at("fee")),
-                                  boost::json::value_to<long>(transactionRequestJson.at("nonce")));
-        } catch (const boost::exception &o) {
-            logger <<  "RawTransaction.h parsing error: " << ec.message() << std::endl;
-            return nullptr;
-        }
+    static std::shared_ptr<RawTransaction> parse(boost::json::value *params) {
+        boost::json::object transactionRequestJson = params->as_object();
+        transactionRequestJson = transactionRequestJson["data"].as_object();
+        if (params->at("type") == 0)
+            return std::make_shared<RawTransaction>(RawTransaction(
+                    boost::json::value_to<std::string>(transactionRequestJson.at("from")),
+                    boost::json::value_to<std::string>(transactionRequestJson.at("to")),
+                    boost::json::value_to<uint64_t>(transactionRequestJson.at("type")),
+                    boost::json::value_to<std::string>(transactionRequestJson.at("sign")),
+                    boost::json::value_to<std::string>(transactionRequestJson.at("r")),
+                    boost::json::value_to<std::string>(transactionRequestJson.at("s")),
+                    boost::json::value_to<double>(transactionRequestJson.at("amount")),
+                    boost::json::value_to<double>(transactionRequestJson.at("fee")),
+                    boost::json::value_to<long>(transactionRequestJson.at("nonce"))));
+        return std::make_shared<RawTransaction>(RawTransaction(
+                boost::json::value_to<std::string>(transactionRequestJson.at("from")),
+                boost::json::value_to<std::string>(transactionRequestJson.at("to")),
+                boost::json::value_to<uint64_t>(transactionRequestJson.at("type")),
+                transactionRequestJson.at("extradata"),
+                boost::json::value_to<std::string>(transactionRequestJson.at("sign")),
+                boost::json::value_to<std::string>(transactionRequestJson.at("r")),
+                boost::json::value_to<std::string>(transactionRequestJson.at("s")),
+                boost::json::value_to<double>(transactionRequestJson.at("amount")),
+                boost::json::value_to<double>(transactionRequestJson.at("fee")),
+                boost::json::value_to<long>(transactionRequestJson.at("nonce"))));
     }
 
     [[deprecated("Please use \"RawTransaction *parse(...)\"")]]

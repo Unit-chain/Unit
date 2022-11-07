@@ -25,12 +25,12 @@
   "to": "UNTxspt199oNWgDTHhx153BoUPMxY6D",
   "amount": 1e3,
   "type": 0,
-  "extradata": {
-  "name": "null",
-  "value": "null",
-  "bytecode":"null"
-  }
- }
+  "signature":"334D016F755CD6DC58C53A86E183882F8EC14F52FB05345887C8A5EDD42C87B7",
+  "r":"00CFEB4CE50DDD93625C2BD1F6D339430A520725285C73064A1C213F7EE70737A5",
+  "s":"5C94352C2BC5679158CC31C174A045D51343FBF1A28693299423305D5834A52B"
+ }, 
+ "id":"1"
+}
 ```
 
 ```json
@@ -39,12 +39,16 @@
   "from": "UNTxp28nf2wLJzWm49YtLKyXGYh8vJ3",
   "to": "UNTxspt199oNWgDTHhx153BoUPMxY6D",
   "amount": 0,
-  "type": 2,
+  "type": 1,
+  "signature":"334D016F755CD6DC58C53A86E183882F8EC14F52FB05345887C8A5EDD42C87B7",
+  "r":"00CFEB4CE50DDD93625C2BD1F6D339430A520725285C73064A1C213F7EE70737A5",
+  "s":"5C94352C2BC5679158CC31C174A045D51343FBF1A28693299423305D5834A52B",
   "extradata": {
   "name": "token",
   "value": "1e3",
   "bytecode":"null"
-  }
+  },
+  "id":"1"
  }
 ```
 

@@ -155,6 +155,7 @@ void BlockHandler::startBlockGenerator() {
                     ->setVersion(1) /// previous version was implemented earlier. Now it's second version, e.g 1
                     ->setIndex(((int) dbResponse.errorResponse == 1) ? 0 : boost::json::value_to<uint64_t>(boost::json::parse(*dbResponse.value).at("index")))
                     ->setNonce(0) /// while no consensus implemented
+                    ->setEpoch(0) /// while no consensus implemented
                     ->generateHash()
                     ->generateRoot()
                     ->setProverSign()
@@ -169,6 +170,7 @@ void BlockHandler::startBlockGenerator() {
                     ->setVersion(1)
                     ->setIndex(++(this->previousBlock->blockHeader.index))
                     ->setNonce(0) /// while no consensus implemented
+                    ->setEpoch(0) /// while no consensus implemented
                     ->generateHash()
                     ->generateRoot()
                     ->setProverSign()

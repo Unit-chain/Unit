@@ -1,13 +1,17 @@
 #include <iostream>
 #include "thread"
 
-#if 0
-    #include "boost/unordered_map.hpp"
+#if 1
     #include "libdevcore/bip44/ecdsa.hpp"
     #include "libdevcore/bip44/BIP32.hpp"
     #include "libdevcore/bip44/BIP39.hpp"
     #include "libdevcore/bip44/BIP44.hpp"
     #include "libdevcore/bip44/utils.hpp"
+    using namespace std;
+#endif
+
+#if 0
+    #include "boost/unordered_map.hpp"
     #include "libdevcore/db/DBProvider.h"
     #include "libdevcore/datastructures/account/WalletAccount.h"
     #include "libdevcore/datastructures/blockchain/transaction/ValidTransaction.h"
@@ -17,20 +21,8 @@
     #include "libdevcore/pointers/lazy_pointer.h"
 #endif
 
-void bar(int x)
-{
-    std::cout << x << std::endl;
-}
-
-class test{
-public:
-    static void test1(int x) {std::cout << x << std::endl;}
-};
-
 int main() {
     std::cout << "Hello, World!" << std::endl;
-    std::thread first (test::test1, 10);
-    first.join();
     #if 0
         boost::unordered_map<std::string, std::string> map;
         map["test"] = "tesst";
@@ -180,7 +172,7 @@ int main() {
         std::string test3 = "[%s]: %s, %d";
         std::cout << *StringUtil::insertSubElement(&test3, "DEBUG", "Xyz failed", 1)  << std::endl;
     #endif
-    #if 0
+    #if 1
         BIP44 bip44;
         BIP44Result r = bip44.generateWallet(PHRASE_24, 0, EXTERNAL_CHANGE);
         cout << "WALLET PATH: " << r.path << endl;
@@ -196,6 +188,7 @@ int main() {
         ECDSASignResult sig = ecdsa_sign_message("Hello!", r.prv);
         std::cout << "r: " << sig.r << std::endl;
         std::cout << "s: " << sig.s << std::endl;
+        std::cout << "signature hash: " << sig.message_hash << std::endl;
         bool verified = ecdsa_verify_signature(sig.r, sig.s, "Hello!", r.address);
         cout << "Result of verification: "<<verified<<"\n";
         BIP44Result r2 = bip44.generateAddress(r.mnemonic, 0, EXTERNAL_CHANGE, 1);
