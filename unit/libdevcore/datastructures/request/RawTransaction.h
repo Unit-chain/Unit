@@ -130,7 +130,7 @@ public:
         this->hash = sha3(sha3(*this->serializeToRawTransaction()));
     }
 
-    [[nodiscard]] inline std::shared_ptr<std::string> serializeForValidating() const {
+    [[nodiscard]] inline std::shared_ptr<std::string> serializeWithoutSignatures() const {
         std::stringstream ss;
         if (type == 0)
             ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)" << std::scientific << this->amount << R"(, "type":)"
