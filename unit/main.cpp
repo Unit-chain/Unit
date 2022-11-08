@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include "boost/multiprecision/cpp_int.hpp"
+
 #if 0
     #include "libdevcore/bip44/ecdsa.hpp"
     #include "libdevcore/bip44/BIP32.hpp"
@@ -9,7 +11,7 @@
     using namespace std;
 #endif
 
-#if 0
+#if 1
     #include "boost/unordered_map.hpp"
     #include "libdevcore/db/DBProvider.h"
     #include "libdevcore/datastructures/account/WalletAccount.h"
@@ -22,7 +24,16 @@
 
 int main() {
     std::cout << "Hello, World!" << std::endl;
-    static constexpr char httpMethodError[106] = R"({"jsonrpc": "2.0", "error": {"code": -32003, "message": "HTTP request method not supported"}, "id": null})";
+    boost::json::value value = boost::json::parse(R"({"val":"0x12725DD1D243ABA0E75FE645CC4873F9E65AFE688C928E1F21"})");
+    std::cout << "\"" << boost::json::value_to<std::string>(value.at("val")) << "\"" << std::endl;
+    #if 0
+        boost::json::value value = boost::json::parse(R"({"val":"0x12725DD1D243ABA0E75FE645CC4873F9E65AFE688C928E1F21"})");
+        boost::multiprecision::uint256_t uint256 = boost::multiprecision::uint256_t(boost::json::value_to<std::string>(value.at("val")));
+        std::string input { "115792089237316195423570985008687907853269984665640564039457584007913129639935" };
+        boost::multiprecision::uint256_t i { input };
+        std::cout << std::hex << i << std::endl;
+        std::cout << std::hex << uint256 << std::endl;
+    #endif
     #if 0
         std::string from = "UNTxp28nf2wLJzWm49YtLKyXGYh8vJ3";
         std::string to = "UNTxp28nf2wLJzWm49YtLKyXGYh8vJ3";

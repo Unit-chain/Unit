@@ -4,7 +4,9 @@
 #ifndef UVM_SERVER_H
 #define UVM_SERVER_H
 
+#include "ServerIncludes.h"
 #include "RpcMethod.h"
+#include "RpcFilterBuilder.h"
 #include "../libdevcore/datastructures/containers/list.h"
 #include "../libdevcore/datastructures/blockchain/transaction/ValidTransaction.h"
 #include "../libdevcore/db/DBProvider.h"

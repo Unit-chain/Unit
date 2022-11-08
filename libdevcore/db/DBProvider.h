@@ -34,6 +34,7 @@ namespace dbProvider {
 
     class BatchProvider : AbstractProvider {
     public:
+        BatchProvider() = default;
         explicit BatchProvider(std::string path);
         const std::string path;
 

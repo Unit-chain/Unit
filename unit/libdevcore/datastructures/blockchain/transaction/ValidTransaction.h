@@ -9,9 +9,11 @@
 #include "iostream"
 #include "boost/json.hpp"
 #include "boost/json/src.hpp"
+#include "boost/multiprecision/cpp_int.hpp"
 #include "../../request/RawTransaction.h"
 
 namespace json = boost::json;
+using namespace boost::multiprecision;
 
 class ValidTransaction {
 public:
@@ -34,23 +36,33 @@ public:
     std::string rP; // prover signature
     std::string sP; // prover signature
     uint32_t index;
-    long nonce;
-    double amount{};
-    double fee{};
+    uint64_t nonce;
+    uint256_t amount{};
+    uint64_t fee{};
 
     inline std::shared_ptr<std::string> getHash() {
         return std::make_shared<std::string>(this->hash);
     }
 
     [[nodiscard]] inline std::shared_ptr<std::string> serializeToJsonTransaction() const {
-        auto name = json::value_to<std::string>(this->extra.at("name"));
-        auto value = json::value_to<double>(this->extra.at("value"));
-        auto bytecode = json::value_to<std::string>(this->extra.at("bytecode"));
         std::stringstream ss;
-        ss << R"({"hash":")" << this->hash << R"(", "from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)" << std::scientific << this->amount << R"(, "type":)"
-           << this->type << R"(, "date":)" << this->date << R"(, "extradata":{)" << R"("name":")" << name << R"(", "value":)" << value << R"(, "bytecode": ")" << bytecode
-           << R"("}, "sign":")" << this->sign << R"(", "r":")" << this->r << R"(", "s":")" << this->s << R"(", "signP":")" << this->signP << R"(", "rP":")" << this->rP
-           << R"(", "sP":")" << this->sP << R"(", "fee":)" << this->fee << R"(, "nonce":)" << this->nonce << R"(})";
+        if (type == 0)
+            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)"
+               << this->amount << R"(, "type":)"
+               << this->type << R"(, "date":)" << this->date << R"(, "fee":)"
+               << this->fee << R"(, "nonce":)" << this->nonce << R"(, "signature":")" << this->sign << R"(", "r":")"
+               << this->r << R"(", "s":")" << this->s
+               << R"("})";
+        else {
+            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)"
+               << this->amount << R"(, "type":)"
+               << this->type << R"(, "date":)" << this->date << R"(, "extradata":{)" << R"("name":")" << json::value_to<std::string>(this->extra.at("name"))
+               << R"(", "value":")" << ValidTransaction::uint256_jv_2string(this->extra.at("value")) << R"(", "bytecode": ")" << json::value_to<std::string>(this->extra.at("bytecode"))
+               << R"("})" << R"(, "fee":)" << this->fee << R"(, "nonce":)"
+               << this->nonce << R"(, "signature":")" << this->sign << R"(", "r":")"
+               << this->r << R"(", "s":")" << this->s
+               << R"("})";
+        }
         return std::make_shared<std::string>(ss.str());
     }
 
@@ -86,6 +98,10 @@ public:
 
     bool operator!=(const ValidTransaction &rhs) const {
         return !(rhs == *this);
+    }
+protected:
+    inline static std::string uint256_jv_2string(const boost::json::value &value) {
+        return boost::json::value_to<std::string>(value);
     }
 };
 

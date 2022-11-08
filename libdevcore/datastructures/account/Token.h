@@ -11,11 +11,14 @@
 #include "sstream"
 #include "boost/json.hpp"
 #include "boost/json/src.hpp"
+#include "boost/multiprecision/cpp_int.hpp"
 #include "../../../global/GlobalVariables.h"
+#include "AbstractAccount.h"
+
+using namespace boost::multiprecision;
 
 /// apologies to any of you who are Ethereum's fans
 /// this was made in a hurry :(
-
 inline std::string string_to_hex(std::string &value_to_hex) {
     std::stringstream stream;
     for (const auto &item : value_to_hex) {
@@ -43,16 +46,16 @@ inline std::string hex_to_ascii(std::string &hex){
     return newString;
 }
 
-class Token {
+class Token : public AbstractAccount {
 public:
-    Token(std::string name, std::string bytecode, double supply) : name(std::move(name)), bytecode(std::move(bytecode)),
+    Token(std::string name, std::string bytecode, const std::string& supply) : name(std::move(name)), bytecode(std::move(bytecode)),
                                                                                  supply(supply) {}
 
     std::string name;
     std::string bytecode;
-    double supply;
+    uint256_t supply;
     static std::optional<std::shared_ptr<Token>> parse(boost::json::value *extra);
-    std::string serialize() const;
+    [[nodiscard]] std::string serialize() const;
 };
 
 std::optional<std::shared_ptr<Token>> Token::parse(boost::json::value *extra) {
@@ -60,7 +63,7 @@ std::optional<std::shared_ptr<Token>> Token::parse(boost::json::value *extra) {
     try {
         auto bytecode = boost::json::value_to<std::string>(extra->at("bytecode"));
         parsedData = boost::json::parse(hex_to_ascii(bytecode));
-        Token newToken = Token(boost::json::value_to<std::string>(parsedData.at("name")), bytecode, boost::json::value_to<double>(parsedData.at("supply")));
+        Token newToken = Token(boost::json::value_to<std::string>(parsedData.at("name")), bytecode, boost::json::value_to<std::string>(parsedData.at("supply")));
         return {std::make_shared<Token>(newToken)};
     } catch (std::exception &e) {
         logger << e.what() << std::endl;
@@ -70,7 +73,7 @@ std::optional<std::shared_ptr<Token>> Token::parse(boost::json::value *extra) {
 
 std::string Token::serialize() const {
     std::stringstream ss;
-    ss << R"({"name":")" << this->name << R"(","bytecode":")" << this->bytecode << R"(", "supply":)" << this->supply << "}";
+    ss << R"({"name":")" << this->name << R"(","bytecode":")" << this->bytecode << R"(", "supply":")" << Token::uint256_2string(this->supply) << R"("})";
     return ss.str();
 }
 

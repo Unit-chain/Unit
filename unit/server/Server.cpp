@@ -1,11 +1,6 @@
 //
 // Created by Gosha Stolyarov on 28.07.2022.
 //
-#include <boost/beast/core.hpp>
-#include <boost/beast/http.hpp>
-#include <boost/beast/version.hpp>
-#include <boost/asio.hpp>
-#include <boost/json.hpp>
 
 #include <chrono>
 #include <ctime>
@@ -65,6 +60,7 @@ private:
     static constexpr char defaultAccountError[110] = R"({"jsonrpc": "2.0", "error": {"code": -32004, "message": "something happening with your account"}, "id": null})";
     static constexpr char badNonce[114] = R"({"jsonrpc": "2.0", "error": {"code": -32005, "message": "old nonce is used for current transaction"}, "id": null})";
     static constexpr char invalidSignature[90] = R"({"jsonrpc": "2.0", "error": {"code": -32006, "message": "invalid signature"}, "id": null})";
+    static constexpr char invalidMethod[89] = R"({"jsonrpc": "2.0", "error": {"code": -32001, "message": "method not found"}, "id": null})";
 
 
     inline void read_request() {
@@ -174,7 +170,8 @@ private:
 //        }
         try {
             RpcMethodHandler rpcMethodHandler;
-            if ("transfer" == boost::json::value_to<std::string>(json.at("method"))) {
+            auto method = boost::json::value_to<std::string>(json.at("method"));
+            if ("transfer" == method) {
                 rpcMethodHandler = RpcMethodHandler(std::make_shared<TransferMethod>(TransferMethod()).get());
                 std::shared_ptr<boost::json::value> validating = rpcMethodHandler.executeValidating(
                         std::make_shared<boost::json::value>(json.at("params")).get());
@@ -182,25 +179,25 @@ private:
                     create_error_response(boost::json::value_to<std::string>(*validating), true);
                 } else {
                     boost::json::value parameters = json.at("params");
-                    std::shared_ptr<RawTransaction> rawTransaction = RawTransaction::parse(&parameters);
-                    auto sender = boost::json::value_to<std::string>(json.at("params").at("from"));
-                    operationDBStatus::DBResponse<std::string> dbResponse = this->userProvider.read<std::string>(&sender);
-                    if (dbResponse.error && ((int) dbResponse.errorResponse) == 2)
-                        create_error_response(http_connection::emptyBalanceError,
-                                              true);
-                    else
-                        create_error_response(http_connection::defaultError,
-                                              true);
-                    std::optional<std::shared_ptr<WalletAccount>> opAccount = WalletAccount::parseWallet(dbResponse.value);
-                    if (!opAccount.has_value())
-                        create_error_response(http_connection::defaultAccountError, true);
-                    std::shared_ptr<WalletAccount> account = opAccount.value();
-                    if (account->nonce == json.at("params").at("nonce"))
-                        create_error_response(http_connection::badNonce, true);
-                    if (!ecdsa_verify_signature(boost::json::value_to<std::string>(parameters.at("r")), boost::json::value_to<std::string>(parameters.at("s")),
-                            *rawTransaction->serializeWithoutSignatures(), boost::json::value_to<std::string>(parameters.at("from"))))
-                        create_error_response(http_connection::invalidSignature, true);
+                    RpcFilterBuilder rpcFilterBuilder = RpcFilterBuilder();
+                    if (std::get<0>(rpcFilterBuilder.setParameter(std::make_shared<boost::json::value>(parameters))
+                    ->setFilter(std::make_shared<BasicTransactionFilter>(BasicTransactionFilter(&(this->userProvider),&(this->response_))))->build())) {
+                        throw;
+                    }
+                    // need to send success request and check logic again
                 }
+            } else if ("unit_get_balance" == method) {
+                // implement balance method
+            } else if ("unit_get_tx_pool_size" == method) {
+                // implement balance method
+            } else if ("unit_get_address_tx_history" == method) {
+                // implement balance method
+            } else if ("unit_get_block_height" == method) {
+                // implement balance method
+            } else if ("unit_get_tx" == method) {
+                // implement balance method
+            } else {
+                create_error_response(rpcError::invalidMethod, true);
             }
         } catch (const boost::wrapexcept<std::out_of_range> &o) {
 

@@ -4,37 +4,40 @@
 
 #ifndef UNIT_WALLETACCOUNT_H
 #define UNIT_WALLETACCOUNT_H
+#include "utility"
+#include "iostream"
+#include "vector"
+#include "sstream"
+#include "boost/json.hpp"
+#include "boost/json/src.hpp"
+#include "boost/json/array.hpp"
 #include "../../../global/GlobalVariables.h"
 #include "../../../global/errors/WalletErrors.h"
 #include "../../bip44/utils.hpp"
 #include "../request/RawTransaction.h"
-#include <utility>
-#include "iostream"
-#include "vector"
-#include "boost/json.hpp"
-#include "boost/json/src.hpp"
-#include "boost/json/array.hpp"
-#include "sstream"
+#include "AbstractAccount.h"
+
 
 namespace json = boost::json;
+using namespace boost::multiprecision;
 
-class WalletAccount {
+class WalletAccount : public AbstractAccount {
 public:
     WalletAccount() = default;
-    WalletAccount(std::string address, double balance, boost::json::object tokensBalance, json::array txOutputs,
-                  json::array txInputs, long nonce) : address(std::move(address)), balance(balance), txOutputs(txOutputs.storage()),
+    WalletAccount(std::string address, uint256_t balance, boost::json::object tokensBalance, const json::array& txOutputs,
+                  const json::array& txInputs, uint64_t nonce) : address(std::move(address)), balance(std::move(balance)), txOutputs(txOutputs.storage()),
                                                               txInputs(txInputs.storage()), tokensBalance(std::move(tokensBalance)), nonce(nonce) {}
-    WalletAccount(std::string address, double balance, json::object tokensBalance);
-    WalletAccount(std::string address, double balance, json::object tokensBalance, long nonce);
-    explicit WalletAccount(const std::string &address) : address(address) {
-        this->balance = 0.0;
+    WalletAccount(std::string address, uint256_t balance, json::object tokensBalance);
+    WalletAccount(std::string address, uint256_t balance, json::object tokensBalance, uint64_t nonce);
+    explicit WalletAccount(std::string address) : address(std::move(address)) {
+        this->balance = 0;
         this->nonce = 0;
     }
     virtual ~WalletAccount() = default;
 
     std::string address;
-    double balance{};
-    long nonce;
+    uint256_t balance{};
+    uint64_t nonce;
     json::object tokensBalance{};
     json::array txOutputs{};
     json::array txInputs{};
@@ -43,13 +46,15 @@ public:
     static std::optional<std::shared_ptr<WalletAccount>> parseWallet(std::string *ptr);
     static WalletAccount* createEmptyWallet(const std::string &);
     bool parseHistory(std::string *ptr);
-    operationStatus::WalletErrorsCode subtract(double value, const std::string& outputHash);
-    operationStatus::WalletErrorsCode subtractToken(double value, const std::string& inputHash, const std::string &tokenName);
-    void increase(double value, const std::string& inputHash);
-    void increaseToken(double value, const std::string& inputHash, const std::string &tokenName);
+    operationStatus::WalletErrorsCode subtract(const uint256_t& value, const std::string& outputHash);
+    operationStatus::WalletErrorsCode subtractToken(const uint256_t& value, const std::string& inputHash, const std::string &tokenName);
+    void increase(const uint256_t& value, const std::string& inputHash);
+    void increaseToken(const uint256_t& value, const std::string& inputHash, const std::string &tokenName);
     void setTxOutputs(const json::array &txOutputs);
     void setTxInputs(const json::array &txInputs);
     bool isValidNonce(RawTransaction *rawPointer) const;
+    int compareNativeTokenBalance(const json::value &amount) const;
+    int compareTokenBalance(const json::value &amount, const json::value &tokenName);
     [[nodiscard]] std::string serialize() const;
     [[nodiscard]] std::string serializeHistory() const;
 };
@@ -61,7 +66,7 @@ std::optional<std::shared_ptr<WalletAccount>> WalletAccount::parseWallet(std::st
         json::value value = json::parse(*ptr, ec);
         auto address = boost::json::value_to<std::string>(value.at("address"));
         auto tokensBalance = value.at("tokensBalance").as_object();
-        return std::make_shared<WalletAccount>(WalletAccount(address, value.at("balance").as_double(), tokensBalance, value.at("nonce").as_int64()));
+        return std::make_shared<WalletAccount>(WalletAccount(address, uint256_t(boost::json::value_to<std::string>(value.at("balance"))), tokensBalance, value.at("nonce").as_int64()));
     } catch (const boost::exception &o) {
         logger << ec.message() << std::endl;
         return std::nullopt;
@@ -70,20 +75,20 @@ std::optional<std::shared_ptr<WalletAccount>> WalletAccount::parseWallet(std::st
 
 std::string WalletAccount::serialize() const {
     std::stringstream ss;
-    ss << R"({"address":")" << this->address << R"(", "balance":)" << std::scientific << this->balance << R"(, "nonce":)" << this->nonce << ((tokensBalance.empty()) ? "}" : ", ");
-    if (!tokensBalance.empty()) {
-        ss << R"("tokensBalance":)" << boost::json::serialize(tokensBalance) << "}";
-    }
+    std::stringstream balanceSS;
+    balanceSS << std::hex << this->balance;
+    ss << R"({"address":")" << this->address << R"(", "balance":")" << balanceSS.str() << R"(", "nonce":)" << this->nonce << ((tokensBalance.empty()) ? "}" : ", ");
+    if (!tokensBalance.empty()) ss << R"("tokensBalance":)" << boost::json::serialize(this->tokensBalance) << "}";
     return ss.str();
 }
 
-void WalletAccount::increase(double value, const std::string& inputHash) {
+void WalletAccount::increase(const uint256_t& value, const std::string& inputHash) {
     this->balance += value;
     this->txInputs.emplace_back(inputHash);
     this->changed = true;
 }
 
-operationStatus::WalletErrorsCode WalletAccount::subtract(double value, const std::string& outputHash) {
+operationStatus::WalletErrorsCode WalletAccount::subtract(const uint256_t& value, const std::string& outputHash) {
     if (this->balance < value) return operationStatus::WalletErrorsCode::cLowNativeTokenBalance;
     this->balance -= value;
     this->txOutputs.emplace_back(outputHash);
@@ -91,10 +96,10 @@ operationStatus::WalletErrorsCode WalletAccount::subtract(double value, const st
     return operationStatus::WalletErrorsCode::cOk;
 }
 
-operationStatus::WalletErrorsCode WalletAccount::subtractToken(double value, const std::string &inputHash, const std::string &tokenName) {
+operationStatus::WalletErrorsCode WalletAccount::subtractToken(const uint256_t& value, const std::string &inputHash, const std::string &tokenName) {
     if (!this->tokensBalance.contains(tokenName)) return operationStatus::WalletErrorsCode::cTokenBalanceNotFound;
-    if (this->tokensBalance[tokenName].as_double() < value) return operationStatus::WalletErrorsCode::cLowTokenBalance;
-    this->tokensBalance[tokenName] = this->tokensBalance[tokenName].as_double() - value;
+    if (uint256_t(boost::json::value_to<std::string>(this->tokensBalance[tokenName])) < value) return operationStatus::WalletErrorsCode::cLowTokenBalance;
+    this->tokensBalance[tokenName] = WalletAccount::uint256_diff_2string(uint256_t(boost::json::value_to<std::string>(this->tokensBalance[tokenName])), value); // (a - b).toString();
     this->changed = true;
     return operationStatus::WalletErrorsCode::cOk;
     #if 0
@@ -107,18 +112,18 @@ operationStatus::WalletErrorsCode WalletAccount::subtractToken(double value, con
     #endif
 }
 
-void WalletAccount::increaseToken(double value, const std::string &inputHash, const std::string &tokenName) {
+void WalletAccount::increaseToken(const uint256_t& value, const std::string &inputHash, const std::string &tokenName) {
     if (!this->tokensBalance.contains(tokenName)) {
-        this->tokensBalance[tokenName] = value;
+        this->tokensBalance[tokenName] = WalletAccount::uint256_2string(value);
         this->changed = true;
         return;
     }
-    this->tokensBalance[tokenName] = this->tokensBalance[tokenName].as_double() + value;
+    this->tokensBalance[tokenName] = WalletAccount::uint256_sum_2string(uint256_t(boost::json::value_to<std::string>(this->tokensBalance[tokenName])), value);
     this->changed = true;
 }
 
-WalletAccount::WalletAccount(std::string address, double balance, json::object tokensBalance) : address(std::move(
-        address)), balance(balance), tokensBalance(std::move(tokensBalance)) {}
+WalletAccount::WalletAccount(std::string address, uint256_t balance, json::object tokensBalance) : address(std::move(
+        address)), balance(std::move(balance)), tokensBalance(std::move(tokensBalance)) {}
 
 bool WalletAccount::parseHistory(std::string *ptr) {
     if (ptr == nullptr) return false;
@@ -149,8 +154,8 @@ std::string WalletAccount::serializeHistory() const {
     return ss.str();
 }
 
-WalletAccount::WalletAccount(std::string address, double balance, json::object tokensBalance, long nonce) : address(std::move(
-        address)), balance(balance), tokensBalance(std::move(tokensBalance)), nonce(nonce) {}
+WalletAccount::WalletAccount(std::string address, uint256_t balance, json::object tokensBalance, uint64_t nonce) : address(std::move(
+        address)), balance(std::move(balance)), tokensBalance(std::move(tokensBalance)), nonce(nonce) {}
 
 bool WalletAccount::isValidNonce(RawTransaction *rawPointer) const {
     return this->nonce != rawPointer->nonce;
@@ -158,6 +163,17 @@ bool WalletAccount::isValidNonce(RawTransaction *rawPointer) const {
 
 WalletAccount* WalletAccount::createEmptyWallet(const std::string &address) {
     return std::make_shared<WalletAccount>(WalletAccount()).get();
+}
+
+int WalletAccount::compareNativeTokenBalance(const json::value &amount) const {
+    uint256_t amountOfTokens = uint256_t(boost::json::value_to<std::string>(amount));
+    return (this->balance < amountOfTokens) ? -1 : (this->balance > amountOfTokens) ? 1 : 0;
+}
+
+int WalletAccount::compareTokenBalance(const json::value &amount, const json::value &tokenName) {
+    uint256_t amountOfTokens = uint256_t(boost::json::value_to<std::string>(amount));
+    uint256_t amountOfTokensInBalance = uint256_t(boost::json::value_to<std::string>(this->tokensBalance[boost::json::value_to<std::string>(tokenName)]));
+    return (amountOfTokensInBalance < amountOfTokens) ? -1 : (amountOfTokensInBalance > amountOfTokens) ? 1 : 0;
 }
 
 
