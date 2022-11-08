@@ -28,20 +28,21 @@ inline void create_error_response(const std::string &message, http::response<htt
 
 class RpcFilterObject {
 public:
-    virtual std::tuple<bool, std::shared_ptr<boost::json::value>> doFilterInternal(std::shared_ptr<boost::json::value> parameter);
+    virtual std::tuple<bool, std::shared_ptr<boost::json::value>> doReturnableFilterInternal(std::shared_ptr<boost::json::value> parameter);
+    virtual bool doFilterInternal(std::shared_ptr<boost::json::value> parameter);
 };
 
 class BasicTransactionFilter : public RpcFilterObject {
 public:
     BasicTransactionFilter();
     explicit BasicTransactionFilter(dbProvider::BatchProvider *userProvider, http::response<http::dynamic_body> *response);
-    std::tuple<bool, std::shared_ptr<boost::json::value>> doFilterInternal(std::shared_ptr<boost::json::value> parameter) override;
+    std::tuple<bool, std::shared_ptr<boost::json::value>> doReturnableFilterInternal(std::shared_ptr<boost::json::value> parameter) override;
 private:
     dbProvider::BatchProvider *userProvider;
     http::response<http::dynamic_body> *response;
 };
 
-std::tuple<bool, std::shared_ptr<boost::json::value>> BasicTransactionFilter::doFilterInternal(std::shared_ptr<boost::json::value> parameter) {
+std::tuple<bool, std::shared_ptr<boost::json::value>> BasicTransactionFilter::doReturnableFilterInternal(std::shared_ptr<boost::json::value> parameter) {
     std::shared_ptr<RawTransaction> rawTransaction = RawTransaction::parse(parameter.get());
     auto sender = boost::json::value_to<std::string>(parameter->at("from"));
     operationDBStatus::DBResponse<std::string> dbResponse = this->userProvider->read<std::string>(&sender);

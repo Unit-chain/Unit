@@ -185,6 +185,13 @@ private:
                         throw;
                     }
                     // need to send success request and check logic again
+                    //
+                    //
+                    //          change to doFilterInternal in the future!!!
+                    //
+                    //
+                    //
+                    //
                 }
             } else if ("unit_get_balance" == method) {
                 // implement balance method
