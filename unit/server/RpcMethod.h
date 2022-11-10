@@ -13,7 +13,7 @@
 
 class RpcMethod {
 public:
-    virtual std::shared_ptr<boost::json::value> validateRequest(boost::json::value *params);
+    virtual std::shared_ptr<boost::json::value> validateRequest(boost::json::value *params) = 0;
 };
 
 class RpcMethodHandler {
@@ -23,6 +23,9 @@ public:
 
     [[nodiscard]] const std::shared_ptr<RpcMethod> &getMethod() const {return method;}
     void setMethod(const std::shared_ptr<RpcMethod> &method) { RpcMethodHandler::method = method;}
+
+    /// should return nullptr if ok
+    /// or else should return error
     inline std::shared_ptr<boost::json::value> executeValidating(boost::json::value *params) { return this->method->validateRequest(params); }
 private:
     std::shared_ptr<RpcMethod> method;

@@ -16,7 +16,7 @@ public:
     RpcFilterBuilder *setParameter(const std::shared_ptr<boost::json::value> &parameter);
     RpcFilterBuilder *setFilter(const std::shared_ptr<RpcFilterObject>& rpcFilter);
     RpcFilterBuilder *setMultipleFilters(const std::shared_ptr<std::vector<RpcFilterObject>>& filtersList);
-    std::tuple<bool, std::shared_ptr<boost::json::value>> build();
+    std::tuple<bool, std::shared_ptr<boost::json::value>> filter();
 private:
     std::vector<RpcFilterObject> filters;
     std::shared_ptr<boost::json::value> parameter;
@@ -48,7 +48,7 @@ RpcFilterBuilder *RpcFilterBuilder::setParameter(const shared_ptr<boost::json::v
     return this;
 }
 
-std::tuple<bool, std::shared_ptr<boost::json::value>> RpcFilterBuilder::build() {
+std::tuple<bool, std::shared_ptr<boost::json::value>> RpcFilterBuilder::filter() {
     bool filteringResult = true;
     for (auto & filter : this->filters) {
         std::tuple<bool, std::shared_ptr<boost::json::value>> filterResponse = filter.doReturnableFilterInternal(

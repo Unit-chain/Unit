@@ -141,58 +141,44 @@ private:
     /* END OF RESPONSES */
     /*------------------*/
 
-    /*INSTRUCTIONS*/
-    /*------------*/
+    inline void processFilters(RpcMethodHandler& rpcMethodHandler, RpcFilterBuilder *filterChain, RpcMethod &method, const boost::json::value *json) {
+        rpcMethodHandler = RpcMethodHandler(&method);
+        std::shared_ptr<boost::json::value> validating = rpcMethodHandler.executeValidating(
+                std::make_shared<boost::json::value>(json->at("params")).get());
+        std::string errorMessage{};
+        if (validating != nullptr) {
+            errorMessage = boost::json::value_to<std::string>(*validating);
+            create_error_response(errorMessage, true);
+            throw;
+        } else {
+            RpcFilterBuilder rpcFilterBuilder = RpcFilterBuilder();
+            #if 0
+                        if (std::get<0>(rpcFilterBuilder.setParameter(std::make_shared<boost::json::value>(parameters))
+                                                ->setFilter(std::make_shared<BasicTransactionFilter>(
+                                                        BasicTransactionFilter(&(this->userProvider),
+                                                                               &(this->response_))))->filter())) {
+                            throw;
+                        }
+            #endif
+            std::tuple<bool, std::shared_ptr<boost::json::value>> filtersResult = filterChain->filter();
+            if (!std::get<0>(filtersResult)) {
+                errorMessage = boost::json::value_to<std::string>(*std::get<1>(filtersResult));
+                create_error_response(errorMessage, true);
+                throw;
+            }
+        }
+    }
+
     inline void process_instruction(const boost::json::value& json) {
-//        try {
-//            std::string instruction;
-//            instruction = boost::json::value_to<std::string>(json.at("instruction"));
-//            if (instruction == "i_balance") {
-//                i_balance(json);
-//            } else if (instruction == "i_push_transaction") {
-//                try {
-//                    i_push_transaction(json);
-//                } catch (std::exception &e) {
-//                    create_error_response(R"({"message":"Invalid data"})");
-//                    return;
-//                }
-//            } else if (instruction == "i_block_height") {
-//                i_block_height();
-//            } else if (instruction == "i_tx") {
-//                i_tx(json);
-//            } else if (instruction == "i_pool_size") {
-//                i_pool_size();
-//            } else {
-//                create_error_response(R"({"message":"Instruction not found"})");
-//            }
-//        } catch (const boost::wrapexcept<std::out_of_range> &o) {
-//            create_error_response(R"({"message":"Instruction field not found"})");
-//        }
         try {
             RpcMethodHandler rpcMethodHandler;
             auto method = boost::json::value_to<std::string>(json.at("method"));
             if ("transfer" == method) {
                 rpcMethodHandler = RpcMethodHandler(std::make_shared<TransferMethod>(TransferMethod()).get());
-                std::shared_ptr<boost::json::value> validating = rpcMethodHandler.executeValidating(
-                        std::make_shared<boost::json::value>(json.at("params")).get());
-                if (validating != nullptr) {
-                    create_error_response(boost::json::value_to<std::string>(*validating), true);
-                } else {
-                    boost::json::value parameters = json.at("params");
-                    RpcFilterBuilder rpcFilterBuilder = RpcFilterBuilder();
-                    if (std::get<0>(rpcFilterBuilder.setParameter(std::make_shared<boost::json::value>(parameters))
-                    ->setFilter(std::make_shared<BasicTransactionFilter>(BasicTransactionFilter(&(this->userProvider),&(this->response_))))->build())) {
-                        throw;
-                    }
-                    // need to send success request and check logic again
-                    //
-                    //
-                    //          change to doFilterInternal in the future!!!
-                    //
-                    //
-                    //
-                    //
-                }
+                RpcFilterBuilder *rpcFilterBuilder = rpcFilterBuilder->setParameter(std::make_shared<boost::json::value>(json.at("params")))
+                        ->setFilter(std::make_shared<BasicTransactionFilter>(BasicTransactionFilter(&(this->userProvider),&(this->response_))));
+                TransferMethod transfer{};
+                this->processFilters(rpcMethodHandler, rpcFilterBuilder, transfer, &json);
             } else if ("unit_get_balance" == method) {
                 // implement balance method
             } else if ("unit_get_tx_pool_size" == method) {
@@ -206,7 +192,7 @@ private:
             } else {
                 create_error_response(rpcError::invalidMethod, true);
             }
-        } catch (const boost::wrapexcept<std::out_of_range> &o) {
+        } catch (const std::exception &e) {
 
         }
     }

@@ -28,53 +28,50 @@ inline void create_error_response(const std::string &message, http::response<htt
 
 class RpcFilterObject {
 public:
-    virtual std::tuple<bool, std::shared_ptr<boost::json::value>> doReturnableFilterInternal(std::shared_ptr<boost::json::value> parameter);
-    virtual bool doFilterInternal(std::shared_ptr<boost::json::value> parameter);
+    inline virtual std::tuple<bool, std::shared_ptr<boost::json::value>> doReturnableFilterInternal(std::shared_ptr<boost::json::value> parameter) = 0;
 };
 
 class BasicTransactionFilter : public RpcFilterObject {
 public:
     BasicTransactionFilter();
     explicit BasicTransactionFilter(dbProvider::BatchProvider *userProvider, http::response<http::dynamic_body> *response);
-    std::tuple<bool, std::shared_ptr<boost::json::value>> doReturnableFilterInternal(std::shared_ptr<boost::json::value> parameter) override;
+    inline std::tuple<bool, std::shared_ptr<boost::json::value>> doReturnableFilterInternal(std::shared_ptr<boost::json::value> parameter) override {
+        std::shared_ptr<RawTransaction> rawTransaction = RawTransaction::parse(parameter.get());
+        auto sender = boost::json::value_to<std::string>(parameter->at("from"));
+        operationDBStatus::DBResponse<std::string> dbResponse = this->userProvider->read<std::string>(&sender);
+        if (dbResponse.error && ((int) dbResponse.errorResponse) == 2) {
+            create_error_response(rpcError::emptyBalanceError, this->response);
+            return {false, nullptr};
+        }
+        std::optional<std::shared_ptr<WalletAccount>> opAccount = WalletAccount::parseWallet(dbResponse.value);
+        if (!opAccount.has_value()) {
+            create_error_response(rpcError::defaultAccountError, this->response);
+            return {false, nullptr};
+        }
+        std::shared_ptr<WalletAccount> account = opAccount.value();
+        if (account->nonce == parameter->at("nonce")) {
+            create_error_response(rpcError::badNonce, this->response);
+            return {false, nullptr};
+        }
+        if (!ecdsa_verify_signature(boost::json::value_to<std::string>(parameter->at("r")), boost::json::value_to<std::string>(parameter->at("s")),
+                                    *rawTransaction->serializeWithoutSignatures(), boost::json::value_to<std::string>(parameter->at("from")))) {
+            create_error_response(rpcError::invalidSignature, this->response);
+            return {false, nullptr};
+        }
+        if (boost::json::value_to<int>(parameter->at("type")) == 0 && (account->compareNativeTokenBalance(parameter->at("amount")) < 0)) {
+            create_error_response(rpcError::lowBalance, this->response);
+            return {false, nullptr};
+        }
+        if (boost::json::value_to<int>(parameter->at("type")) == 1 && (account->compareTokenBalance(parameter->at("amount"), parameter->at("extradata").at("name")) < 0)) {
+            create_error_response(rpcError::lowBalance, this->response);
+            return {false, nullptr};
+        }
+        return {true, nullptr};
+    }
 private:
     dbProvider::BatchProvider *userProvider;
     http::response<http::dynamic_body> *response;
 };
-
-std::tuple<bool, std::shared_ptr<boost::json::value>> BasicTransactionFilter::doReturnableFilterInternal(std::shared_ptr<boost::json::value> parameter) {
-    std::shared_ptr<RawTransaction> rawTransaction = RawTransaction::parse(parameter.get());
-    auto sender = boost::json::value_to<std::string>(parameter->at("from"));
-    operationDBStatus::DBResponse<std::string> dbResponse = this->userProvider->read<std::string>(&sender);
-    if (dbResponse.error && ((int) dbResponse.errorResponse) == 2) {
-        create_error_response(rpcError::emptyBalanceError, this->response);
-        return {false, nullptr};
-    }
-    std::optional<std::shared_ptr<WalletAccount>> opAccount = WalletAccount::parseWallet(dbResponse.value);
-    if (!opAccount.has_value()) {
-        create_error_response(rpcError::defaultAccountError, this->response);
-        return {false, nullptr};
-    }
-    std::shared_ptr<WalletAccount> account = opAccount.value();
-    if (account->nonce == parameter->at("nonce")) {
-        create_error_response(rpcError::badNonce, this->response);
-        return {false, nullptr};
-    }
-    if (!ecdsa_verify_signature(boost::json::value_to<std::string>(parameter->at("r")), boost::json::value_to<std::string>(parameter->at("s")),
-                                *rawTransaction->serializeWithoutSignatures(), boost::json::value_to<std::string>(parameter->at("from")))) {
-        create_error_response(rpcError::invalidSignature, this->response);
-        return {false, nullptr};
-    }
-    if (boost::json::value_to<int>(parameter->at("type")) == 0 && (account->compareNativeTokenBalance(parameter->at("amount")) < 0)) {
-        create_error_response(rpcError::lowBalance, this->response);
-        return {false, nullptr};
-    }
-    if (boost::json::value_to<int>(parameter->at("type")) == 1 && (account->compareTokenBalance(parameter->at("amount"), parameter->at("extradata").at("name")) < 0)) {
-        create_error_response(rpcError::lowBalance, this->response);
-        return {false, nullptr};
-    }
-    return {true, nullptr};
-}
 
 BasicTransactionFilter::BasicTransactionFilter() {}
 

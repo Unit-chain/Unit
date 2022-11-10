@@ -1,7 +1,5 @@
 #include <iostream>
 
-#include "boost/multiprecision/cpp_int.hpp"
-
 #if 0
     #include "libdevcore/bip44/ecdsa.hpp"
     #include "libdevcore/bip44/BIP32.hpp"
@@ -11,7 +9,8 @@
     using namespace std;
 #endif
 
-#if 1
+#if 0
+    #include "boost/multiprecision/cpp_int.hpp"
     #include "boost/unordered_map.hpp"
     #include "libdevcore/db/DBProvider.h"
     #include "libdevcore/datastructures/account/WalletAccount.h"
@@ -24,8 +23,6 @@
 
 int main() {
     std::cout << "Hello, World!" << std::endl;
-    boost::json::value value = boost::json::parse(R"({"val":"0x12725DD1D243ABA0E75FE645CC4873F9E65AFE688C928E1F21"})");
-    std::cout << "\"" << boost::json::value_to<std::string>(value.at("val")) << "\"" << std::endl;
     #if 0
         boost::json::value value = boost::json::parse(R"({"val":"0x12725DD1D243ABA0E75FE645CC4873F9E65AFE688C928E1F21"})");
         boost::multiprecision::uint256_t uint256 = boost::multiprecision::uint256_t(boost::json::value_to<std::string>(value.at("val")));

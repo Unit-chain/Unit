@@ -7,7 +7,6 @@
 
 #include <ostream>
 
-#define logger std::cout << "################## "
 #define DEBUG true
 #define ZERO_HASH 9e6291970cb44dd94008c79bcaf9d86f18b4b49ba5b2a04781db7199ed3b9e4e
 #define TRANSFER 0b00
