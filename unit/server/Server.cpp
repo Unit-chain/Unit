@@ -141,8 +141,8 @@ private:
     /* END OF RESPONSES */
     /*------------------*/
 
-    inline void processFilters(RpcMethodHandler& rpcMethodHandler, RpcFilterBuilder *filterChain, RpcMethod &method, const boost::json::value *json) {
-        rpcMethodHandler = RpcMethodHandler(&method);
+    inline void processFilters(RpcMethodHandler& rpcMethodHandler, RpcFilterBuilder *filterChain, RpcMethod *method, const boost::json::value *json) {
+        rpcMethodHandler = RpcMethodHandler(method);
         std::shared_ptr<boost::json::value> validating = rpcMethodHandler.executeValidating(
                 std::make_shared<boost::json::value>(json->at("params")).get());
         std::string errorMessage{};
@@ -172,13 +172,14 @@ private:
     inline void process_instruction(const boost::json::value& json) {
         try {
             RpcMethodHandler rpcMethodHandler;
+            RpcFilterBuilder *rpcFilterBuilder = nullptr;
+            RpcMethod *declaredMethod = nullptr;
             auto method = boost::json::value_to<std::string>(json.at("method"));
             if ("transfer" == method) {
                 rpcMethodHandler = RpcMethodHandler(std::make_shared<TransferMethod>(TransferMethod()).get());
-                RpcFilterBuilder *rpcFilterBuilder = rpcFilterBuilder->setParameter(std::make_shared<boost::json::value>(json.at("params")))
+                rpcFilterBuilder = rpcFilterBuilder->setParameter(std::make_shared<boost::json::value>(json.at("params")))
                         ->setFilter(std::make_shared<BasicTransactionFilter>(BasicTransactionFilter(&(this->userProvider),&(this->response_))));
-                TransferMethod transfer{};
-                this->processFilters(rpcMethodHandler, rpcFilterBuilder, transfer, &json);
+                declaredMethod = new TransferMethod(); // may cause slicing (cppcoreguidelines-slicing)
             } else if ("unit_get_balance" == method) {
                 // implement balance method
             } else if ("unit_get_tx_pool_size" == method) {
@@ -191,7 +192,9 @@ private:
                 // implement balance method
             } else {
                 create_error_response(rpcError::invalidMethod, true);
+                throw;
             }
+            this->processFilters(rpcMethodHandler, rpcFilterBuilder, declaredMethod, &json);
         } catch (const std::exception &e) {
 
         }
