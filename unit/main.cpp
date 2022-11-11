@@ -1,4 +1,5 @@
 #include <iostream>
+#include "libdevcore/utils/StringUtil.h"
 
 #if 0
     #include "libdevcore/bip44/ecdsa.hpp"
@@ -23,6 +24,7 @@
 
 int main() {
     std::cout << "Hello, World!" << std::endl;
+    std::cout << StringUtil::string_format("Test: {}", "123") << std::endl;
     #if 0
         boost::json::value value = boost::json::parse(R"({"val":"0x12725DD1D243ABA0E75FE645CC4873F9E65AFE688C928E1F21"})");
         boost::multiprecision::uint256_t uint256 = boost::multiprecision::uint256_t(boost::json::value_to<std::string>(value.at("val")));

@@ -169,17 +169,24 @@ private:
         }
     }
 
-    inline void process_instruction(const boost::json::value& json) {
+    inline void process_instruction(boost::json::value& json) {
         try {
-            RpcMethodHandler rpcMethodHandler;
-            RpcFilterBuilder *rpcFilterBuilder = nullptr;
-            RpcMethod *declaredMethod = nullptr;
+            #if 0
+                RpcMethodHandler rpcMethodHandler;
+                RpcFilterBuilder *rpcFilterBuilder = nullptr;
+                RpcMethod *declaredMethod = nullptr;
+            #endif
             auto method = boost::json::value_to<std::string>(json.at("method"));
+            RpcFilterChain rpcFilterChain{};
             if ("transfer" == method) {
-                rpcMethodHandler = RpcMethodHandler(std::make_shared<TransferMethod>(TransferMethod()).get());
-                rpcFilterBuilder = rpcFilterBuilder->setParameter(std::make_shared<boost::json::value>(json.at("params")))
-                        ->setFilter(std::make_shared<BasicTransactionFilter>(BasicTransactionFilter(&(this->userProvider),&(this->response_))));
-                declaredMethod = new TransferMethod(); // may cause slicing (cppcoreguidelines-slicing)
+                #if 0
+                    rpcMethodHandler = RpcMethodHandler(std::make_shared<TransferMethod>(TransferMethod()).get());
+                    rpcFilterBuilder = rpcFilterBuilder->setParameter(std::make_shared<boost::json::value>(json.at("params")))
+                            ->setFilter(std::make_shared<BasicTransactionFilter>(BasicTransactionFilter(&(this->userProvider),&(this->response_))));
+                    declaredMethod = new TransferMethod(); // may cause slicing
+                    this->processFilters(rpcMethodHandler, rpcFilterBuilder, declaredMethod, &json);
+                #endif
+                rpcFilterChain.add(new BasicTransactionRpcFilter(&(this->userProvider),&(this->response_)));
             } else if ("unit_get_balance" == method) {
                 // implement balance method
             } else if ("unit_get_tx_pool_size" == method) {
@@ -192,11 +199,11 @@ private:
                 // implement balance method
             } else {
                 create_error_response(rpcError::invalidMethod, true);
-                throw;
+                throw RpcMethodSupportException();
             }
-            this->processFilters(rpcMethodHandler, rpcFilterBuilder, declaredMethod, &json);
+            rpcFilterChain.filter(&json);
         } catch (const std::exception &e) {
-
+            std::cout << e.what() << std::endl;
         }
     }
 };

@@ -7,6 +7,7 @@
 #include "ServerIncludes.h"
 #include "RpcMethod.h"
 #include "RpcFilterBuilder.h"
+#include "RpcFilterChain.h"
 #include "../libdevcore/datastructures/containers/list.h"
 #include "../libdevcore/datastructures/blockchain/transaction/ValidTransaction.h"
 #include "../libdevcore/db/DBProvider.h"
