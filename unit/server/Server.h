@@ -10,6 +10,7 @@
 #include "RpcFilterChain.h"
 #include "../libdevcore/datastructures/containers/list.h"
 #include "../libdevcore/datastructures/blockchain/transaction/ValidTransaction.h"
+#include "../libdevcore/datastructures/blockchain/block/Block.h"
 #include "../libdevcore/db/DBProvider.h"
 
 #define LOCAL_IP "127.0.0.1"
@@ -17,7 +18,8 @@
 
 class Server {
 public:
-    static int start_server(unit::list<ValidTransaction> *tx_deque, const std::shared_ptr<std::string>& path);
+    static int start_server(unit::list<ValidTransaction> *tx_deque, std::string &userDBPath,
+                            std::string &historyPath, std::string &blockPath, std::string &transactionPath, Block *last);
     static bool isEnoughTokenBalance(const boost::json::value& balance, const std::string& token_name, double value);
     static bool isEnoughUnitBalance(const boost::json::value& balance, double value);
 };

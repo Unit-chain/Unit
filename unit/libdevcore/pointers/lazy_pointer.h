@@ -9,6 +9,14 @@
 #include <thread>
 #include <mutex>
 
+//
+//
+//
+// need to change to std::weak_ptr<T>
+//
+//
+//
+
 template<class T>
 class lazy_pointer {
 public:

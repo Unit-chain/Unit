@@ -54,3 +54,14 @@ cd *Unit*
 - [ ] POW to ZK-GPU-COUNTING PROOF(possible)
 - [ ] Pseudonymous
 
+```mermaid
+gantt
+dateFormat  YYYY-MM-DD
+title Developing scheme
+
+section Beta stage
+Blockchain beta               :active,  des1, 2023-01-10, 40d
+Virtual machine               :         des2, after des1 2023-05-10, 20d
+Decentralization              :         des3, after des2, 30d
+
+```

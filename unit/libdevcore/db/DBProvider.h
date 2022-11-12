@@ -36,7 +36,7 @@ namespace dbProvider {
     public:
         BatchProvider() = default;
         explicit BatchProvider(std::string path);
-        const std::string path;
+        std::string path;
 
         operationDBStatus::DBCode singleWrite(std::string *key, std::string *value) override;
         template<class T> operationDBStatus::DBCode multipleWrite(unit::list<T> *keys, unit::list<T> *values);
@@ -44,6 +44,13 @@ namespace dbProvider {
         operationDBStatus::DBTupleResponse multiRead(std::vector<std::string> *keys);
         static std::shared_ptr<rocksdb::WriteBatch> getBatch();
         operationDBStatus::DBCode commitBatch(const std::shared_ptr<rocksdb::WriteBatch>& batch);
+        inline BatchProvider &operator=(const BatchProvider &c2) {
+            this->path = c2.path;
+            this->options = c2.options;
+            this->writeOptions = c2.writeOptions;
+            this->readOptions = c2.readOptions;
+            return *this;
+        }
     private:
         friend class AbstractProvider;
     protected:

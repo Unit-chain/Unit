@@ -1,5 +1,5 @@
 //
-// Created by Gosha Stolyarov on 28.07.2022.
+// Created by Kirill Zhukov on 11.11.2022.
 //
 
 #include <chrono>
@@ -28,10 +28,15 @@ namespace my_program_state {
 class http_connection : public std::enable_shared_from_this<http_connection> {
 public:
     http_connection(tcp::socket socket) : socket_(std::move(socket)){}
-    http_connection(tcp::socket socket, const std::shared_ptr<std::string>& path) : socket_(std::move(socket)), userProvider(*path){}
+    http_connection(tcp::socket socket, std::string& path) : socket_(std::move(socket)), userProvider(path){}
     // Initiate the asynchronous operations associated with the connection.
-    void start(unit::list<ValidTransaction> *txDeque) {
+    void start(unit::list<ValidTransaction> *txDeque, std::string *userDBPath, std::string *historyPath, std::string *blockPath, std::string *transactionPath, Block *last) {
         this->txDeque = std::shared_ptr<unit::list<ValidTransaction>>(txDeque);
+        this->userProvider = dbProvider::BatchProvider(*userDBPath);
+        this->historyProvider = dbProvider::BatchProvider(*historyPath);
+        this->blockDBProvider = dbProvider::BatchProvider(*blockPath);
+        this->transactionDBProvider = dbProvider::BatchProvider(*transactionPath);
+        this->last = last;
         read_request();
         check_deadline();
     }
@@ -39,6 +44,14 @@ public:
 private:
     // database provider for users accounts
     dbProvider::BatchProvider userProvider;
+    // database provider for history accounts
+    dbProvider::BatchProvider historyProvider;
+    // database provider for block DB
+    dbProvider::BatchProvider blockDBProvider;
+    // database provider for transaction DB
+    dbProvider::BatchProvider transactionDBProvider;
+    // current block
+    Block *last;
     // pointer to tx deque
     std::shared_ptr<unit::list<ValidTransaction>> txDeque;
     // The socket for the currently connected client.
@@ -79,7 +92,6 @@ private:
     inline void process_request() {
         response_.version(request_.version());
         response_.keep_alive(true);
-
         // featured json body
         boost::json::value body_to_json;
         boost::json::error_code ec;
@@ -152,14 +164,6 @@ private:
             throw;
         } else {
             RpcFilterBuilder rpcFilterBuilder = RpcFilterBuilder();
-            #if 0
-                        if (std::get<0>(rpcFilterBuilder.setParameter(std::make_shared<boost::json::value>(parameters))
-                                                ->setFilter(std::make_shared<BasicTransactionFilter>(
-                                                        BasicTransactionFilter(&(this->userProvider),
-                                                                               &(this->response_))))->filter())) {
-                            throw;
-                        }
-            #endif
             std::tuple<bool, std::shared_ptr<boost::json::value>> filtersResult = filterChain->filter();
             if (!std::get<0>(filtersResult)) {
                 errorMessage = boost::json::value_to<std::string>(*std::get<1>(filtersResult));
@@ -171,32 +175,20 @@ private:
 
     inline void process_instruction(boost::json::value& json) {
         try {
-            #if 0
-                RpcMethodHandler rpcMethodHandler;
-                RpcFilterBuilder *rpcFilterBuilder = nullptr;
-                RpcMethod *declaredMethod = nullptr;
-            #endif
             auto method = boost::json::value_to<std::string>(json.at("method"));
             RpcFilterChain rpcFilterChain{};
             if ("transfer" == method) {
-                #if 0
-                    rpcMethodHandler = RpcMethodHandler(std::make_shared<TransferMethod>(TransferMethod()).get());
-                    rpcFilterBuilder = rpcFilterBuilder->setParameter(std::make_shared<boost::json::value>(json.at("params")))
-                            ->setFilter(std::make_shared<BasicTransactionFilter>(BasicTransactionFilter(&(this->userProvider),&(this->response_))));
-                    declaredMethod = new TransferMethod(); // may cause slicing
-                    this->processFilters(rpcMethodHandler, rpcFilterBuilder, declaredMethod, &json);
-                #endif
-                rpcFilterChain.add(new BasicTransactionRpcFilter(&(this->userProvider),&(this->response_)));
+                rpcFilterChain.add(new BasicTransactionRpcFilter(&(this->userProvider),&(this->response_), this->txDeque));
             } else if ("unit_get_balance" == method) {
-                // implement balance method
+                rpcFilterChain.add(new BasicBalanceFilter(&(this->userProvider),&(this->response_)));
             } else if ("unit_get_tx_pool_size" == method) {
-                // implement balance method
+                rpcFilterChain.add(new BasicPoolFilter(&(this->response_), this->txDeque));
             } else if ("unit_get_address_tx_history" == method) {
-                // implement balance method
+                rpcFilterChain.add(new BasicBalanceHistoryFilter(&(this->response_), &(this->historyProvider)));
             } else if ("unit_get_block_height" == method) {
-                // implement balance method
+                rpcFilterChain.add(new BasicBlockHeightFilter(&(this->response_), this->last));
             } else if ("unit_get_tx" == method) {
-                // implement balance method
+                rpcFilterChain.add(new BasicTransactionByHashRpcFilter(&(this->response_), &(this->transactionDBProvider)));
             } else {
                 create_error_response(rpcError::invalidMethod, true);
                 throw RpcMethodSupportException();
@@ -209,15 +201,17 @@ private:
 };
 
 // "Loop" forever accepting new connections.
-void http_server(tcp::acceptor &acceptor, tcp::socket &socket, unit::list<ValidTransaction> *tx_deque, const std::shared_ptr<std::string>& path) {
+void http_server(tcp::acceptor &acceptor, tcp::socket &socket, unit::list<ValidTransaction> *tx_deque,
+                 std::string *userDBPath, std::string *historyPath, std::string *blockPath, std::string *transactionPath, Block *last) {
     acceptor.async_accept(socket,
-                          [&, tx_deque](beast::error_code ec){
-                              if (!ec) std::make_shared<http_connection>(std::move(socket))->start(tx_deque);
-                              http_server(acceptor, socket, tx_deque, path);
+                          [&, tx_deque, userDBPath, historyPath, transactionPath, last](beast::error_code ec){
+                              if (!ec) std::make_shared<http_connection>(std::move(socket))->start(tx_deque, userDBPath, historyPath, blockPath, transactionPath, last);
+                              http_server(acceptor, socket, tx_deque, userDBPath, historyPath, blockPath, transactionPath, last);
                           });
 }
 
-int Server::start_server(unit::list<ValidTransaction> *tx_deque, const std::shared_ptr<std::string>& path) {
+int Server::start_server(unit::list<ValidTransaction> *tx_deque, std::string &userDBPath,
+                         std::string &historyPath, std::string &blockPath, std::string &transactionPath, Block *last) {
     rerun_server:{};
     try {
         std::string ip_address = LOCAL_IP;
@@ -226,8 +220,8 @@ int Server::start_server(unit::list<ValidTransaction> *tx_deque, const std::shar
         net::io_context ioc{1};
         tcp::acceptor acceptor{ioc, {address, port}};
         tcp::socket socket{ioc};
-        http_server(acceptor, socket, tx_deque, path);
-        std::cout << "server has been started" << std::endl;
+        http_server(acceptor, socket, tx_deque, &userDBPath, &historyPath, &blockPath, &transactionPath, last);
+        std::cout << "server started" << std::endl;
         ioc.run();
     } catch (std::exception const &e) {
         std::cerr << "Error: " << e.what() << std::endl;
