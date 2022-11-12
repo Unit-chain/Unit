@@ -68,7 +68,7 @@ struct BlockHeader {
 
 std::string BlockHeader::serializeBlockHeader() {
     std::stringstream ss;
-    ss << R"({"hash":")" << this->hash << R"(", "previousHash":")" << this->previousHash << R"(", "merkleRoot":")" << this->merkleRoot << R"(", "time":)"
+    ss << R"({"hash":")" << this->hash << R"(", "previousHash":")" << this->previousHash << R"(", "transactionMerkleRoot":")" << this->merkleRoot << R"(", "time":)"
     << this->time << R"(, "version":)" << this->version << R"(, "transactionCount":)" << this->transactionCount << R"(, "index":)"
     << this->index << R"(", "size":)" << this->size << R"(, "nonce":)" << this->nonce << R"(})";
     return std::string();
