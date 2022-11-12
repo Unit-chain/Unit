@@ -153,26 +153,6 @@ private:
     /* END OF RESPONSES */
     /*------------------*/
 
-    inline void processFilters(RpcMethodHandler& rpcMethodHandler, RpcFilterBuilder *filterChain, RpcMethod *method, const boost::json::value *json) {
-        rpcMethodHandler = RpcMethodHandler(method);
-        std::shared_ptr<boost::json::value> validating = rpcMethodHandler.executeValidating(
-                std::make_shared<boost::json::value>(json->at("params")).get());
-        std::string errorMessage{};
-        if (validating != nullptr) {
-            errorMessage = boost::json::value_to<std::string>(*validating);
-            create_error_response(errorMessage, true);
-            throw;
-        } else {
-            RpcFilterBuilder rpcFilterBuilder = RpcFilterBuilder();
-            std::tuple<bool, std::shared_ptr<boost::json::value>> filtersResult = filterChain->filter();
-            if (!std::get<0>(filtersResult)) {
-                errorMessage = boost::json::value_to<std::string>(*std::get<1>(filtersResult));
-                create_error_response(errorMessage, true);
-                throw;
-            }
-        }
-    }
-
     inline void process_instruction(boost::json::value& json) {
         try {
             auto method = boost::json::value_to<std::string>(json.at("method"));
