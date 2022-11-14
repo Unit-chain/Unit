@@ -22,14 +22,12 @@ public:
         if (!(psl || psr)) return "";
         return !psl ? *psr : !psr ? *psl : *psl + *psr;
     }
-
     void buildTree(unsigned long long currentIndex, unsigned long long leftQueryBorder, unsigned long long rightQueryBorder);
-
     void print_tree();
     inline std::optional<std::string> get_root(){
         if (this->tree.empty() || this->initial_array.empty())
             return std::nullopt;
-        return tree[0];
+        return (this->initial_array.size() == 1) ? this->sha3(this->tree[0]) : this->tree[0];
     }
 
     [[nodiscard]] const std::vector<std::string> *getInitialArray() const;

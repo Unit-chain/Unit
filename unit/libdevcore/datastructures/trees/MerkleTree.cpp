@@ -34,8 +34,6 @@ void MerkleTree::print_tree() {
     }
 }
 
-
-
 const std::vector<std::string> *MerkleTree::getInitialArray() const {
     return &initial_array;
 }

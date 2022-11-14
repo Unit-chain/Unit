@@ -119,13 +119,6 @@ private:
     inline void create_error_response(const std::string& message = R"({"message":"Error"})", bool isJSON = true) {
         response_.result(http::status::bad_request);
         response_.set(http::field::content_type, (isJSON ? "application/json" : "text/plain"));
-        response_.set(http::field::server, "Unit");
-        beast::ostream(response_.body()) << message;
-    }
-
-    inline void create_success_response(const std::string& message = R"({"message":"Ok"})", bool isJSON = true) {
-        response_.result(http::status::ok);
-        response_.set(http::field::content_type, (isJSON ? "application/json" : "text/plain"));
         response_.set(http::field::server, "unit");
         beast::ostream(response_.body()) << message;
     }
@@ -192,7 +185,7 @@ void http_server(tcp::acceptor &acceptor, tcp::socket &socket, unit::list<ValidT
 
 int Server::start_server(unit::list<ValidTransaction> *tx_deque, std::string &userDBPath,
                          std::string &historyPath, std::string &blockPath, std::string &transactionPath, Block *last) {
-    rerun_server:{};
+    rerun_server:;
     try {
         std::string ip_address = LOCAL_IP;
         auto const address = net::ip::make_address(ip_address);

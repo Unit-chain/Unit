@@ -42,6 +42,7 @@ add_executable(unit
         libdevcore/datastructures/blockchain/transaction/ValidTransaction.h
         libdevcore/pointers/lazy_pointer.h
         libdevcore/datastructures/blockchain/block/Block.h
+        libdevcore/datastructures/blockchain/block/NewBlock.h
         libdevcore/datastructures/blockchain/block/BlockHeader.h
         libdevcore/datastructures/blockchain/block/Shard.h
         libdevcore/datastructures/containers/list.h
@@ -50,13 +51,15 @@ add_executable(unit
         libdevcore/db/DBProvider.h
         libdevcore/db/DBStatus.h
         libdevcore/db/JsonMergeOperator.h
+        libdevcore/db/DB.h
+        libdevcore/db/DBError.h
         libdevcore/datastructures/concurrency/ThreadPool.h
         libdevcore/datastructures/concurrency/DBWriter.h
+        libdevcore/datastructures/blockchain/block/BlockBuilder.h
+        libdevcore/datastructures/account/Token.h
         global/errors/WalletErrors.h
         global/GlobalVariables.h
         blockHandler/BlockHandler.h
-        libdevcore/datastructures/blockchain/block/BlockBuilder.h
-        libdevcore/datastructures/account/Token.h
         server/Server.h server/Server.cpp server/RpcMethod.h
         server/RpcFilterObject.h
         server/ServerIncludes.h
