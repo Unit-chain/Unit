@@ -66,7 +66,7 @@ std::optional<std::shared_ptr<Token>> Token::parse(boost::json::value *extra) {
         Token newToken = Token(boost::json::value_to<std::string>(parsedData.at("name")), bytecode, boost::json::value_to<std::string>(parsedData.at("supply")));
         return {std::make_shared<Token>(newToken)};
     } catch (std::exception &e) {
-        logger << e.what() << std::endl;
+        std::cout << e.what() << std::endl;
         return std::nullopt;
     }
 }

@@ -68,7 +68,7 @@ std::optional<std::shared_ptr<WalletAccount>> WalletAccount::parseWallet(std::st
         auto tokensBalance = value.at("tokensBalance").as_object();
         return std::make_shared<WalletAccount>(WalletAccount(address, uint256_t(boost::json::value_to<std::string>(value.at("balance"))), tokensBalance, value.at("nonce").as_int64()));
     } catch (const boost::exception &o) {
-        logger << ec.message() << std::endl;
+        std::cout << ec.message() << std::endl;
         return std::nullopt;
     }
 }
@@ -135,7 +135,7 @@ bool WalletAccount::parseHistory(std::string *ptr) {
         this->txInputs = value.at("in").as_array();
         return true;
     } catch (const boost::exception &o) {
-        logger << ec.message() << std::endl;
+        std::cout << ec.message() << std::endl;
         return false;
     }
 }

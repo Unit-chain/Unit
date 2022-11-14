@@ -30,6 +30,7 @@ public:
     std::string rP;
     std::string sP;
     std::string rewardProverAddress;
+    std::string logsBloom = "null";
     unit::list<ValidTransaction> txList;
     uint64_t reward{};
     uint64_t epoch;
@@ -78,8 +79,10 @@ public:
 
 std::string Block::serializeBlock() {
     std::stringstream ss(blockHeader.serializeBlockHeader());
-    ss << R"(", "message":")" << this->message << R"(", "signP":")" << this->signP << R"(", "rP":")" << this->rP << R"(", "sP":")" << this->sP << R"(", "rewardProverAddress":")"
-       << this->rewardProverAddress << R"(", "reward":)" << this->reward << R"(})";
+    ss << R"(", "message":")" << this->message << R"(", "signP":")" << this->signP
+    << R"(", "rP":")" << this->rP << R"(", "sP":")" << this->sP << R"(", "rewardProverAddress":")"
+    << this->rewardProverAddress << R"(", "reward":)" << this->reward
+    << R"(})";
     return ss.str();
 }
 

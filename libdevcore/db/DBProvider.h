@@ -36,7 +36,7 @@ namespace dbProvider {
     public:
         BatchProvider() = default;
         explicit BatchProvider(std::string path);
-        const std::string path;
+        std::string path;
 
         operationDBStatus::DBCode singleWrite(std::string *key, std::string *value) override;
         template<class T> operationDBStatus::DBCode multipleWrite(unit::list<T> *keys, unit::list<T> *values);
@@ -44,6 +44,13 @@ namespace dbProvider {
         operationDBStatus::DBTupleResponse multiRead(std::vector<std::string> *keys);
         static std::shared_ptr<rocksdb::WriteBatch> getBatch();
         operationDBStatus::DBCode commitBatch(const std::shared_ptr<rocksdb::WriteBatch>& batch);
+        inline BatchProvider &operator=(const BatchProvider &c2) {
+            this->path = c2.path;
+            this->options = c2.options;
+            this->writeOptions = c2.writeOptions;
+            this->readOptions = c2.readOptions;
+            return *this;
+        }
     private:
         friend class AbstractProvider;
     protected:
@@ -129,8 +136,8 @@ namespace dbProvider {
     operationDBStatus::DBResponse<T> BatchProvider::read(std::string *key) {
         rocksdb::DB *db;
         rocksdb::Status status = rocksdb::DB::OpenForReadOnly(this->options, this->path, &db);
-        if (status.code() == rocksdb::Status::Code::kCorruption) return operationDBStatus::DBResponse<std::string>(operationDBStatus::DBCode::cCorruption,true);
-        if (status.code() == rocksdb::Status::Code::kIOError) return operationDBStatus::DBResponse<std::string>(operationDBStatus::DBCode::cIOError,true);
+        if (status.code() == rocksdb::Status::Code::kCorruption) return {operationDBStatus::DBCode::cCorruption, true};
+        if (status.code() == rocksdb::Status::Code::kIOError) return {operationDBStatus::DBCode::cIOError, true};
         while (status.code() != rocksdb::Status::Code::kOk) {
             status = rocksdb::DB::OpenForReadOnly(this->options, this->path, &db);
             if (status.code() != rocksdb::Status::Code::kOk) std::this_thread::sleep_for(std::chrono::seconds(3));
@@ -140,14 +147,14 @@ namespace dbProvider {
         if (!status.ok()) {
             if (status.code() == rocksdb::Status::Code::kNotFound) {
                 closeDB(&db);
-                return operationDBStatus::DBResponse<std::string>(operationDBStatus::DBCode::cNotFound,true);
+                return {operationDBStatus::DBCode::cNotFound, true};
             }
             while (status.code() != rocksdb::Status::Code::kOk) {
                 status = db->Get(rocksdb::ReadOptions(), rocksdb::Slice(*key), &response);
                 std::this_thread::sleep_for(std::chrono::seconds ( 3));
             }
         }
-        return operationDBStatus::DBResponse<std::string>(false, response);
+        return {false, response};
     }
 
     operationDBStatus::DBCode BatchProvider::commitBatch(const std::shared_ptr<rocksdb::WriteBatch>& batch) {
