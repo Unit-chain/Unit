@@ -10,63 +10,63 @@
 class RpcMethodSupportException : public std::exception {
 public:
     std::string what() {
-        return rpcError::httpMethodError;
+        return messageError::httpMethodError;
     }
 };
 
 class RpcParseException : public std::exception {
 public:
     std::string what() {
-        return rpcError::parsingError;
+        return messageError::parsingError;
     }
 };
 
 class RpcEmptyBalanceException : public std::exception {
 public:
     std::string what() {
-        return rpcError::emptyBalanceError;
+        return messageError::emptyBalanceError;
     }
 };
 
 class RpcDefaultException : public std::exception {
 public:
     std::string what() {
-        return rpcError::defaultError;
+        return messageError::defaultError;
     }
 };
 
 class RpcDefaultAccountException : public std::exception {
 public:
     std::string what() {
-        return rpcError::defaultAccountError;
+        return messageError::defaultAccountError;
     }
 };
 
 class RpcBadNonceException : public std::exception {
 public:
     std::string what() {
-        return rpcError::badNonce;
+        return messageError::badNonce;
     }
 };
 
 class RpcInvalidSignatureException : public std::exception {
 public:
     std::string what() {
-        return rpcError::invalidSignature;
+        return messageError::invalidSignature;
     }
 };
 
 class RpcLowBalanceException : public std::exception {
 public:
     std::string what() {
-        return rpcError::lowBalance;
+        return messageError::lowBalance;
     }
 };
 
 class RpcInvalidParameterException : public std::exception {
 public:
     std::string what() {
-        return rpcError::invalidParameter;
+        return messageError::invalidParameter;
     }
 };
 #endif //UNIT_RPCEXCEPTIONS_H

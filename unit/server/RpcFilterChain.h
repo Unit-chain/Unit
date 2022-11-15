@@ -11,15 +11,11 @@
 #include "boost/json.hpp"
 #include "boost/json/src.hpp"
 #include "RpcExceptions.h"
+#include "ServerIncludes.h"
 #include "../libdevcore/datastructures/blockchain/transaction/ValidTransaction.h"
-#include "../libdevcore/datastructures/blockchain/block/Block.h"
-
-inline void create_success_response(const std::string &message, http::response<http::dynamic_body> *response_) {
-    response_->result(http::status::ok);
-    response_->set(http::field::content_type, "application/json");
-    response_->set(http::field::server, "unit");
-    beast::ostream(response_->body()) << message;
-}
+#include "../libdevcore/bip44/ecdsa.hpp"
+#include "../libdevcore/datastructures/account/WalletAccount.h"
+//#include "../libdevcore/db/DB.h"
 
 class RpcFilterChain {
 public:
@@ -48,11 +44,11 @@ void RpcFilterChain::filter(boost::json::value *json) {
 
 class BasicTransactionRpcFilter : public RpcFilterChain {
 public:
-    BasicTransactionRpcFilter(dbProvider::BatchProvider *userProvider, http::response<http::dynamic_body> *response, std::shared_ptr<unit::list<ValidTransaction>>  txDeque)
+    BasicTransactionRpcFilter(unit::DB *userProvider, http::response<http::dynamic_body> *response, std::shared_ptr<unit::list<ValidTransaction>>  txDeque)
             : userProvider(userProvider), response(response), validTxDeque(std::move(txDeque)) {}
     void filter(boost::json::value *parameter) override;
 protected:
-    dbProvider::BatchProvider *userProvider;
+    unit::DB *userProvider;
     http::response<http::dynamic_body> *response;
     std::shared_ptr<unit::list<ValidTransaction>> validTxDeque;
 };
@@ -60,12 +56,12 @@ protected:
 void BasicTransactionRpcFilter::filter(boost::json::value *parameter) {
     std::shared_ptr<RawTransaction> rawTransaction = RawTransaction::parse(parameter);
     auto sender = boost::json::value_to<std::string>(parameter->at("from"));
-    operationDBStatus::DBResponse<std::string> dbResponse = this->userProvider->read<std::string>(&sender);
-    if (dbResponse.error && ((int) dbResponse.errorResponse) == 2) {
+    std::variant<std::string, std::exception> dbResponse = this->userProvider->get(sender);
+    if (std::holds_alternative<std::exception>(dbResponse)) {
         create_error_response(rpcError::emptyBalanceError, this->response);
         throw RpcDefaultException();
     }
-    std::optional<std::shared_ptr<WalletAccount>> opAccount = WalletAccount::parseWallet(dbResponse.value);
+    std::optional<std::shared_ptr<WalletAccount>> opAccount = WalletAccount::parseWallet(&std::get<0>(dbResponse));
     if (!opAccount.has_value()) {
         create_error_response(rpcError::defaultAccountError, this->response);
         throw RpcEmptyBalanceException();
@@ -97,19 +93,20 @@ void BasicTransactionRpcFilter::filter(boost::json::value *parameter) {
 /// Used for process balance request
 class BasicBalanceFilter : public RpcFilterChain {
 public:
-    BasicBalanceFilter(dbProvider::BatchProvider *userProvider, http::response<http::dynamic_body> *response) : userProvider(userProvider), response(response) {}
+    BasicBalanceFilter(unit::DB *userProvider, http::response<http::dynamic_body> *response) : userProvider(userProvider), response(response) {}
     void filter(boost::json::value *parameter) override;
 protected:
-    dbProvider::BatchProvider *userProvider;
+    unit::DB *userProvider;
     http::response<http::dynamic_body> *response;
 };
 
 void BasicBalanceFilter::filter(boost::json::value *parameter) {
     if (!parameter->as_object().contains("params")) throw RpcInvalidParameterException();
     auto param = boost::json::value_to<std::string>(parameter->at("params"));
-    operationDBStatus::DBResponse<std::string> value = this->userProvider->read<std::string>(&param);
-    if (value.error) (operationDBStatus::DBCode::cNotFound == value.errorResponse) ? throw RpcEmptyBalanceException() : throw RpcDefaultException();
-    create_success_response(rpcResponse::processSimpleResponse(*value.value, boost::json::value_to<std::string>(parameter->at("id"))), this->response);
+    std::variant<std::string, std::exception> dbResponse = this->userProvider->get(param);
+    unit::DB::isSameError<decltype(std::get<1>(dbResponse)), unit::error::DBNotFound>(std::get<1>(dbResponse));
+    if (std::holds_alternative<std::exception>(dbResponse)) (unit::DB::isSameError<decltype(std::get<1>(dbResponse)), unit::error::DBNotFound>(std::get<1>(dbResponse))) ? throw RpcEmptyBalanceException() : throw RpcDefaultException();
+    create_success_response(rpcResponse::processSimpleResponse(std::get<0>(dbResponse), boost::json::value_to<std::string>(parameter->at("id"))), this->response);
 }
 
 /// Used for process pool size request
@@ -129,22 +126,19 @@ void BasicPoolFilter::filter(boost::json::value *parameter) {
 /// Used for process balance history request
 class BasicBalanceHistoryFilter : public RpcFilterChain {
 public:
-    BasicBalanceHistoryFilter(http::response<http::dynamic_body> *response, dbProvider::BatchProvider *historyDB) : response(response), historyDB(historyDB) {}
+    BasicBalanceHistoryFilter(http::response<http::dynamic_body> *response, unit::DB *historyDB) : response(response), historyDB(historyDB) {}
     void filter(boost::json::value *parameter) override;
 protected:
     http::response<http::dynamic_body> *response;
-    dbProvider::BatchProvider *historyDB;
+    unit::DB *historyDB;
 };
 
 void BasicBalanceHistoryFilter::filter(boost::json::value *parameter) {
     if (!parameter->as_object().contains("params")) throw RpcInvalidParameterException();
     auto sender = boost::json::value_to<std::string>(parameter->at("params"));
-    operationDBStatus::DBResponse<std::string> dbResponse = this->historyDB->read<std::string>(&sender);
-    if (dbResponse.error && ((int) dbResponse.errorResponse) == 2) {
-        create_error_response(rpcError::emptyBalanceError, this->response);
-        throw RpcDefaultException();
-    }
-    create_success_response(rpcResponse::processSimpleResponse(*dbResponse.value, boost::json::value_to<std::string>(parameter->at("id"))), this->response);
+    std::variant<std::string, std::exception> dbResponse = this->historyDB->get(sender);
+    if (std::holds_alternative<std::exception>(dbResponse)) (unit::DB::isSameError<decltype(std::get<1>(dbResponse)), unit::error::DBNotFound>(std::get<1>(dbResponse))) ? throw RpcEmptyBalanceException() : throw RpcDefaultException();
+    create_success_response(rpcResponse::processSimpleResponse(std::get<0>(dbResponse), boost::json::value_to<std::string>(parameter->at("id"))), this->response);
 }
 
 /// Used for process current block request
@@ -164,22 +158,19 @@ void BasicBlockHeightFilter::filter(boost::json::value *parameter) {
 /// Used for process transaction by hash request
 class BasicTransactionByHashRpcFilter : public RpcFilterChain {
 public:
-    BasicTransactionByHashRpcFilter(http::response<http::dynamic_body> *response, dbProvider::BatchProvider *transactionDB) : response(response), transactionDB(transactionDB) {}
+    BasicTransactionByHashRpcFilter(http::response<http::dynamic_body> *response, unit::DB *transactionDB) : response(response), transactionDB(transactionDB) {}
     void filter(boost::json::value *parameter) override;
 protected:
     http::response<http::dynamic_body> *response;
-    dbProvider::BatchProvider *transactionDB;
+    unit::DB *transactionDB;
 };
 
 void BasicTransactionByHashRpcFilter::filter(boost::json::value *parameter) {
     if (!parameter->as_object().contains("params")) throw RpcInvalidParameterException();
     auto sender = boost::json::value_to<std::string>(parameter->at("params"));
-    operationDBStatus::DBResponse<std::string> dbResponse = this->transactionDB->read<std::string>(&sender);
-    if (dbResponse.error && ((int) dbResponse.errorResponse) == 2) {
-        create_error_response(rpcError::emptyBalanceError, this->response);
-        throw RpcDefaultException();
-    }
-    create_success_response(rpcResponse::processSimpleResponse(*dbResponse.value, boost::json::value_to<std::string>(parameter->at("id"))), this->response);
+    std::variant<std::string, std::exception> dbResponse = this->transactionDB->get(sender);
+    if (std::holds_alternative<std::exception>(dbResponse)) (unit::DB::isSameError<decltype(std::get<1>(dbResponse)), unit::error::DBNotFound>(std::get<1>(dbResponse))) ? throw RpcEmptyBalanceException() : throw RpcDefaultException();
+    create_success_response(rpcResponse::processSimpleResponse(std::get<0>(dbResponse), boost::json::value_to<std::string>(parameter->at("id"))), this->response);
 }
 
 #endif //UNIT_RPCFILTERCHAIN_H

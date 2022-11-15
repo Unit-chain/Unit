@@ -10,8 +10,8 @@
 #include "RpcFilterChain.h"
 #include "../libdevcore/datastructures/containers/list.h"
 #include "../libdevcore/datastructures/blockchain/transaction/ValidTransaction.h"
-#include "../libdevcore/datastructures/blockchain/block/Block.h"
 #include "../libdevcore/db/DBProvider.h"
+#include "../libdevcore/db/DB.h"
 
 #define LOCAL_IP "127.0.0.1"
 #define PORT 29000

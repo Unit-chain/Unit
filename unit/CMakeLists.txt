@@ -42,7 +42,7 @@ add_executable(unit
         libdevcore/datastructures/blockchain/transaction/ValidTransaction.h
         libdevcore/pointers/lazy_pointer.h
         libdevcore/datastructures/blockchain/block/Block.h
-        libdevcore/datastructures/blockchain/block/NewBlock.h
+        libdevcore/datastructures/blockchain/block/Block.h
         libdevcore/datastructures/blockchain/block/BlockHeader.h
         libdevcore/datastructures/blockchain/block/Shard.h
         libdevcore/datastructures/containers/list.h

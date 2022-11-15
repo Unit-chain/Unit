@@ -19,12 +19,12 @@
 namespace beast = boost::beast;
 namespace http = beast::http;
 
-inline void create_error_response(const std::string &message, http::response<http::dynamic_body> *response_) {
-    response_->result(http::status::bad_request);
-    response_->set(http::field::content_type, "application/json");
-    response_->set(http::field::server, "Unit");
-    beast::ostream(response_->body()) << message;
-}
+//inline void create_error_response(const std::string &message, http::response<http::dynamic_body> *response_) {
+//    response_->result(http::status::bad_request);
+//    response_->set(http::field::content_type, "application/json");
+//    response_->set(http::field::server, "Unit");
+//    beast::ostream(response_->body()) << message;
+//}
 
 class RpcFilterObject {
 public:

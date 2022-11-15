@@ -25,25 +25,30 @@
     #include "libdevcore/pointers/lazy_pointer.h"
 #endif
 
-class test : std::exception {
-    std::string what() {
-        return "a";
-    }
-};
-class test1 : std::exception {
-    std::string what() {
-        return "a";
-    }
-};
+#if 0
+    class test : public std::exception {
+        std::string what() {
+            return "a";
+        }
+    };
+    class test1 : public std::exception {
+        std::string what() {
+            return "a";
+        }
+    };
+    template<class U, class V>
+    inline static bool isSameError(U &u, V &v) { return std::is_same_v<U, V>; }
+#endif
 
 int main() {
     std::cout << "Hello, World!" << std::endl;
-    #if 1
+    #if 0
         test a{};
         test c{};
         test1 b{};
-        std::cout << std::is_same<test, test1>::value << std::endl;
+        std::cout << std::is_same<std::exception, test1>::value << std::endl;
         std::cout << std::is_same_v<decltype(a), test> << '\n';
+        std::cout << isSameError<decltype(a), test1>(a, b) << '\n';
     #endif
     #if 0
         std::string key = "test";

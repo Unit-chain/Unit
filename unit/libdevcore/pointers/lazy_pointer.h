@@ -4,7 +4,6 @@
 
 #ifndef UNIT_LAZY_POINTER_H
 #define UNIT_LAZY_POINTER_H
-#define DEBUG true
 #include "iostream"
 #include <thread>
 #include <mutex>

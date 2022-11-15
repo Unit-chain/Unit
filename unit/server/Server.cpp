@@ -21,7 +21,7 @@ namespace my_program_state {
         return ++count;
     }
     std::time_t now() {
-        return std::time(0);
+        return std::time(nullptr);
     }
 }
 
@@ -32,10 +32,10 @@ public:
     // Initiate the asynchronous operations associated with the connection.
     void start(unit::list<ValidTransaction> *txDeque, std::string *userDBPath, std::string *historyPath, std::string *blockPath, std::string *transactionPath, Block *last) {
         this->txDeque = std::shared_ptr<unit::list<ValidTransaction>>(txDeque);
-        this->userProvider = dbProvider::BatchProvider(*userDBPath);
-        this->historyProvider = dbProvider::BatchProvider(*historyPath);
-        this->blockDBProvider = dbProvider::BatchProvider(*blockPath);
-        this->transactionDBProvider = dbProvider::BatchProvider(*transactionPath);
+        this->userProvider = unit::BasicDB(*userDBPath);
+        this->historyProvider = unit::BasicDB(*historyPath);
+        this->blockDBProvider = unit::BasicDB(*blockPath);
+        this->transactionDBProvider = unit::BasicDB(*transactionPath);
         this->last = last;
         read_request();
         check_deadline();
@@ -43,13 +43,13 @@ public:
 
 private:
     // database provider for users accounts
-    dbProvider::BatchProvider userProvider;
+    unit::BasicDB userProvider{};
     // database provider for history accounts
-    dbProvider::BatchProvider historyProvider;
+    unit::BasicDB historyProvider{};
     // database provider for block DB
-    dbProvider::BatchProvider blockDBProvider;
+    unit::BasicDB blockDBProvider{};
     // database provider for transaction DB
-    dbProvider::BatchProvider transactionDBProvider;
+    unit::BasicDB transactionDBProvider{};
     // current block
     Block *last;
     // pointer to tx deque
@@ -116,9 +116,9 @@ private:
 
     /* RESPONSES */
     /*-----------*/
-    inline void create_error_response(const std::string& message = R"({"message":"Error"})", bool isJSON = true) {
+    inline void create_error_response(const std::string& message = R"({"message":"Error"})") {
         response_.result(http::status::bad_request);
-        response_.set(http::field::content_type, (isJSON ? "application/json" : "text/plain"));
+        response_.set(http::field::content_type, "application/json");
         response_.set(http::field::server, "unit");
         beast::ostream(response_.body()) << message;
     }
@@ -163,7 +163,7 @@ private:
             } else if ("unit_get_tx" == method) {
                 rpcFilterChain.add(new BasicTransactionByHashRpcFilter(&(this->response_), &(this->transactionDBProvider)));
             } else {
-                create_error_response(rpcError::invalidMethod, true);
+                create_error_response(rpcError::invalidMethod);
                 throw RpcMethodSupportException();
             }
             rpcFilterChain.filter(&json);
