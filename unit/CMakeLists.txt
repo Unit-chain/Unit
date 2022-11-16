@@ -46,6 +46,7 @@ add_executable(unit
         libdevcore/datastructures/blockchain/block/BlockHeader.h
         libdevcore/datastructures/blockchain/block/Shard.h
         libdevcore/datastructures/containers/list.h
+        libdevcore/datastructures/containers/vector.h
         libdevcore/datastructures/account/WalletAccount.h
         libdevcore/datastructures/account/AbstractAccount.h
         libdevcore/db/DBProvider.h
@@ -60,12 +61,16 @@ add_executable(unit
         global/errors/WalletErrors.h
         global/GlobalVariables.h
         blockHandler/BlockHandler.h
-        server/Server.h server/Server.cpp server/RpcMethod.h
+        blockHandler/DBStaticWriter.h
+        server/Server.h server/Server.cpp
+        server/RpcMethod.h
         server/RpcFilterObject.h
         server/ServerIncludes.h
         server/RpcFilterBuilder.h
         server/RpcFilterChain.h
-        server/RpcExceptions.h)
+        server/RpcExceptions.h
+        pools/TransactionPool.h
+        pools/TransactionPoolErrors.h blockHandler/ShardInserter.h UnitInitiator.h)
 
 if(LINUX)
     message(STATUS ">>> Linux found")

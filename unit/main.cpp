@@ -1,4 +1,6 @@
 #include <iostream>
+#include <cstdio>
+#include "UnitInitiator.h"
 
 #if 0
     #include <type_traits>
@@ -40,8 +42,10 @@
     inline static bool isSameError(U &u, V &v) { return std::is_same_v<U, V>; }
 #endif
 
-int main() {
+int main(int argc, char **argv) {
     std::cout << "Hello, World!" << std::endl;
+    UnitInitiator::init(argc, argv);
+
     #if 0
         test a{};
         test c{};

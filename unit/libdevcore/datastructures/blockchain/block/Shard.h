@@ -49,7 +49,7 @@ public:
     }
 
     void emplaceBack(ValidTransaction &validTransaction) {
-        this->transactionList.push_back(validTransaction);
+        this->transactionList.emplace_back(validTransaction);
     }
 
     std::string serializeTransactions() {

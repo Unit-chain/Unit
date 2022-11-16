@@ -12,6 +12,8 @@
 #include "deque"
 #include "boost/unordered_map.hpp"
 #include "boost/unordered/unordered_set.hpp"
+
+#include "DBStaticWriter.h"
 #include "../global/GlobalVariables.h"
 #include "../libdevcore/datastructures/concurrency/DBWriter.h"
 #include "../libdevcore/db/DB.h"
@@ -22,86 +24,6 @@
 #include "../libdevcore/bip44/utils.hpp"
 #include "../libdevcore/bip44/BIP44.hpp"
 #include "../libdevcore/bip44/BIP39.hpp"
-
-class DBStaticBatcher {
-public:
-    static void setTxBatch(unit::list<ValidTransaction> *txList, rocksdb::WriteBatch *writeBatch,
-                           unit::DB *userDbProvider, unit::DB *tokensDbProvider, uint64_t *blockSize);
-};
-void DBStaticBatcher::setTxBatch(unit::list<ValidTransaction> *txList, rocksdb::WriteBatch *writeBatch, unit::DB *userDbProvider,
-                                 unit::DB *tokensDbProvider, uint64_t *blockSize) {
-    *blockSize = 0;
-    boost::unordered_map<std::string, std::shared_ptr<WalletAccount>> cache = boost::unordered_map<std::string, std::shared_ptr<WalletAccount>>(txList->size()); //
-    std::vector<ValidTransaction> valuesToBeDeleted;
-    std::vector<std::string> accounts{};
-    accounts.reserve(txList->size());
-    bool creatingTokensTx = false;
-    for (auto &it : *txList) {
-        if (std::find(accounts.begin(), accounts.end(), it.from) != accounts.end()) accounts.emplace_back(it.from);
-        if (std::find(accounts.begin(), accounts.end(), it.to) != accounts.end()) accounts.emplace_back(it.to);
-        if (it.type == CREATE_TOKENS) creatingTokensTx = true;
-    }
-    auto response = userDbProvider->multiGet(&accounts);
-    assert(std::holds_alternative<std::exception>(response) == false);
-
-    /// accounts = statuses = responses = accounts.size()
-    /// cause database returning statuses 1:1 to keys
-    /// each account address is key
-    /// that's the reason for them to have the same size
-    std::vector<rocksdb::Status> statuses = std::get<0>(std::get<0>(response));
-    std::vector<std::string> responses = std::get<1>(std::get<0>(response));
-    for (int i = 0; i < statuses.size(); ++i) {
-        if ((uint16_t) statuses.at(i).code() == 0) cache.emplace(accounts.at(i), WalletAccount::parseWallet(&responses.at(i)).value());
-        else cache.emplace(accounts.at(i), WalletAccount::createEmptyWallet(accounts.at(i)));
-    }
-
-    std::shared_ptr<rocksdb::WriteBatch> tokenBatch{};
-    if (creatingTokensTx) tokenBatch = unit::DB::getBatch();
-    for (auto &it : *txList) {
-        if (!cache.contains(it.from) || !cache.contains(it.to)) { valuesToBeDeleted.emplace_back(it); continue; }
-        std::shared_ptr<WalletAccount> senderAccount = cache.at(it.from);
-        std::shared_ptr<WalletAccount> recipientAccount = cache.at(it.to);
-
-        if (it.type == TRANSFER && (senderAccount->balance < it.amount)) { valuesToBeDeleted.emplace_back(it); continue; }
-        else { goto transfer; }
-        if (it.type == TRANSFER_TOKENS && ((!senderAccount->tokensBalance.contains(boost::json::value_to<std::string>(it.extra.at("name")))) ||
-                                           (boost::json::value_to<double>(it.extra.at("value")) < boost::json::value_to<double>(it.extra.at("value"))))) { valuesToBeDeleted.emplace_back(it); continue; }
-        else { goto transfer_tokens; }
-        if (it.type == CREATE_TOKENS) goto create_token;
-
-        transfer: {
-            senderAccount->subtract(it.amount, it.hash);
-            recipientAccount->increase(it.amount, it.hash);
-            std::shared_ptr<std::string> serializedStr = it.serializeToJsonTransaction();
-            writeBatch->Put(rocksdb::Slice(it.hash), rocksdb::Slice(*serializedStr));
-            *blockSize += serializedStr->size();
-            continue;
-        };
-        transfer_tokens: {
-            auto tokenName = boost::json::value_to<std::string>(it.extra.at("name"));
-            senderAccount->subtractToken(it.amount, it.hash, tokenName);
-            senderAccount->increaseToken(it.amount, it.hash, tokenName);
-            std::shared_ptr<std::string> serializedStr = it.serializeToJsonTransaction();
-            writeBatch->Put(rocksdb::Slice(it.hash), rocksdb::Slice(*serializedStr));
-            *blockSize += serializedStr->size();
-            continue;
-        };
-        create_token:{
-            std::optional<std::shared_ptr<Token>> tokenOptional = Token::parse(&it.extra);
-            if (!tokenOptional.has_value()) { valuesToBeDeleted.emplace_back(it); continue; }
-            std::shared_ptr<Token> token = tokenOptional.value();
-            senderAccount->increaseToken(token->supply, it.hash, token->name);
-            tokenBatch->Put(rocksdb::Slice(token->name), rocksdb::Slice(token->serialize()));
-            std::shared_ptr<std::string> serializedStr = it.serializeToJsonTransaction();
-            writeBatch->Put(rocksdb::Slice(it.hash), rocksdb::Slice(*serializedStr));
-            *blockSize += serializedStr->size();
-            continue;
-        }
-    }
-    for (auto& [key, value]: cache) writeBatch->Put(rocksdb::Slice(key), rocksdb::Slice(value->serialize()));
-    for (auto &valueToBeRemoved : valuesToBeDeleted) txList->remove(valueToBeRemoved);
-    if (creatingTokensTx) tokensDbProvider->commit(tokenBatch);
-}
 
 class BlockHandler {
 public:
@@ -121,12 +43,11 @@ public:
     }
     [[noreturn]] void startBlockGenerator();
 private:
-//    DBWriter blockWriter;
     unit::BasicDB blockWriter;
-    DBWriter userWriter;
-    DBWriter transactionWriter;
-    DBWriter historyWriter;
-    DBWriter tokenWriter;
+    unit::BasicDB userWriter;
+    unit::BasicDB transactionWriter;
+    unit::BasicDB historyWriter;
+    unit::BasicDB tokenWriter;
     unit::list<ValidTransaction> transactions_deque;
     Block *previousBlock;
     Block *currentBlock;
@@ -142,23 +63,28 @@ void BlockHandler::startBlockGenerator() {
     std::string addressP =  this->addressesUtils.pub2addr(this->bip44Result.pub);
     this->blockBuilder.setBlock(this->currentBlock);
     start: {
+        std::string parentHash{};
         if (this->previousBlock == nullptr) {
             std::variant<std::string, std::exception> dbResponse = this->blockWriter.get(currentBlockKey);
-//            if (dbResponse.error) { assert((int) dbResponse.errorResponse == 1); }
-//            this->blockBuilder
-//                    .setPreviousHash(((int) dbResponse.errorResponse == 1) ? "genesis" : *dbResponse.value)
-//                    ->setMessage("test blocks")
-//                    ->setRewardProverAddress(addressP)
-//                    ->setTime(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
-//                    ->setVersion(1) /// previous version was implemented earlier. Now it's second version, e.g 1
-//                    ->setIndex(((int) dbResponse.errorResponse == 1) ? 0 : boost::json::value_to<uint64_t>(boost::json::parse(*dbResponse.value).at("index")))
-//                    ->setNonce(0) /// while no consensus implemented
-//                    ->setEpoch(0) /// while no consensus implemented
-//                    ->generateHash()
-//                    ->generateRoot()
-//                    ->setProverSign()
-//                    ->setBlockHeader()
-//                    ->build();
+            if (std::holds_alternative<std::exception>(dbResponse)) {
+                if (unit::DB::isSameError<decltype(std::get<1>(dbResponse)), unit::error::DBNotFound>(std::get<1>(dbResponse)))
+                    parentHash = "genesis";
+            } else parentHash = std::get<0>(dbResponse);
+
+            this->blockBuilder
+                    .setPreviousHash(parentHash)
+                    ->setMessage("test blocks")
+                    ->setRewardProverAddress(addressP)
+                    ->setTime(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
+                    ->setVersion(1) /// previous version was implemented earlier. Now it's second version, e.g 1
+                    ->setIndex((parentHash == "genesis") ? 0 : boost::json::value_to<uint64_t>(boost::json::parse(std::get<0>(dbResponse)).at("index")))
+                    ->setNonce(0) /// while no consensus implemented
+                    ->setEpoch(0) /// while no consensus implemented
+                    ->generateHash()
+                    ->generateRoot()
+                    ->setProverSign()
+                    ->setBlockHeader()
+                    ->build();
         } else {
              this->blockBuilder
                     .setPreviousHash(this->previousBlock->blockHeader.hash)
@@ -177,16 +103,16 @@ void BlockHandler::startBlockGenerator() {
         }
         *this->lock = true;
     }
-//    pushingBlock: {
-//        std::shared_ptr<rocksdb::WriteBatch> txBatch = this->blockWriter.getProvider()->getBatch();
-//        std::thread txThread(DBStaticBatcher::setTxBatch, &this->currentBlock->txList, txBatch.get(),
-//                             this->userWriter.getProvider(), this->tokenWriter.getProvider(), &(this->currentBlock->blockHeader.size));
-//        std::shared_ptr<WriteBatch> blockBatchPtr = DBWriter::getBatch();
-//        blockBatchPtr->Put(rocksdb::Slice(this->currentBlock->blockHeader.hash), rocksdb::Slice(this->currentBlock->serializeBlock()));
-//        txThread.join();
-//        this->blockWriter.getProvider()->commitBatch(blockBatchPtr);
-//        this->transactionWriter.getProvider()->commitBatch(txBatch);
-//    }
+    pushingBlock: {
+        std::shared_ptr<rocksdb::WriteBatch> txBatch = unit::BasicDB::getBatch();
+        std::thread txThread(DBStaticWriter::setTxBatch, &this->currentBlock->shardList, txBatch.get(),
+                             &this->userWriter, &this->tokenWriter, &(this->currentBlock->blockHeader.size));
+        std::shared_ptr<rocksdb::WriteBatch> blockBatchPtr = DBWriter::getBatch();
+        blockBatchPtr->Put(rocksdb::Slice(this->currentBlock->blockHeader.hash), rocksdb::Slice(this->currentBlock->serializeBlock()));
+        txThread.join();
+        this->blockWriter.commit(blockBatchPtr);
+        this->transactionWriter.commit(txBatch);
+    }
     *this->previousBlock = *currentBlock;
     *this->currentBlock = Block();
     std::this_thread::sleep_for(std::chrono::seconds ( 3));

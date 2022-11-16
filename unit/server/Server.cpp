@@ -30,8 +30,8 @@ public:
     http_connection(tcp::socket socket) : socket_(std::move(socket)){}
     http_connection(tcp::socket socket, std::string& path) : socket_(std::move(socket)), userProvider(path){}
     // Initiate the asynchronous operations associated with the connection.
-    void start(unit::list<ValidTransaction> *txDeque, std::string *userDBPath, std::string *historyPath, std::string *blockPath, std::string *transactionPath, Block *last) {
-        this->txDeque = std::shared_ptr<unit::list<ValidTransaction>>(txDeque);
+    void start(TransactionPool *transactionPool, std::string *userDBPath, std::string *historyPath, std::string *blockPath, std::string *transactionPath, Block *last) {
+        this->transactionPool = transactionPool;
         this->userProvider = unit::BasicDB(*userDBPath);
         this->historyProvider = unit::BasicDB(*historyPath);
         this->blockDBProvider = unit::BasicDB(*blockPath);
@@ -53,7 +53,7 @@ private:
     // current block
     Block *last;
     // pointer to tx deque
-    std::shared_ptr<unit::list<ValidTransaction>> txDeque;
+    TransactionPool *transactionPool;
     // The socket for the currently connected client.
     tcp::socket socket_;
     // The buffer for performing reads.
@@ -151,11 +151,11 @@ private:
             auto method = boost::json::value_to<std::string>(json.at("method"));
             RpcFilterChain rpcFilterChain{};
             if ("transfer" == method) {
-                rpcFilterChain.add(new BasicTransactionRpcFilter(&(this->userProvider),&(this->response_), this->txDeque));
+                rpcFilterChain.add(new BasicTransactionRpcFilter(&(this->userProvider),&(this->response_), this->transactionPool));
             } else if ("unit_get_balance" == method) {
                 rpcFilterChain.add(new BasicBalanceFilter(&(this->userProvider),&(this->response_)));
             } else if ("unit_get_tx_pool_size" == method) {
-                rpcFilterChain.add(new BasicPoolFilter(&(this->response_), this->txDeque));
+                rpcFilterChain.add(new BasicPoolFilter(&(this->response_), this->transactionPool));
             } else if ("unit_get_address_tx_history" == method) {
                 rpcFilterChain.add(new BasicBalanceHistoryFilter(&(this->response_), &(this->historyProvider)));
             } else if ("unit_get_block_height" == method) {
@@ -174,26 +174,26 @@ private:
 };
 
 // "Loop" forever accepting new connections.
-void http_server(tcp::acceptor &acceptor, tcp::socket &socket, unit::list<ValidTransaction> *tx_deque,
+void http_server(tcp::acceptor &acceptor, tcp::socket &socket, TransactionPool *transactionPool,
                  std::string *userDBPath, std::string *historyPath, std::string *blockPath, std::string *transactionPath, Block *last) {
     acceptor.async_accept(socket,
-                          [&, tx_deque, userDBPath, historyPath, transactionPath, last](beast::error_code ec){
-                              if (!ec) std::make_shared<http_connection>(std::move(socket))->start(tx_deque, userDBPath, historyPath, blockPath, transactionPath, last);
-                              http_server(acceptor, socket, tx_deque, userDBPath, historyPath, blockPath, transactionPath, last);
+                          [&, transactionPool, userDBPath, historyPath, transactionPath, last](beast::error_code ec){
+                              if (!ec) std::make_shared<http_connection>(std::move(socket))->start(transactionPool, userDBPath, historyPath, blockPath, transactionPath, last);
+                              http_server(acceptor, socket, transactionPool, userDBPath, historyPath, blockPath, transactionPath, last);
                           });
 }
 
-int Server::start_server(unit::list<ValidTransaction> *tx_deque, std::string &userDBPath,
+int Server::start_server(TransactionPool *transactionPool, std::string &userDBPath,
                          std::string &historyPath, std::string &blockPath, std::string &transactionPath, Block *last) {
     rerun_server:;
     try {
         std::string ip_address = LOCAL_IP;
         auto const address = net::ip::make_address(ip_address);
         uint16_t port = PORT;
-        net::io_context ioc{1};
+        net::io_context ioc{2};
         tcp::acceptor acceptor{ioc, {address, port}};
         tcp::socket socket{ioc};
-        http_server(acceptor, socket, tx_deque, &userDBPath, &historyPath, &blockPath, &transactionPath, last);
+        http_server(acceptor, socket, transactionPool, &userDBPath, &historyPath, &blockPath, &transactionPath, last);
         std::cout << "server started" << std::endl;
         ioc.run();
     } catch (std::exception const &e) {

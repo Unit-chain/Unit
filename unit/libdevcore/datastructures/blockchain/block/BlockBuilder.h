@@ -7,8 +7,8 @@
 #include <utility>
 
 #include "iostream"
-#include "../../../../libdevcore/bip44/BIP44.hpp"
 #include "Block.h"
+#include "../../../bip44/BIP44.hpp"
 #include "../../../bip44/ecdsa.hpp"
 
 class BlockBuilder {

@@ -10,11 +10,13 @@
 #include "iostream"
 #include "boost/json.hpp"
 #include "boost/json/src.hpp"
+
 #include "RpcExceptions.h"
 #include "ServerIncludes.h"
-#include "../libdevcore/datastructures/blockchain/transaction/ValidTransaction.h"
+#include "../pools/TransactionPool.h"
 #include "../libdevcore/bip44/ecdsa.hpp"
 #include "../libdevcore/datastructures/account/WalletAccount.h"
+#include "../libdevcore/datastructures/blockchain/transaction/ValidTransaction.h"
 //#include "../libdevcore/db/DB.h"
 
 class RpcFilterChain {
@@ -44,13 +46,13 @@ void RpcFilterChain::filter(boost::json::value *json) {
 
 class BasicTransactionRpcFilter : public RpcFilterChain {
 public:
-    BasicTransactionRpcFilter(unit::DB *userProvider, http::response<http::dynamic_body> *response, std::shared_ptr<unit::list<ValidTransaction>>  txDeque)
-            : userProvider(userProvider), response(response), validTxDeque(std::move(txDeque)) {}
+    BasicTransactionRpcFilter(unit::DB *userProvider, http::response<http::dynamic_body> *response, TransactionPool *transactionPool)
+            : userProvider(userProvider), response(response), transactionPool(transactionPool) {}
     void filter(boost::json::value *parameter) override;
 protected:
     unit::DB *userProvider;
     http::response<http::dynamic_body> *response;
-    std::shared_ptr<unit::list<ValidTransaction>> validTxDeque;
+    TransactionPool *transactionPool;
 };
 
 void BasicTransactionRpcFilter::filter(boost::json::value *parameter) {
@@ -86,7 +88,7 @@ void BasicTransactionRpcFilter::filter(boost::json::value *parameter) {
     }
     RpcFilterChain::filter(parameter);
     rawTransaction->generateHash();
-    this->validTxDeque->push_back(ValidTransaction(rawTransaction.get()));
+    this->transactionPool->emplaceBack(ValidTransaction(rawTransaction.get()));
     create_success_response(rpcResponse::processSimpleResponse(rawTransaction->hash, boost::json::value_to<std::string>(parameter->at("id"))), this->response);
 }
 
@@ -112,15 +114,15 @@ void BasicBalanceFilter::filter(boost::json::value *parameter) {
 /// Used for process pool size request
 class BasicPoolFilter : public RpcFilterChain {
 public:
-    BasicPoolFilter(http::response<http::dynamic_body> *response, std::shared_ptr<unit::list<ValidTransaction>>  txDeque) : response(response), validTxDeque(std::move(txDeque)) {}
+    BasicPoolFilter(http::response<http::dynamic_body> *response, TransactionPool *transactionPool) : response(response), transactionPool(transactionPool) {}
     void filter(boost::json::value *parameter) override;
 protected:
     http::response<http::dynamic_body> *response;
-    std::shared_ptr<unit::list<ValidTransaction>> validTxDeque;
+    TransactionPool *transactionPool;
 };
 
 void BasicPoolFilter::filter(boost::json::value *parameter) {
-    create_success_response(rpcResponse::processSimpleResponse(std::to_string(this->validTxDeque->size()), boost::json::value_to<std::string>(parameter->at("id"))), this->response);
+    create_success_response(rpcResponse::processSimpleResponse(std::to_string(this->transactionPool->getPoolSize()), boost::json::value_to<std::string>(parameter->at("id"))), this->response);
 }
 
 /// Used for process balance history request

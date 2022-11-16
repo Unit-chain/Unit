@@ -12,6 +12,7 @@
 #include "Shard.h"
 #include "../transaction/ValidTransaction.h"
 #include "../../containers/list.h"
+#include "../../containers/vector.h"
 #include "../../trees/MerkleTree.h"
 
 class Block {
@@ -20,7 +21,7 @@ public:
     Block(std::string hash, std::string previousHash, const std::string &merkleRoot,
              uint64_t time, uint64_t version, uint64_t transactionCount, uint64_t index, uint32_t size,
              int nonce, std::string message, std::string signP, std::string rewardP,
-             const unit::list<Shard> &shardList, uint64_t reward) : blockHeader(std::move(hash), std::move(previousHash), merkleRoot, time, version, transactionCount, index, size, nonce),
+             const unit::vector<Shard> &shardList, uint64_t reward) : blockHeader(std::move(hash), std::move(previousHash), merkleRoot, time, version, transactionCount, index, size, nonce),
                                                                     message(std::move(message)), signP(std::move(signP)),
                                                                     rewardProverAddress(std::move(rewardP)), shardList(shardList),
                                                                     reward(reward) {}
@@ -33,7 +34,7 @@ public:
     std::string miner;
     std::string rewardProverAddress;
     std::string logsBloom = "0x0";
-    unit::list<Shard> shardList{};
+    unit::vector<Shard> shardList{};
     uint64_t reward{};
     uint64_t epoch{};
 
@@ -42,7 +43,7 @@ public:
     std::string generateMerkleRoot();
     std::string generateHash();
     uint64_t getSize();
-    const unit::list<Shard> &getShardList() const;
+    const unit::vector<Shard> &getShardList() const;
 
     const BlockHeader &getBlockHeader() const;
 
@@ -60,7 +61,7 @@ public:
 
     void setRewardProverAddress(const std::string &rewardProverAddress);
 
-    void setTxList(const unit::list<ValidTransaction> &txList);
+    void setTxList(const unit::vector<ValidTransaction> &txList);
 
     uint64_t getReward() const;
 
@@ -78,7 +79,7 @@ public:
 
     void setEpoch(uint64_t epoch);
 
-    void setShardList(const unit::list<Shard> &txList);
+    void setShardList(const unit::vector<Shard> &txList);
 
     const std::string &getDifficulty() const;
 
@@ -92,7 +93,7 @@ public:
 
     void setLogsBloom(const std::string &logsBloom);
 
-    void emplaceBack(const ValidTransaction &validTransaction);
+    void emplaceBack(Shard &shard);
 
     std::string serializeShards();
 };
@@ -155,7 +156,7 @@ uint64_t Block::getSize() {
     return this->blockHeader.size;
 }
 
-const unit::list<Shard> &Block::getShardList() const {
+const unit::vector<Shard> &Block::getShardList() const {
     return shardList;
 }
 
@@ -191,7 +192,7 @@ void Block::setRewardProverAddress(const std::string &rewardProverAddress) {
     Block::rewardProverAddress = rewardProverAddress;
 }
 
-void Block::setShardList(const unit::list<Shard> &txList) {
+void Block::setShardList(const unit::vector<Shard> &txList) {
     Block::shardList = txList;
 }
 
@@ -249,6 +250,10 @@ const std::string &Block::getLogsBloom() const {
 
 void Block::setLogsBloom(const std::string &logsBloom) {
     Block::logsBloom = logsBloom;
+}
+
+void Block::emplaceBack(Shard &shard) {
+    this->shardList.emplace_back(shard);
 }
 
 #endif //UNIT_BLOCK_H

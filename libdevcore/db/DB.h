@@ -17,7 +17,6 @@ namespace unit {
     class DB {
     public:
         DB() = default;
-
         explicit DB(std::string path) : path(std::move(path)) {
             int cpuPiece = (int) std::thread::hardware_concurrency() / 2;
             this->options.create_if_missing = true;
@@ -30,7 +29,7 @@ namespace unit {
         }
 
         virtual std::variant<std::shared_ptr<rocksdb::DB*>, std::exception> newDB() = 0;
-        virtual std::variant<std::shared_ptr<rocksdb::WriteBatch>, std::exception> getBatch() = 0;
+        static std::shared_ptr<rocksdb::WriteBatch> getBatch() { return std::make_shared<rocksdb::WriteBatch>(rocksdb::WriteBatch()); }
         static inline void close(rocksdb::DB **db) { delete *db; }
         static inline void close(const std::shared_ptr<rocksdb::DB*> &db) { delete *db; }
         virtual std::variant<std::string, std::exception> get(std::string &key) = 0;
@@ -38,40 +37,49 @@ namespace unit {
         virtual std::variant<std::string, std::exception> seek(std::string &key) = 0;
         virtual std::variant<bool, std::exception> has(std::string &key) = 0;
         virtual std::variant<bool, std::exception> has(std::shared_ptr<rocksdb::Snapshot*> &snapshot) = 0;
-        virtual std::variant<void, std::exception> put(std::string &key, std::string &value) = 0;
+        virtual std::exception put(std::string &key, std::string &value) = 0;
         virtual std::optional<std::exception> deleteKey(std::string &key) = 0;
         virtual std::optional<std::exception> commit(std::shared_ptr<rocksdb::WriteBatch> &batch) = 0;
         virtual std::variant<std::shared_ptr<rocksdb::Snapshot*>, std::exception> getSnapshot(std::shared_ptr<rocksdb::DB*> &dbPtr) = 0;
         // should be used as function for checking if error equals to other
         template<class U, class V>
-        inline bool isSameErrors(U &u, V &v) { return std::is_same_v<decltype(u), decltype(v)>; }
+        inline static bool isSameErrors(U &u, V &v) { return std::is_same_v<decltype(u), decltype(v)>; }
         // should be used as function for checking if error equals to other
         template<class U, class V>
-        inline bool isSameError(U &u) { return std::is_same_v<decltype(u), V>; }
+        inline static bool isSameError(U &u) { return std::is_same_v<decltype(u), V>; }
+        template<class U, class V>
+        inline static bool isSameError(U &u, V &v) { return std::is_same_v<U, V>; }
+        inline virtual DB &operator=(const DB &c2) {
+            this->path = c2.path;
+            this->options = c2.options;
+            this->writeOptions = c2.writeOptions;
+            this->readOptions = c2.readOptions;
+            return *this;
+        }
     private:
         rocksdb::ReadOptions readOptions;
     protected:
         rocksdb::Options options;
-        const std::string path;
+        std::string path;
         rocksdb::WriteOptions writeOptions;
     };
 
-    class BasicDB : private DB {
+    class BasicDB : public DB {
     public:
+        BasicDB() = default;
         explicit BasicDB(const std::string &path) : DB(path) {}
-        std::variant<std::shared_ptr<rocksdb::WriteBatch>, std::exception> getBatch() override;
         std::variant<std::string, std::exception> get(std::string &key) override;
-        std::variant<std::string, std::exception> seek(std::string &key) override;
-        std::variant<bool, std::exception> has(std::string &key) override;
         std::optional<std::exception> commit(std::shared_ptr<rocksdb::WriteBatch> &batch) override;
         std::variant<std::shared_ptr<rocksdb::DB*>, std::exception> newDB() override;
         std::variant<std::tuple<std::vector<rocksdb::Status>, std::vector<std::string>>, std::exception> multiGet(std::vector<std::string> *keys) override;
+        [[deprecated("not implemented")]]virtual std::variant<bool, std::exception> has(std::shared_ptr<rocksdb::Snapshot*> &snapshot) override;
+        [[deprecated("not implemented")]]virtual std::exception put(std::string &key, std::string &value) override;
+        [[deprecated("not implemented")]]virtual std::optional<std::exception> deleteKey(std::string &key) override;
+        [[deprecated("not implemented")]]virtual std::variant<std::shared_ptr<rocksdb::Snapshot*>, std::exception> getSnapshot(std::shared_ptr<rocksdb::DB*> &dbPtr) override;
+        [[deprecated("not implemented")]]std::variant<std::string, std::exception> seek(std::string &key) override;
+        [[deprecated("not implemented")]]std::variant<bool, std::exception> has(std::string &key) override;
     private:
     };
-
-    std::variant<std::shared_ptr<rocksdb::WriteBatch>, std::exception> BasicDB::getBatch() {
-        return std::make_shared<rocksdb::WriteBatch>(rocksdb::WriteBatch());
-    }
 
     std::variant<std::string, std::exception> BasicDB::get(std::string &key) {
         rocksdb::DB *db;
@@ -145,6 +153,27 @@ namespace unit {
         std::vector<std::string> response;
         std::vector<rocksdb::Status> statuses = db->MultiGet(rocksdb::ReadOptions(), slices, &response);
         return {std::make_tuple(std::move(statuses), std::move(response))};
+    }
+
+    std::variant<std::string, std::exception> BasicDB::seek(std::string &key) {
+        return {};
+    }
+
+    std::variant<bool, std::exception> BasicDB::has(std::string &key) {
+        return {};
+    }
+    std::exception BasicDB::put(std::string &key, std::string &value) {
+        return {};
+    }
+    std::optional<std::exception> BasicDB::deleteKey(std::string &key) {
+        return std::exception();
+    }
+    std::variant<std::shared_ptr<rocksdb::Snapshot*>, std::exception> BasicDB::getSnapshot(std::shared_ptr<rocksdb::DB*> &dbPtr) {
+        return {};
+    }
+
+    std::variant<bool, std::exception> BasicDB::has(std::shared_ptr<rocksdb::Snapshot *> &snapshot) {
+        return {};
     }
 }
 #endif //UNIT_DB_H

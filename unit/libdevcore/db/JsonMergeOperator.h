@@ -1,8 +1,6 @@
 //
 // Created by Kirill Zhukov on 21.06.2022.
 //
-////////////////////////////////// look at fullMergeV2
-
 
 #ifndef UVM_JSONMERGEOPERATOR_H
 #define UVM_JSONMERGEOPERATOR_H
@@ -12,7 +10,6 @@
 #include "boost/algorithm/string.hpp"
 #include "boost/json.hpp"
 #include "boost/json/src.hpp"
-//#include "nlohmann/json.hpp"
 
 class JsonMergeOperator : public  rocksdb::MergeOperator{
 public:
