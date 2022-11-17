@@ -10,7 +10,7 @@
 namespace unit::error {
     class OutOfPoolRange : public std::exception {
     public:
-        std::string what() {
+        [[nodiscard]] const char * what() const noexcept override {
             return "went out of transaction pool size";
         }
     };

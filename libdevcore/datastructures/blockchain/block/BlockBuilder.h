@@ -32,7 +32,7 @@ public:
     }
 
     inline BlockBuilder *setVersion(uint64_t version) {
-        this->blockHeader.setTime(version);
+        this->blockHeader.setVersion(version);
         return this;
     }
 
@@ -81,6 +81,12 @@ public:
         this->currentBlock->setRp(sig.r);
         this->currentBlock->setSp(sig.s);
         this->currentBlock->setSignP(sig.message_hash);
+        return this;
+    }
+
+    inline BlockBuilder *insertShard(std::shared_ptr<Shard> &shard) {
+        if (shard == nullptr) return this;
+        this->currentBlock->shardList.emplace_back(*shard);
         return this;
     }
 

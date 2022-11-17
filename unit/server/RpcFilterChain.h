@@ -17,7 +17,6 @@
 #include "../libdevcore/bip44/ecdsa.hpp"
 #include "../libdevcore/datastructures/account/WalletAccount.h"
 #include "../libdevcore/datastructures/blockchain/transaction/ValidTransaction.h"
-//#include "../libdevcore/db/DB.h"
 
 class RpcFilterChain {
 public:
@@ -154,7 +153,7 @@ protected:
 };
 
 void BasicBlockHeightFilter::filter(boost::json::value *parameter) {
-    create_success_response(rpcResponse::processSimpleResponse(this->last->serializeBlock(), boost::json::value_to<std::string>(parameter->at("id"))), this->response);
+    create_success_response(rpcResponse::processSimpleResponse((this->last != nullptr) ? this->last->serializeBlock() : "null", boost::json::value_to<std::string>(parameter->at("id"))), this->response);
 }
 
 /// Used for process transaction by hash request

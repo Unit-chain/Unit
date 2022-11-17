@@ -51,7 +51,8 @@ namespace unit {
         const T & back() const { std::lock_guard<std::mutex> lock( mutex ); return storage.back(); }
         void assign( size_type n, T & u ) { std::lock_guard<std::mutex> lock( mutex ); storage.assign( n, u ); }
         template <class InputIterator> void assign( InputIterator begin, InputIterator end ) { std::lock_guard<std::mutex> lock( mutex ); storage.assign( begin, end ); }
-        void emplace_back( const T & u ) { std::lock_guard<std::mutex> lock( mutex ); storage.emplace_back( u ); }
+        void emplace_back(const T & u) { std::lock_guard<std::mutex> lock( mutex ); storage.emplace_back( u ); }
+        void push_back(const T & u) { std::lock_guard<std::mutex> lock(mutex); storage.push_back(u); }
         void pop_back() { std::lock_guard<std::mutex> lock( mutex ); storage.pop_back(); }
         iterator insert( iterator pos, const T & u ) { std::lock_guard<std::mutex> lock( mutex ); return storage.insert( pos, u ); }
         void insert( iterator pos, size_type n, const T & u ) { std::lock_guard<std::mutex> lock( mutex ); storage.insert( pos, n, u ); }

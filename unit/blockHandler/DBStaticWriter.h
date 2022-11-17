@@ -35,6 +35,7 @@ public:
 void DBStaticWriter::setTxBatch(unit::vector<Shard> *shardList, rocksdb::WriteBatch *writeBatch, unit::DB *userDbProvider,
                                 unit::DB *tokensDbProvider, uint64_t *blockSize) {
     *blockSize = 0;
+    if (shardList->empty()) return;
     boost::unordered_map<std::string, std::shared_ptr<WalletAccount>> cache = boost::unordered_map<std::string, std::shared_ptr<WalletAccount>>(shardList->at(
             mersenneRand(0, (shardList->size()-1))).transactionList.size()); // randomly chose pre-allocated size of map
     std::shared_ptr<rocksdb::WriteBatch> tokenBatch{};

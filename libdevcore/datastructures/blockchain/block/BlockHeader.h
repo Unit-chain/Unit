@@ -28,7 +28,7 @@ struct BlockHeader {
     int nonce{};
 
     std::string generateHash();
-    std::string serializeBlockHeader();
+    std::string serializeBlockHeader() const;
     uint64_t getSize();
 
     const std::string &getHash() const;
@@ -64,14 +64,28 @@ struct BlockHeader {
     int getNonce() const;
 
     void setNonce(int nonce);
+
+    inline virtual BlockHeader &operator=(const BlockHeader &c2) {
+        this->hash = c2.hash;
+        this->previousHash = c2.previousHash;
+        this->merkleRoot = c2.merkleRoot;
+        this->time = c2.time;
+        this->version = c2.time;
+        this->version = c2.version;
+        this->transactionCount = c2.transactionCount;
+        this->index = c2.index;
+        this->size = c2.size;
+        this->nonce = c2.nonce;
+        return *this;
+    }
 };
 
-std::string BlockHeader::serializeBlockHeader() {
+std::string BlockHeader::serializeBlockHeader() const {
     std::stringstream ss;
     ss << R"({"hash":")" << this->hash << R"(", "previousHash":")" << this->previousHash << R"(", "transactionMerkleRoot":")" << this->merkleRoot << R"(", "time":)"
     << this->time << R"(, "version":)" << this->version << R"(, "transactionCount":)" << this->transactionCount << R"(, "index":)"
-    << this->index << R"(", "size":)" << this->size << R"(, "nonce":)" << this->nonce << R"(})";
-    return std::string();
+    << this->index << R"(, "size":)" << this->size << R"(, "nonce":)" << this->nonce;
+    return ss.str();
 }
 
 BlockHeader::BlockHeader(const std::string &previousHash, uint64_t time, uint64_t version, uint64_t index, int nonce)

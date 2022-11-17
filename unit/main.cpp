@@ -1,5 +1,4 @@
 #include <iostream>
-#include <cstdio>
 #include "UnitInitiator.h"
 
 #if 0
@@ -44,8 +43,56 @@
 
 int main(int argc, char **argv) {
     std::cout << "Hello, World!" << std::endl;
-    UnitInitiator::init(argc, argv);
-
+    argc = 41;
+    std::string argvv[41] = {
+            "--userpath",
+            "/Users/kirillzhukov/Desktop/unit/user/",
+            "--historyPath",
+            "/Users/kirillzhukov/Desktop/unit/history/",
+            "--blockPath",
+            "/Users/kirillzhukov/Desktop/unit/blocks/",
+            "--transactionPath",
+            "/Users/kirillzhukov/Desktop/unit/transactions/",
+            "--tokenPath",
+            "/Users/kirillzhukov/Desktop/unit/tokens",
+            "--mnemonicSize",
+            "24",
+            "--mnemonic",
+            "garden",
+            "barrel",
+            "lobster",
+            "swift",
+            "filter",
+            "arm",
+            "walnut",
+            "inquiry",
+            "physical",
+            "pride",
+            "cruise",
+            "winner",
+            "desert",
+            "fantasy",
+            "victory",
+            "aerobic",
+            "myself",
+            "organ",
+            "vague",
+            "opera",
+            "shoot",
+            "various",
+            "track",
+            "income",
+            "--passphrase",
+            "qwerty",
+            "--walletIndex",
+            "0"
+    };
+    try {
+        UnitInitiator::init(argc, argvv);
+    } catch (std::exception &e) {
+        std::cout << e.what() << std::endl;
+        exit;
+    }
     #if 0
         test a{};
         test c{};
@@ -53,6 +100,7 @@ int main(int argc, char **argv) {
         std::cout << std::is_same<std::exception, test1>::value << std::endl;
         std::cout << std::is_same_v<decltype(a), test> << '\n';
         std::cout << isSameError<decltype(a), test1>(a, b) << '\n';
+        std::cout << isSameError<decltype(a), decltype(ava())>(a, a) << '\n';
     #endif
     #if 0
         std::string key = "test";

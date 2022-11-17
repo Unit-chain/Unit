@@ -22,7 +22,8 @@ public:
                                                                    hash(rawPointer->hash),
                                                                    sign(rawPointer->sign), r(rawPointer->r), s(rawPointer->s),
                                                                    signP(rawPointer->signP), rP(rawPointer->rP), sP(rawPointer->sP),
-                                                                   amount(rawPointer->amount), fee(rawPointer->fee), nonce(rawPointer->nonce) {}
+                                                                   amount(rawPointer->amount), fee(rawPointer->fee), nonce(rawPointer->nonce) {
+    }
     std::string from;
     std::string to;
     uint64_t type{};
@@ -51,8 +52,7 @@ public:
                << this->amount << R"(, "type":)"
                << this->type << R"(, "date":)" << this->date << R"(, "fee":)"
                << this->fee << R"(, "nonce":)" << this->nonce << R"(, "signature":")" << this->sign << R"(", "r":")"
-               << this->r << R"(", "s":")" << this->s
-               << R"("})";
+               << this->r << R"(", "s":")" << this->s << R"("})";
         else {
             ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)"
                << this->amount << R"(, "type":)"
@@ -60,8 +60,7 @@ public:
                << R"(", "value":")" << ValidTransaction::uint256_jv_2string(this->extra.at("value")) << R"(", "bytecode": ")" << json::value_to<std::string>(this->extra.at("bytecode"))
                << R"("})" << R"(, "fee":)" << this->fee << R"(, "nonce":)"
                << this->nonce << R"(, "signature":")" << this->sign << R"(", "r":")"
-               << this->r << R"(", "s":")" << this->s
-               << R"("})";
+               << this->r << R"(", "s":")" << this->s << R"("})";
         }
         return std::make_shared<std::string>(ss.str());
     }

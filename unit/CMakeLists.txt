@@ -49,8 +49,6 @@ add_executable(unit
         libdevcore/datastructures/containers/vector.h
         libdevcore/datastructures/account/WalletAccount.h
         libdevcore/datastructures/account/AbstractAccount.h
-        libdevcore/db/DBProvider.h
-        libdevcore/db/DBStatus.h
         libdevcore/db/JsonMergeOperator.h
         libdevcore/db/DB.h
         libdevcore/db/DBError.h
@@ -62,11 +60,9 @@ add_executable(unit
         global/GlobalVariables.h
         blockHandler/BlockHandler.h
         blockHandler/DBStaticWriter.h
-        server/Server.h server/Server.cpp
+        server/Server.h
         server/RpcMethod.h
-        server/RpcFilterObject.h
         server/ServerIncludes.h
-        server/RpcFilterBuilder.h
         server/RpcFilterChain.h
         server/RpcExceptions.h
         pools/TransactionPool.h

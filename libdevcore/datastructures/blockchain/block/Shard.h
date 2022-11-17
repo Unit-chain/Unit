@@ -7,28 +7,34 @@
 #include "../../containers/list.h"
 #include "../transaction/ValidTransaction.h"
 #include "../../../crypto/SHA3/sha3.h"
+#include "../../trees/MerkleTree.h"
 
 class Shard {
 public:
+    explicit Shard(const unit::vector<ValidTransaction> &transactionList) : transactionList(transactionList) {}
     std::string transactionMerkleRoot;
-    unit::list<ValidTransaction> transactionList;
+    unit::vector<ValidTransaction> transactionList;
     std::string shardID;
     std::string signature;
-    uint64_t size;
+    std::string rP;
+    std::string sP;
 
     const std::string &getTransactionMerkleRoot() const {
         return transactionMerkleRoot;
     }
-
-    void setTransactionMerkleRoot(const std::string &transactionMerkleRoot) {
-        Shard::transactionMerkleRoot = transactionMerkleRoot;
+    void setTransactionMerkleRoot() {
+        std::vector<std::string> transactionsHash;
+        transactionsHash.reserve(transactionList.size());
+        for (auto &it : transactionList) transactionsHash.emplace_back(it.hash);
+        MerkleTree merkleTree = MerkleTree(transactionsHash);
+        this->transactionMerkleRoot = merkleTree.get_root();
     }
 
-    const unit::list<ValidTransaction> &getTransactionList() const {
+    const unit::vector<ValidTransaction> &getTransactionList() const {
         return transactionList;
     }
 
-    void setTransactionList(const unit::list<ValidTransaction> &transactionList) {
+    void setTransactionList(const unit::vector<ValidTransaction> &transactionList) {
         Shard::transactionList = transactionList;
     }
 
@@ -36,16 +42,10 @@ public:
         return shardID;
     }
 
-    void setShardId(const std::string &shardId) {
-        shardID = shardId;
-    }
-
-    uint64_t getSize() const {
-        return size;
-    }
-
-    void setSize(uint64_t size) {
-        Shard::size = size;
+    Shard *setShardId(const std::string &address) {
+        SHA3 sha3 = SHA3(SHA3::Bits256);
+        shardID = sha3(sha3(address));
+        return this;
     }
 
     void emplaceBack(ValidTransaction &validTransaction) {
@@ -64,7 +64,14 @@ public:
     std::string serialize () {
         std::stringstream ss;
         ss << R"({"shardID":")" << this->shardID << R"(", "transactionMerkleRoot":")" << this->transactionMerkleRoot
-        << R"(", "transactionList":[)" << this->serializeTransactions() << R"(], "size":)" << this->size << "}";
+        << R"(", "transactionList":[)" << this->serializeTransactions() << R"(])" << R"(, "signature":")" << this->signature
+        << R"(", "rP":")" << this-> rP << R"(", "sP":")" << this-> sP << "\"}";
+        return ss.str();
+    }
+    std::string serializeWithoutSignatures () {
+        std::stringstream ss;
+        ss << R"({"shardID":")" << this->shardID << R"(", "transactionMerkleRoot":")" << this->transactionMerkleRoot
+        << R"(", "transactionList":[)" << this->serializeTransactions() << R"(]})";
         return ss.str();
     }
 
@@ -72,8 +79,16 @@ public:
         return signature;
     }
 
+    Shard *setSp(const std::string &sP) {
+        this->sP = sP;
+        return this;
+    }
+    Shard *setRp(const std::string &rP) {
+        this->rP = rP;
+        return this;
+    }
     void setSignature(const std::string &signature) {
-        Shard::signature = signature;
+        this->signature = signature;
     }
 
 };

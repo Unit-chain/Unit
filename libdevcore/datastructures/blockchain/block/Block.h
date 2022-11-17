@@ -31,7 +31,7 @@ public:
     std::string rP;
     std::string sP;
     std::string difficulty;
-    std::string miner;
+    std::string miner = "UNT0";
     std::string rewardProverAddress;
     std::string logsBloom = "0x0";
     unit::vector<Shard> shardList{};
@@ -96,9 +96,25 @@ public:
     void emplaceBack(Shard &shard);
 
     std::string serializeShards();
+
+    Block &operator=(const Block& c2) {
+        this->blockHeader = c2.blockHeader;
+        this->message = c2.message;
+        this->signP = c2.signP;
+        this->rP = c2.rP;
+        this->sP = c2.sP;
+        this->difficulty = c2.difficulty;
+        this->miner = c2.miner;
+        this->rewardProverAddress = c2.rewardProverAddress;
+        this->logsBloom = c2.logsBloom;
+        this->shardList = c2.shardList;
+        this->reward = c2.reward;
+        this->epoch = c2.epoch;
+    }
 };
 
 std::string Block::serializeShards() {
+    if (this->shardList.empty()) return "";
     std::stringstream ss;
     for (auto &shard : this->shardList) ss << shard.serialize() << ",";
     std::string shard = ss.str();
@@ -107,8 +123,8 @@ std::string Block::serializeShards() {
 }
 
 std::string Block::serializeBlock() {
-    std::stringstream ss(blockHeader.serializeBlockHeader());
-    ss << R"(", "message":")" << this->message << R"(", "signP":")" << this->signP << R"(", "rP":")" << this->rP << R"(", "sP":")" << this->sP << R"(", "rewardProverAddress":")"
+    std::stringstream ss;
+    ss << blockHeader.serializeBlockHeader() << R"(", "message":")" << this->message << R"(", "signP":")" << this->signP << R"(", "rP":")" << this->rP << R"(", "sP":")" << this->sP << R"(", "rewardProverAddress":")"
        << this->rewardProverAddress << R"(", "logsBloom": ")" << this->logsBloom << R"(", "difficulty":")" << this->difficulty << R"(", "miner":")" << this->miner
        << R"(", "miner":")" << this->miner << R"(", "reward":")" << this->reward << R"(", "shards":[)" << this->serializeShards() << R"(]})";
     return ss.str();
@@ -152,7 +168,7 @@ std::string Block::generateHash() {
 
 uint64_t Block::getSize() {
     if(shardList.empty()) return 0;
-    for(auto & it : this->shardList) this->blockHeader.size += it.getSize();
+    for(auto & it : this->shardList) this->blockHeader.size += it.serialize().size();
     return this->blockHeader.size;
 }
 
@@ -173,7 +189,7 @@ const std::string &Block::getMessage() const {
 }
 
 void Block::setMessage(const std::string &message) {
-    Block::message = message;
+    this->message = message;
 }
 
 const std::string &Block::getSignP() const {

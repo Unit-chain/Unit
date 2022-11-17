@@ -9,63 +9,63 @@
 
 class RpcMethodSupportException : public std::exception {
 public:
-    std::string what() {
+    [[nodiscard]] const char * what() const noexcept override {
         return messageError::httpMethodError;
     }
 };
 
 class RpcParseException : public std::exception {
 public:
-    std::string what() {
+    [[nodiscard]] const char * what() const noexcept override {
         return messageError::parsingError;
     }
 };
 
 class RpcEmptyBalanceException : public std::exception {
 public:
-    std::string what() {
+    [[nodiscard]] const char * what() const noexcept override {
         return messageError::emptyBalanceError;
     }
 };
 
 class RpcDefaultException : public std::exception {
 public:
-    std::string what() {
+    [[nodiscard]] const char * what() const noexcept override {
         return messageError::defaultError;
     }
 };
 
 class RpcDefaultAccountException : public std::exception {
 public:
-    std::string what() {
+    [[nodiscard]] const char * what() const noexcept override {
         return messageError::defaultAccountError;
     }
 };
 
 class RpcBadNonceException : public std::exception {
 public:
-    std::string what() {
+    [[nodiscard]] const char * what() const noexcept override {
         return messageError::badNonce;
     }
 };
 
 class RpcInvalidSignatureException : public std::exception {
 public:
-    std::string what() {
+    [[nodiscard]] const char * what() const noexcept override {
         return messageError::invalidSignature;
     }
 };
 
 class RpcLowBalanceException : public std::exception {
 public:
-    std::string what() {
+    [[nodiscard]] const char * what() const noexcept override {
         return messageError::lowBalance;
     }
 };
 
 class RpcInvalidParameterException : public std::exception {
 public:
-    std::string what() {
+    [[nodiscard]] const char * what() const noexcept override {
         return messageError::invalidParameter;
     }
 };

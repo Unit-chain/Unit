@@ -32,7 +32,7 @@ namespace unit {
         static std::shared_ptr<rocksdb::WriteBatch> getBatch() { return std::make_shared<rocksdb::WriteBatch>(rocksdb::WriteBatch()); }
         static inline void close(rocksdb::DB **db) { delete *db; }
         static inline void close(const std::shared_ptr<rocksdb::DB*> &db) { delete *db; }
-        virtual std::variant<std::string, std::exception> get(std::string &key) = 0;
+        virtual std::string get(std::string &key) = 0;
         virtual std::variant<std::tuple<std::vector<rocksdb::Status>, std::vector<std::string>>, std::exception> multiGet(std::vector<std::string> *keys) = 0;
         virtual std::variant<std::string, std::exception> seek(std::string &key) = 0;
         virtual std::variant<bool, std::exception> has(std::string &key) = 0;
@@ -68,7 +68,7 @@ namespace unit {
     public:
         BasicDB() = default;
         explicit BasicDB(const std::string &path) : DB(path) {}
-        std::variant<std::string, std::exception> get(std::string &key) override;
+        std::string get(std::string &key) override;
         std::optional<std::exception> commit(std::shared_ptr<rocksdb::WriteBatch> &batch) override;
         std::variant<std::shared_ptr<rocksdb::DB*>, std::exception> newDB() override;
         std::variant<std::tuple<std::vector<rocksdb::Status>, std::vector<std::string>>, std::exception> multiGet(std::vector<std::string> *keys) override;
@@ -81,11 +81,11 @@ namespace unit {
     private:
     };
 
-    std::variant<std::string, std::exception> BasicDB::get(std::string &key) {
+    std::string BasicDB::get(std::string &key) {
         rocksdb::DB *db;
         rocksdb::Status status = rocksdb::DB::OpenForReadOnly(this->options, this->path, &db);
-        if (status.code() == rocksdb::Status::Code::kCorruption) return {unit::error::DBCorruption()};
-        if (status.code() == rocksdb::Status::Code::kIOError) return {unit::error::DBIOError()};
+        if (status.code() == rocksdb::Status::Code::kCorruption) throw unit::error::DBCorruption();
+        if (status.code() == rocksdb::Status::Code::kIOError) throw unit::error::DBIOError();
         while (status.code() != rocksdb::Status::Code::kOk) {
             status = rocksdb::DB::OpenForReadOnly(this->options, this->path, &db);
             if (status.code() != rocksdb::Status::Code::kOk) std::this_thread::sleep_for(std::chrono::seconds(3));
@@ -95,7 +95,7 @@ namespace unit {
         if (!status.ok()) {
             if (status.code() == rocksdb::Status::Code::kNotFound) {
                 DB::close(&db);
-                return {unit::error::DBNotFound()};
+                throw unit::error::DBNotFound();
             }
             while (status.code() != rocksdb::Status::Code::kOk) {
                 status = db->Get(rocksdb::ReadOptions(), rocksdb::Slice(key), &response);

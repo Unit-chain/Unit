@@ -8,25 +8,25 @@
 
 namespace unit::error {
     class DBCorruption : public std::exception {
-        std::string what() { return "DB corruption"; }
+        [[nodiscard]] const char * what() const noexcept override { return "DB corruption"; }
     };
     class DBBusy : public std::exception {
-        std::string what() { return "DB busy"; }
+        [[nodiscard]] const char * what() const noexcept override { return "DB busy"; }
     };
     class DBNotFound : public std::exception {
-        std::string what() { return "DB not found"; }
+        [[nodiscard]] const char * what() const noexcept override { return "DB not found"; }
     };
     class DBNotSupported : public std::exception {
-        std::string what() { return "DB not supported"; }
+        [[nodiscard]] const char * what() const noexcept override { return "DB not supported"; }
     };
     class DBInvalidArgument : public std::exception {
-        std::string what() { return "DB invalid argument"; }
+        [[nodiscard]] const char * what() const noexcept override { return "DB invalid argument"; }
     };
     class DBIOError : public std::exception {
-        std::string what() { return "DB IO error"; }
+        [[nodiscard]] const char * what() const noexcept override { return "DB IO error"; }
     };
     class DBDefault : public std::exception {
-        std::string what() { return "DB default"; }
+        [[nodiscard]] const char * what() const noexcept override { return "DB default"; }
     };
 }
 
