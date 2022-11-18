@@ -24,7 +24,9 @@ namespace unit {
         explicit vector(size_type n, const T & value = T(), const Allocator & alloc = Allocator()) : storage( n, value, alloc ) { }
         template <class InputIterator> vector(InputIterator first, InputIterator last, const Allocator & alloc = Allocator()) : storage( first, last, alloc ) { }
         vector( const unit::vector<T, Allocator> & x ) { std::lock_guard<std::mutex> lock( x.mutex ); storage = x.storage; }
-        unit::vector<T, Allocator> & operator=( const unit::vector<T, Allocator> & x ) { std::lock_guard<std::mutex> lock( mutex ); std::lock_guard<std::mutex> lock2( x.mutex ); storage = x.storage; return *this;}
+
+        unit::vector<T, Allocator> & operator=( const unit::vector<T, Allocator> & x ) { std::lock_guard<std::mutex> lock( mutex ); std::lock_guard<std::mutex> lock2( x.mutex ); this->storage = x.storage; return *this;}
+
         ~vector<T, Allocator>() {}
         iterator begin() { std::lock_guard<std::mutex> lock( mutex ); return storage.begin(); }
         const_iterator begin() const { std::lock_guard<std::mutex> lock( mutex ); return storage.begin(); }

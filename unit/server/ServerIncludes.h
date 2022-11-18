@@ -61,9 +61,25 @@ namespace messageError {
 }
 
 namespace rpcResponse {
+    std::string processSimpleResponse(const std::string &result, int id) {
+        std::stringstream ss;
+        ss << R"({"jsonrpc": "2.0", "result":)" << result << R"(, "id":")" << id << R"("})";
+        return ss.str();
+    }
     std::string processSimpleResponse(const std::string &result, const std::string &id) {
         std::stringstream ss;
         ss << R"({"jsonrpc": "2.0", "result":)" << result << R"(, "id":")" << id << R"("})";
+        return ss.str();
+    }
+    std::string processSimpleStringResponse(const std::string &result, int id) {
+        std::stringstream ss;
+        ss << R"({"jsonrpc": "2.0", "result":")" << result << R"(", "id":")" << id << R"("})";
+        return ss.str();
+    }
+    std::string processSimpleStringResponse(const std::string &result, const std::string &id) {
+        std::stringstream ss;
+        ss << R"({"jsonrpc": "2.0", "result":")" << result << R"(", "id":")" << id << R"("})";
+        return ss.str();
     }
 }
 #endif //UNIT_SERVERINCLUDES_H

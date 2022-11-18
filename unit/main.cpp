@@ -42,7 +42,6 @@
 #endif
 
 int main(int argc, char **argv) {
-    std::cout << "Hello, World!" << std::endl;
     argc = 41;
     std::string argvv[41] = {
             "--userpath",
@@ -91,7 +90,7 @@ int main(int argc, char **argv) {
         UnitInitiator::init(argc, argvv);
     } catch (std::exception &e) {
         std::cout << e.what() << std::endl;
-        exit;
+        exit(2);
     }
     #if 0
         test a{};
@@ -297,7 +296,46 @@ int main(int argc, char **argv) {
         cout << "WALLET ADDRESS: " << r.address << endl;
 
         cout << "\nSigning message 'Hello!': \n";
+//    ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)" << std::scientific << this->amount << R"(, "type":)"
+//       << this->type << R"(, "date":)" << this->date << R"(, "fee":)" << this->fee << R"(, "nonce":)" << this->nonce << R"(})";
+        std::string tx = R"({"from":"")";
         ECDSASignResult sig = ecdsa_sign_message("Hello!", r.prv);
+        std::cout << "r: " << sig.r << std::endl;
+        std::cout << "s: " << sig.s << std::endl;
+        std::cout << "signature hash: " << sig.message_hash << std::endl;
+        bool verified = ecdsa_verify_signature(sig.r, sig.s, "Hello!", r.address);
+        cout << "Result of verification: "<<verified<<"\n";
+        BIP44Result r2 = bip44.generateAddress(r.mnemonic, 0, EXTERNAL_CHANGE, 1);
+        cout << "\n\nWALLET PATH: " << r2.path << endl;
+        cout << "WALLET SEED: " << r2.mnemonic.seed << endl;
+        cout << "WALLET E_XPRV: " << r2.extended_prv << endl;
+        cout << "WALLET E_XPUB: " << r2.extended_pub << endl;
+        cout << "WALLET ADDRESS: " << r2.address << endl;
+
+        cout << "\nSigning message 'Hello!': \n";
+        ECDSASignResult sig2 = ecdsa_sign_message("Hello!", r2.prv);
+        std::cout << "r: " << sig2.r << std::endl;
+        std::cout << "s: " << sig2.s << std::endl;
+        bool verified2 = ecdsa_verify_signature(sig2.r, sig2.s, "Hello!", r2.address);
+        cout << "Result of verification: "<<verified2<<"\n";
+    #endif
+    #if 0
+        BIP39Result bip39Result = BIP39Result("garden barrel lobster swift filter arm walnut inquiry physical pride cruise winner desert fantasy victory aerobic myself organ vague opera shoot various track income",
+                                              "qwerty");
+        BIP44 bip44;
+        BIP44Result r = bip44.generateAddress(bip39Result, 0, EXTERNAL_CHANGE, 0);
+        cout << "WALLET PATH: " << r.path << endl;
+        cout << "WALLET PHRASE: " << r.mnemonic.phrase << endl;
+        cout << "WALLET SEED: " << r.mnemonic.seed << endl;
+        cout << "WALLET PRV: " << r.prv << endl;
+        cout << "WALLET PUB: " << r.pub << endl;
+        cout << "WALLET E_PRV: " << r.extended_prv << endl;
+        cout << "WALLET E_PUB: " << r.extended_pub << endl;
+        cout << "WALLET ADDRESS: " << r.address << endl;
+        cout << "\nSigning transaction: \n";
+        RawTransaction rawTransaction = RawTransaction::parseToGenesis(R"({"from": "UNTxPFeHHV1vu84dB2g6TLK5RT3pbPA","to": "UNTxp28nf2wLJzWm49YtLKyXGYh8vJ3","amount": "0xBE","type": 0,"signature": "null", "r": "null","s": "null","nonce": 1,"fee":0})");
+        std::cout << rawTransaction.serializeWithoutSignatures() << std::endl;
+        ECDSASignResult sig = ecdsa_sign_message(rawTransaction.serializeWithoutSignatures(), r.prv);
         std::cout << "r: " << sig.r << std::endl;
         std::cout << "s: " << sig.s << std::endl;
         std::cout << "signature hash: " << sig.message_hash << std::endl;

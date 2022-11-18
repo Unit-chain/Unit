@@ -15,7 +15,7 @@ public:
     void emplaceBack(const ValidTransaction& validTransaction);
     void dropTransaction(ValidTransaction &validTransaction);
     /// will be dropped transactions in: [vector::begin(); vector::begin()+tillPosition)
-    void dropTransactions(long tillPosition);
+    void dropTransactions(uint64_t tillPosition);
     std::variant<ValidTransaction, std::exception> getTransaction(uint64_t index);
     const unit::vector<ValidTransaction> *getTxPool() const { return &this->transactionPool; }
     uint64_t getPoolSize();
@@ -51,7 +51,7 @@ std::variant<ValidTransaction, std::exception> TransactionPool::getTransaction(u
     return this->transactionPool.at(index);
 }
 
-void TransactionPool::dropTransactions(long tillPosition) {
+void TransactionPool::dropTransactions(uint64_t tillPosition) {
     std::lock_guard<std::mutex> lock(mutex);
     this->transactionPool.erase(this->transactionPool.begin(), this->transactionPool.begin()+tillPosition);
 }

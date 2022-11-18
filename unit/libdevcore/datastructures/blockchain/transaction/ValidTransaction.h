@@ -18,11 +18,56 @@ using namespace boost::multiprecision;
 class ValidTransaction {
 public:
     ValidTransaction() = default;
-    explicit ValidTransaction(RawTransaction *rawPointer) : to(rawPointer->to), type(rawPointer->type), date(rawPointer->date), extra(rawPointer->extra),
-                                                                   hash(rawPointer->hash),
-                                                                   sign(rawPointer->sign), r(rawPointer->r), s(rawPointer->s),
-                                                                   signP(rawPointer->signP), rP(rawPointer->rP), sP(rawPointer->sP),
-                                                                   amount(rawPointer->amount), fee(rawPointer->fee), nonce(rawPointer->nonce) {
+    explicit ValidTransaction(RawTransaction *rawPointer) {
+        this->to = rawPointer->to;
+        this->from = rawPointer->from;
+        this->type = rawPointer->type;
+        this->date = rawPointer->date;
+        this->extra = rawPointer->extra;
+        this->hash = rawPointer->hash;
+        this->sign = rawPointer->sign;
+        this->r = rawPointer->r;
+        this->s = rawPointer->s;
+        this->signP = rawPointer->signP;
+        this->rP = rawPointer->rP;
+        this->sP = rawPointer->sP;
+        this->amount = rawPointer->amount;
+        this->fee = rawPointer->fee;
+        this->nonce = rawPointer->nonce;
+    }
+    explicit ValidTransaction(RawTransaction &rawTransaction) {
+        this->to = rawTransaction.to;
+        this->from = rawTransaction.from;
+        this->type = rawTransaction.type;
+        this->date = rawTransaction.date;
+        this->extra = rawTransaction.extra;
+        this->hash = rawTransaction.hash;
+        this->sign = rawTransaction.sign;
+        this->r = rawTransaction.r;
+        this->s = rawTransaction.s;
+        this->signP = rawTransaction.signP;
+        this->rP = rawTransaction.rP;
+        this->sP = rawTransaction.sP;
+        this->amount = rawTransaction.amount;
+        this->fee = rawTransaction.fee;
+        this->nonce = rawTransaction.nonce;
+    }
+    explicit ValidTransaction(RawTransaction &&rawTransaction) {
+        this->to = rawTransaction.to;
+        this->from = rawTransaction.from;
+        this->type = rawTransaction.type;
+        this->date = rawTransaction.date;
+        this->extra = rawTransaction.extra;
+        this->hash = rawTransaction.hash;
+        this->sign = rawTransaction.sign;
+        this->r = rawTransaction.r;
+        this->s = rawTransaction.s;
+        this->signP = rawTransaction.signP;
+        this->rP = rawTransaction.rP;
+        this->sP = rawTransaction.sP;
+        this->amount = rawTransaction.amount;
+        this->fee = rawTransaction.fee;
+        this->nonce = rawTransaction.nonce;
     }
     std::string from;
     std::string to;
@@ -48,14 +93,14 @@ public:
     [[nodiscard]] inline std::shared_ptr<std::string> serializeToJsonTransaction() const {
         std::stringstream ss;
         if (type == 0)
-            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)"
-               << this->amount << R"(, "type":)"
+            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":")" << "0x"
+               << hexView(this->amount) << R"(", "type":)"
                << this->type << R"(, "date":)" << this->date << R"(, "fee":)"
                << this->fee << R"(, "nonce":)" << this->nonce << R"(, "signature":")" << this->sign << R"(", "r":")"
                << this->r << R"(", "s":")" << this->s << R"("})";
         else {
-            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)"
-               << this->amount << R"(, "type":)"
+            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":")" << "0x"
+               << hexView(this->amount) << R"(", "type":)"
                << this->type << R"(, "date":)" << this->date << R"(, "extradata":{)" << R"("name":")" << json::value_to<std::string>(this->extra.at("name"))
                << R"(", "value":")" << ValidTransaction::uint256_jv_2string(this->extra.at("value")) << R"(", "bytecode": ")" << json::value_to<std::string>(this->extra.at("bytecode"))
                << R"("})" << R"(, "fee":)" << this->fee << R"(, "nonce":)"

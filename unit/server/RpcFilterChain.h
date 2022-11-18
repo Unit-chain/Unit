@@ -55,40 +55,41 @@ protected:
 };
 
 void BasicTransactionRpcFilter::filter(boost::json::value *parameter) {
-    std::shared_ptr<RawTransaction> rawTransaction = RawTransaction::parse(parameter);
-    auto sender = boost::json::value_to<std::string>(parameter->at("from"));
+    RawTransaction rawTransaction = RawTransaction::parse(parameter);
+//    std::cout << *parameter << std::endl;
+    auto sender = boost::json::value_to<std::string>(parameter->at("params").at("from"));
     std::variant<std::string, std::exception> dbResponse = this->userProvider->get(sender);
     if (std::holds_alternative<std::exception>(dbResponse)) {
         create_error_response(rpcError::emptyBalanceError, this->response);
         throw RpcDefaultException();
     }
-    std::optional<std::shared_ptr<WalletAccount>> opAccount = WalletAccount::parseWallet(&std::get<0>(dbResponse));
+    std::optional<WalletAccount> opAccount = WalletAccount::parseWallet(&std::get<0>(dbResponse));
     if (!opAccount.has_value()) {
         create_error_response(rpcError::defaultAccountError, this->response);
         throw RpcEmptyBalanceException();
     }
-    std::shared_ptr<WalletAccount> account = opAccount.value();
-    if (account->nonce == parameter->at("nonce")) {
+    std::optional<WalletAccount> account = opAccount.value();
+    if (account->nonce == boost::json::value_to<uint64_t>(parameter->at("params").at("nonce"))) {
         create_error_response(rpcError::badNonce, this->response);
         throw RpcBadNonceException();
     }
-    if (!ecdsa_verify_signature(boost::json::value_to<std::string>(parameter->at("r")), boost::json::value_to<std::string>(parameter->at("s")),
-                                *rawTransaction->serializeWithoutSignatures(), boost::json::value_to<std::string>(parameter->at("from")))) {
+    if (!ecdsa_verify_signature(boost::json::value_to<std::string>(parameter->at("params").at("r")), boost::json::value_to<std::string>(parameter->at("params").at("s")),
+                                rawTransaction.serializeWithoutSignatures(), boost::json::value_to<std::string>(parameter->at("params").at("from")))) {
         create_error_response(rpcError::invalidSignature, this->response);
         throw RpcInvalidSignatureException();
     }
-    if (0 == boost::json::value_to<int>(parameter->at("type")) && (account->compareNativeTokenBalance(parameter->at("amount")) < 0)) {
+    if (0 == boost::json::value_to<int>(parameter->at("params").at("type")) && (account->compareNativeTokenBalance(parameter->at("params").at("amount")) < 0)) {
         create_error_response(rpcError::lowBalance, this->response);
         throw RpcLowBalanceException();
     }
-    if (1 == boost::json::value_to<int>(parameter->at("type")) && (account->compareTokenBalance(parameter->at("amount"), parameter->at("extradata").at("name")) < 0)) {
+    if (1 == boost::json::value_to<int>(parameter->at("params").at("type")) && (account->compareTokenBalance(parameter->at("params").at("amount"), parameter->at("params").at("extradata").at("name")) < 0)) {
         create_error_response(rpcError::lowBalance, this->response);
         throw RpcLowBalanceException();
     }
-    RpcFilterChain::filter(parameter);
-    rawTransaction->generateHash();
-    this->transactionPool->emplaceBack(ValidTransaction(rawTransaction.get()));
-    create_success_response(rpcResponse::processSimpleResponse(rawTransaction->hash, boost::json::value_to<std::string>(parameter->at("id"))), this->response);
+    rawTransaction.generateHash();
+    this->transactionPool->emplaceBack(ValidTransaction(rawTransaction));
+    int id = boost::json::value_to<int>(parameter->at("id"));
+    create_success_response(rpcResponse::processSimpleStringResponse(rawTransaction.hash, id), this->response);
 }
 
 /// Used for process balance request

@@ -167,7 +167,8 @@ private:
             }
             rpcFilterChain.filter(&json);
         } catch (const std::exception &e) {
-            std::cout << e.what() << std::endl;
+            std::cout << "instruction process error: " << e.what() << std::endl;
+            if (this->response_.body().size() == 0) create_error_response(rpcError::defaultError);
         }
     }
 };

@@ -39,6 +39,7 @@ void BasicLocalShardInserter::shardFactory() {
         ECDSASignResult sig = ecdsa_sign_message(shard1.serializeWithoutSignatures(), this->prover.prv);
         shard1.setShardId(prover.address)->setRp(sig.r)->setSp(sig.s)->setSignature(sig.message_hash);
         shardList->emplace_back(shard1);
+        this->transactionPool->dropTransactions(this->transactionPool->getPoolSize());
     }
 }
 

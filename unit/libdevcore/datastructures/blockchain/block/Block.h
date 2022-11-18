@@ -98,30 +98,18 @@ public:
     std::string serializeShards();
 
     Block &operator=(const Block& c2) {
-//        this->blockHeader = c2.blockHeader;
-//        this->message = c2.message;
-//        this->signP = c2.signP;
-//        this->rP = c2.rP;
-//        this->sP = c2.sP;
-//        this->difficulty = c2.difficulty;
-//        this->miner = c2.miner;
-//        this->rewardProverAddress = c2.rewardProverAddress;
-//        this->logsBloom = c2.logsBloom;
-//        this->shardList = c2.shardList;
-//        this->reward = c2.reward;
-//        this->epoch = c2.epoch;
         this->blockHeader = c2.blockHeader;
-        this->message = "a";
-        this->signP = "a";
-        this->rP = "a";
-        this->sP = "a";
-        this->difficulty = "0x0";
-        this->miner = "UNT_0";
-        this->rewardProverAddress = "UNT_0";
-        this->logsBloom = "0x0";
+        this->message = c2.message;
+        this->signP = c2.signP;
+        this->rP = c2.rP;
+        this->sP = c2.sP;
+        this->difficulty = c2.difficulty;
+        this->miner = c2.miner;
+        this->rewardProverAddress = c2.rewardProverAddress;
+        this->logsBloom = c2.logsBloom;
         this->shardList = c2.shardList;
-        this->reward = "0x0";
-        this->epoch = "0x0";
+        this->reward = c2.reward;
+        this->epoch = c2.epoch;
     }
 };
 
