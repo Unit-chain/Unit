@@ -90,7 +90,7 @@ public:
         return std::make_shared<std::string>(this->hash);
     }
 
-    [[nodiscard]] inline std::shared_ptr<std::string> serializeToJsonTransaction() const {
+    [[nodiscard]] inline std::string serializeToJsonTransaction() const {
         std::stringstream ss;
         if (type == 0)
             ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":")" << "0x"
@@ -107,11 +107,11 @@ public:
                << this->nonce << R"(, "signature":")" << this->sign << R"(", "r":")"
                << this->r << R"(", "s":")" << this->s << R"("})";
         }
-        return std::make_shared<std::string>(ss.str());
+        return ss.str();
     }
 
     [[nodiscard]] inline uint32_t getSize() const {
-        return static_cast<uint32_t>((this->serializeToJsonTransaction())->size());
+        return static_cast<uint32_t>((this->serializeToJsonTransaction()).size());
     }
 
     void setIndex(uint32_t index) {

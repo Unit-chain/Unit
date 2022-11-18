@@ -49,6 +49,7 @@ public:
 
     static std::optional<WalletAccount> parseWallet(std::string *ptr);
     static WalletAccount createEmptyWallet(const std::string &);
+    static WalletAccount *createEmptyPtrWallet(const std::string &address);
     bool parseHistory(std::string *ptr);
     operationStatus::WalletErrorsCode subtract(const uint256_t& value, const std::string& outputHash);
     operationStatus::WalletErrorsCode subtractToken(const uint256_t& value, const std::string& inputHash, const std::string &tokenName);
@@ -58,6 +59,7 @@ public:
     int compareNativeTokenBalance(const json::value &amount) const;
     int compareTokenBalance(const json::value &amount, const json::value &tokenName);
     [[nodiscard]] std::string serialize() const;
+
     [[nodiscard]] std::string serializeHistory() const;
 
     void setTxInputs(const json::array &txInputs);
@@ -82,7 +84,7 @@ std::optional<WalletAccount> WalletAccount::parseWallet(std::string *ptr) {
 std::string WalletAccount::serialize() const {
     std::stringstream ss;
     std::stringstream balanceSS;
-    balanceSS << std::hex << this->balance;
+    balanceSS << "0x" << std::hex << this->balance;
     ss << R"({"address":")" << this->address << R"(", "balance":")" << balanceSS.str() << R"(", "nonce":)" << this->nonce;
     if (!tokensBalance.is_null()) ss << R"(, "tokensBalance":)" << this->tokensBalance;
     ss << "}";
@@ -165,6 +167,9 @@ bool WalletAccount::isValidNonce(RawTransaction *rawPointer) const {
 
 WalletAccount WalletAccount::createEmptyWallet(const std::string &address) {
     return WalletAccount(address);
+}
+WalletAccount *WalletAccount::createEmptyPtrWallet(const std::string &address) {
+    return new WalletAccount(address);
 }
 
 int WalletAccount::compareNativeTokenBalance(const json::value &amount) const {

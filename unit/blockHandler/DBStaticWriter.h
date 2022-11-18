@@ -30,20 +30,14 @@ uint64_t mersenneRand(uint64_t min, uint64_t max) {
 class DBStaticWriter {
 public:
     static void setTxBatch(Block *block, rocksdb::WriteBatch *writeBatch, unit::DB *userDbProvider,
-                           unit::DB *tokensDbProvider, unit::DB *historyDBProvider, uint64_t *blockSize);
+                           unit::DB *tokensDbProvider, unit::DB *historyDBProvider);
 };
 
 
 void DBStaticWriter::setTxBatch(Block *block, rocksdb::WriteBatch *writeBatch, unit::DB *userDbProvider,
-                                unit::DB *tokensDbProvider, unit::DB *historyDBProvider, uint64_t *blockSize) {
-    *blockSize = 0;
+                                unit::DB *tokensDbProvider, unit::DB *historyDBProvider) {
     if (block->shardList.empty()) return;
     std::map<std::string, WalletAccount*> cache = std::map<std::string, WalletAccount*>();
-    #if 0
-        block->shardList.at(
-                mersenneRand(0, (block->shardList.size() -
-                                 1))).transactionList.size(); // randomly chose pre-allocated size of map
-    #endif
     std::shared_ptr<rocksdb::WriteBatch> tokenBatch{};
     std::shared_ptr<rocksdb::WriteBatch> historyBatch = unit::DB::getBatch();
     std::shared_ptr<rocksdb::WriteBatch> userBatch = unit::DB::getBatch();
@@ -53,9 +47,8 @@ void DBStaticWriter::setTxBatch(Block *block, rocksdb::WriteBatch *writeBatch, u
         std::vector<std::string> accounts{};
         accounts.reserve(block->shardList.size());
         for (auto &tx: shard.transactionList) {
-            if (std::find(accounts.begin(), accounts.end(), tx.from) != accounts.end())
-                accounts.emplace_back(tx.from);
-            if (std::find(accounts.begin(), accounts.end(), tx.to) != accounts.end()) accounts.emplace_back(tx.to);
+            if (std::count(accounts.begin(), accounts.end(), tx.from) == 0) accounts.emplace_back(tx.from);
+            if (std::count(accounts.begin(), accounts.end(), tx.to) == 0) accounts.emplace_back(tx.to);
             if (tx.type == CREATE_TOKENS) creatingTokensTx = true;
             if (block->blockHeader.index == 0) cache.emplace(tx.to, new WalletAccount(tx.to));
         }
@@ -80,8 +73,8 @@ void DBStaticWriter::setTxBatch(Block *block, rocksdb::WriteBatch *writeBatch, u
         std::vector<std::string> responses = std::get<1>(response);
         if (block->blockHeader.index != 0) {
             for (int i = 0; i < statuses.size(); ++i) {
-                if ((uint16_t) statuses.at(i).code() == 0) cache.emplace(accounts.at(i), new WalletAccount(responses.at(i)));
-                else cache.emplace(accounts.at(i), new WalletAccount(accounts.at(i)));
+                if ((uint16_t) statuses.at(i).code() != 0) cache.emplace(accounts.at(i), new WalletAccount(responses.at(i)));
+                else cache.emplace(accounts.at(i), WalletAccount::createEmptyPtrWallet(accounts.at(i)));
             }
         }
 
@@ -92,13 +85,16 @@ void DBStaticWriter::setTxBatch(Block *block, rocksdb::WriteBatch *writeBatch, u
                 continue;
             }
             WalletAccount *senderAccount = nullptr;
-            if (block->blockHeader.index != 0)
+            if (block->blockHeader.index != 0) {
                 senderAccount = cache.at(it.from);
+            }
             WalletAccount *recipientAccount = cache.at(it.to);
 
             if (it.type == TRANSFER) {
                 if (block->blockHeader.index == 0) goto transfer;
                 if (senderAccount->balance < it.amount) {
+                    std::cout << std::endl << "sender: " << cache.at(it.from)->serialize() << std::endl;
+                    std::cout << std::endl << "it: " << it.amount << std::endl;
                     valuesToBeDeleted.emplace_back(it);
                     continue;
                 } else goto transfer;
@@ -116,15 +112,15 @@ void DBStaticWriter::setTxBatch(Block *block, rocksdb::WriteBatch *writeBatch, u
 
             transfer:
             {
+                std::string serializedStr = it.serializeToJsonTransaction();
                 if (block->blockHeader.index != 0) {
                     senderAccount->subtract(it.amount, it.hash);
                     historyBatch->Put(rocksdb::Slice(senderAccount->address), rocksdb::Slice(senderAccount->serializeHistory()));
                 }
                 recipientAccount->increase(it.amount, it.hash);
-                std::shared_ptr<std::string> serializedStr = it.serializeToJsonTransaction();
-                writeBatch->Put(rocksdb::Slice(it.hash), rocksdb::Slice(*serializedStr));
+                writeBatch->Put(rocksdb::Slice(it.hash), rocksdb::Slice(serializedStr));
                 historyBatch->Put(rocksdb::Slice(recipientAccount->address), rocksdb::Slice(recipientAccount->serializeHistory()));
-                *blockSize += serializedStr->size();
+                block->blockHeader.size += serializedStr.size();
                 continue;
             };
             transfer_tokens:
@@ -132,9 +128,9 @@ void DBStaticWriter::setTxBatch(Block *block, rocksdb::WriteBatch *writeBatch, u
                 auto tokenName = boost::json::value_to<std::string>(it.extra.at("name"));
                 senderAccount->subtractToken(it.amount, it.hash, tokenName);
                 senderAccount->increaseToken(it.amount, it.hash, tokenName);
-                std::shared_ptr<std::string> serializedStr = it.serializeToJsonTransaction();
-                writeBatch->Put(rocksdb::Slice(it.hash), rocksdb::Slice(*serializedStr));
-                *blockSize += serializedStr->size();
+                std::string serializedStr = it.serializeToJsonTransaction();
+                writeBatch->Put(rocksdb::Slice(it.hash), rocksdb::Slice(serializedStr));
+                block->blockHeader.size += serializedStr.size();
                 continue;
             };
             create_token:
@@ -147,14 +143,15 @@ void DBStaticWriter::setTxBatch(Block *block, rocksdb::WriteBatch *writeBatch, u
                 std::shared_ptr<Token> token = tokenOptional.value();
                 senderAccount->increaseToken(token->supply, it.hash, token->name);
                 tokenBatch->Put(rocksdb::Slice(token->name), rocksdb::Slice(token->serialize()));
-                std::shared_ptr<std::string> serializedStr = it.serializeToJsonTransaction();
-                writeBatch->Put(rocksdb::Slice(it.hash), rocksdb::Slice(*serializedStr));
-                *blockSize += serializedStr->size();
+                std::string serializedStr = it.serializeToJsonTransaction();
+                writeBatch->Put(rocksdb::Slice(it.hash), rocksdb::Slice(serializedStr));
+                block->blockHeader.size += serializedStr.size();
                 continue;
             }
         }
         boost::unordered::unordered_map<std::string, std::shared_ptr<WalletAccount>>::iterator it;
         for (auto &[key, value]: cache)  {
+            std::cout << "value: " << value->serialize() << std::endl;
             userBatch->Put(rocksdb::Slice(key), rocksdb::Slice(value->serialize()));
             value = nullptr;
             delete value;

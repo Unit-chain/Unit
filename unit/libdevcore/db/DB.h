@@ -31,7 +31,7 @@ namespace unit {
         virtual std::variant<std::shared_ptr<rocksdb::DB*>, std::exception> newDB() = 0;
         static std::shared_ptr<rocksdb::WriteBatch> getBatch() { return std::make_shared<rocksdb::WriteBatch>(rocksdb::WriteBatch()); }
         static inline void close(rocksdb::DB **db) { *db = nullptr; delete *db; }
-        static inline void close(const std::shared_ptr<rocksdb::DB*> &db) { delete *db; }
+        static inline void close(const std::shared_ptr<rocksdb::DB*> &db) { *db = nullptr; delete *db; }
         virtual std::string get(std::string &key) = 0;
         virtual std::tuple<std::vector<rocksdb::Status>, std::vector<std::string>> multiGet(std::vector<std::string> *keys) = 0;
         virtual std::variant<std::string, std::exception> seek(std::string &key) = 0;
@@ -111,9 +111,8 @@ namespace unit {
         if (status.code() == rocksdb::Status::Code::kCorruption) return {unit::error::DBCorruption()};
         if (status.code() == rocksdb::Status::Code::kIOError) return {unit::error::DBIOError()};
         while (status.code() != rocksdb::Status::Code::kOk) {
-            status = rocksdb::DB::OpenForReadOnly(this->options, this->path, &db);
+            status = rocksdb::DB::Open(this->options, this->path, &db);
             if (status.code() != rocksdb::Status::Code::kOk) std::this_thread::sleep_for(std::chrono::seconds(3));
-            return {unit::error::DBIOError()};
         }
         status = db->Write(this->writeOptions, batch.get());
         if (status.code() == rocksdb::Status::Code::kCorruption) return {unit::error::DBCorruption()};
@@ -129,7 +128,6 @@ namespace unit {
         while (status.code() != rocksdb::Status::Code::kOk) {
             status = rocksdb::DB::OpenForReadOnly(this->options, this->path, &db);
             if (status.code() != rocksdb::Status::Code::kOk) std::this_thread::sleep_for(std::chrono::seconds(3));
-            return {unit::error::DBIOError()};
         }
         return std::make_shared<rocksdb::DB*>(db);
     }
@@ -152,6 +150,7 @@ namespace unit {
         if (slices.empty()) for (const auto& key : *keys) slices.emplace_back(rocksdb::Slice(key));
         std::vector<std::string> response;
         std::vector<rocksdb::Status> statuses = db->MultiGet(rocksdb::ReadOptions(), slices, &response);
+        std::cout << "id-db size:" << response.size() << std::endl;
         return {std::make_tuple(std::move(statuses), std::move(response))};
     }
 

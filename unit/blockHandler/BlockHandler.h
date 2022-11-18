@@ -135,19 +135,18 @@ void BlockHandler::startBlockGenerator() {
                         ->generateRoot()
                         ->setProverSign()
                         ->build();
-                this->shardList->pop_back();
             }
         }
         std::shared_ptr<rocksdb::WriteBatch> txBatch = unit::BasicDB::getBatch();
         std::thread txThread(DBStaticWriter::setTxBatch, this->currentBlock, txBatch.get(),
-                             &this->userWriter, &this->tokenWriter, &this->historyWriter, &(this->currentBlock->blockHeader.size));
+                             &this->userWriter, &this->tokenWriter, &this->historyWriter);
         std::shared_ptr<rocksdb::WriteBatch> blockBatchPtr = unit::BasicDB::getBatch();
         blockBatchPtr->Put(rocksdb::Slice(this->currentBlock->blockHeader.hash), rocksdb::Slice(this->currentBlock->serializeBlock()));
         blockBatchPtr->Put(rocksdb::Slice(this->currentBlockKey), rocksdb::Slice(this->currentBlock->serializeBlock()));
         txThread.join();
         this->blockWriter.commit(blockBatchPtr);
         if (txBatch->HasPut()) this->transactionWriter.commit(txBatch);
-        std::cout << "block: " << this->currentBlock->serializeBlock() << std::endl;
+//        std::cout << "block: " << this->currentBlock->serializeBlock() << std::endl;
         this->previousBlock = nullptr;
         delete this->previousBlock;
         this->previousBlock = currentBlock;

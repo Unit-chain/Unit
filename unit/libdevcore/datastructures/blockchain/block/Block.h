@@ -31,7 +31,7 @@ public:
     std::string rP;
     std::string sP;
     std::string difficulty;
-    std::string miner = "UNT0";
+    std::string miner = "LOCAL";
     std::string rewardProverAddress;
     std::string logsBloom = "0x0";
     unit::vector<Shard> shardList{};
