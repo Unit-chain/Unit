@@ -23,7 +23,7 @@
 
 class Server {
 public:
-    static int start_server(TransactionPool *transactionPool, std::string &userDBPath, std::string &historyPath, std::string &blockPath, std::string &transactionPath, Block *last);
+    static int start_server(TransactionPool *transactionPool, std::string &userDBPath, std::string &historyPath, std::string &blockPath, std::string &transactionPath);
 };
 
 
@@ -32,13 +32,12 @@ public:
     http_connection(tcp::socket socket) : socket_(std::move(socket)){}
     http_connection(tcp::socket socket, std::string& path) : socket_(std::move(socket)), userProvider(path){}
     // Initiate the asynchronous operations associated with the connection.
-    void start(TransactionPool *transactionPool, std::string *userDBPath, std::string *historyPath, std::string *blockPath, std::string *transactionPath, Block *last) {
+    void start(TransactionPool *transactionPool, std::string *userDBPath, std::string *historyPath, std::string *blockPath, std::string *transactionPath) {
         this->transactionPool = transactionPool;
         this->userProvider = unit::BasicDB(*userDBPath);
         this->historyProvider = unit::BasicDB(*historyPath);
         this->blockDBProvider = unit::BasicDB(*blockPath);
         this->transactionDBProvider = unit::BasicDB(*transactionPath);
-        this->last = last;
         read_request();
         check_deadline();
     }
@@ -52,8 +51,6 @@ private:
     unit::BasicDB blockDBProvider{};
     // database provider for transaction DB
     unit::BasicDB transactionDBProvider{};
-    // current block
-    Block *last;
     // pointer to tx deque
     TransactionPool *transactionPool;
     // The socket for the currently connected client.
@@ -161,7 +158,7 @@ private:
             } else if ("unit_get_address_tx_history" == method) {
                 rpcFilterChain.add(new BasicBalanceHistoryFilter(&(this->response_), &(this->historyProvider)));
             } else if ("unit_get_block_height" == method) {
-                rpcFilterChain.add(new BasicBlockHeightFilter(&(this->response_), this->last));
+                rpcFilterChain.add(new BasicBlockHeightFilter(&(this->response_), &this->blockDBProvider));
             } else if ("unit_get_tx" == method) {
                 rpcFilterChain.add(new BasicTransactionByHashRpcFilter(&(this->response_), &(this->transactionDBProvider)));
             } else {
@@ -177,16 +174,16 @@ private:
 
 // "Loop" forever accepting new connections.
 void http_server(tcp::acceptor &acceptor, tcp::socket &socket, TransactionPool *transactionPool,
-                 std::string *userDBPath, std::string *historyPath, std::string *blockPath, std::string *transactionPath, Block *last) {
+                 std::string *userDBPath, std::string *historyPath, std::string *blockPath, std::string *transactionPath) {
     acceptor.async_accept(socket,
-                          [&, transactionPool, userDBPath, historyPath, transactionPath, last](beast::error_code ec){
-                              if (!ec) std::make_shared<http_connection>(std::move(socket))->start(transactionPool, userDBPath, historyPath, blockPath, transactionPath, last);
-                              http_server(acceptor, socket, transactionPool, userDBPath, historyPath, blockPath, transactionPath, last);
+                          [&, transactionPool, userDBPath, historyPath, transactionPath](beast::error_code ec){
+                              if (!ec) std::make_shared<http_connection>(std::move(socket))->start(transactionPool, userDBPath, historyPath, blockPath, transactionPath);
+                              http_server(acceptor, socket, transactionPool, userDBPath, historyPath, blockPath, transactionPath);
                           });
 }
 
 int Server::start_server(TransactionPool *transactionPool, std::string &userDBPath,
-                         std::string &historyPath, std::string &blockPath, std::string &transactionPath, Block *last) {
+                         std::string &historyPath, std::string &blockPath, std::string &transactionPath) {
     rerun_server:;
     try {
         std::string ip_address = LOCAL_IP;
@@ -195,7 +192,7 @@ int Server::start_server(TransactionPool *transactionPool, std::string &userDBPa
         net::io_context ioc{2};
         tcp::acceptor acceptor{ioc, {address, port}};
         tcp::socket socket{ioc};
-        http_server(acceptor, socket, transactionPool, &userDBPath, &historyPath, &blockPath, &transactionPath, last);
+        http_server(acceptor, socket, transactionPool, &userDBPath, &historyPath, &blockPath, &transactionPath);
         std::cout << "server started" << std::endl;
         ioc.run();
     } catch (std::exception const &e) {

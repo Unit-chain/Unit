@@ -29,8 +29,8 @@ public:
 
 // I know it's awful, but it'll exist till end of tests
 [[noreturn]] void blockHandlingHandler(std::string *blockPath, std::string *userPath, std::string *transactionPath,
-                                       std::string *historyPath, std::string *tokenPath, BIP44Result *bip44Result, unit::list<Shard> *shardList, Block *last) {
-    BlockHandler blockHandler = BlockHandler(*blockPath, *userPath, *transactionPath, *historyPath, *tokenPath, *bip44Result, shardList, last);
+                                       std::string *historyPath, std::string *tokenPath, BIP44Result *bip44Result, unit::list<Shard> *shardList) {
+    BlockHandler blockHandler = BlockHandler(*blockPath, *userPath, *transactionPath, *historyPath, *tokenPath, *bip44Result, shardList);
     blockHandler.startBlockGenerator();
 }
 [[noreturn]] void shardInserterHandler(unit::list<Shard> *shardList, TransactionPool *transactionPool, BIP44Result *bip44Result) {
@@ -38,8 +38,8 @@ public:
     shardInserter.shardFactory();
 }
 [[noreturn]] void transactionServerHandler(TransactionPool *transactionPool, std::string *userDBPath, std::string *historyPath,
-                                           std::string *blockPath, std::string *transactionPath, Block *last) {
-    Server::start_server(transactionPool, *userDBPath, *historyPath, *blockPath, *transactionPath, last);
+                                           std::string *blockPath, std::string *transactionPath) {
+    Server::start_server(transactionPool, *userDBPath, *historyPath, *blockPath, *transactionPath);
 }
 
 class UnitInitiator {
@@ -88,14 +88,13 @@ void UnitInitiator::init(int argc, char **argv) {
     BIP44Result bip44Result = bip44.generateAddress(bip39Result, 0, EXTERNAL_CHANGE, std::stoi((flagsValues.at("--walletIndex"))));
     unit::list<Shard> shardList{};
     TransactionPool transactionPool{};
-    Block *previous = nullptr;
     std::thread blockTh(blockHandlingHandler, &flagsValues.at("--blockPath"),  &flagsValues.at("--userpath"),
-                        &flagsValues.at("--transactionPath"),  &flagsValues.at("--historyPath"),  &flagsValues.at("--tokenPath"), &bip44Result, &shardList, previous);
+                        &flagsValues.at("--transactionPath"),  &flagsValues.at("--historyPath"),  &flagsValues.at("--tokenPath"), &bip44Result, &shardList);
     blockTh.detach();
     std::thread shardTh(shardInserterHandler, &shardList, &transactionPool, &bip44Result);
     shardTh.detach();
     std::thread serverTh(transactionServerHandler, &transactionPool, &flagsValues.at("--userpath"), &flagsValues.at("--historyPath"),
-                         &flagsValues.at("--blockPath"), &flagsValues.at("--transactionPath"), previous);
+                         &flagsValues.at("--blockPath"), &flagsValues.at("--transactionPath"));
     serverTh.detach();
     while (true) {}
 }
@@ -145,12 +144,12 @@ void UnitInitiator::init(int argc, std::string argv[42]) {
     TransactionPool transactionPool{};
     Block *previous = nullptr;
     std::thread blockTh(blockHandlingHandler, &flagsValues.at("--blockPath"),  &flagsValues.at("--userpath"),
-                        &flagsValues.at("--transactionPath"),  &flagsValues.at("--historyPath"),  &flagsValues.at("--tokenPath"), &bip44Result, &shardList, previous);
+                        &flagsValues.at("--transactionPath"),  &flagsValues.at("--historyPath"),  &flagsValues.at("--tokenPath"), &bip44Result, &shardList);
     blockTh.detach();
     std::thread shardTh(shardInserterHandler, &shardList, &transactionPool, &bip44Result);
     shardTh.detach();
     std::thread serverTh(transactionServerHandler, &transactionPool, &flagsValues.at("--userpath"), &flagsValues.at("--historyPath"),
-                         &flagsValues.at("--blockPath"), &flagsValues.at("--transactionPath"), previous);
+                         &flagsValues.at("--blockPath"), &flagsValues.at("--transactionPath"));
     serverTh.detach();
     while (true) {}
 }

@@ -30,7 +30,7 @@ namespace unit {
 
         virtual std::variant<std::shared_ptr<rocksdb::DB*>, std::exception> newDB() = 0;
         static std::shared_ptr<rocksdb::WriteBatch> getBatch() { return std::make_shared<rocksdb::WriteBatch>(rocksdb::WriteBatch()); }
-        static inline void close(rocksdb::DB **db) { delete *db; }
+        static inline void close(rocksdb::DB **db) { *db = nullptr; delete *db; }
         static inline void close(const std::shared_ptr<rocksdb::DB*> &db) { delete *db; }
         virtual std::string get(std::string &key) = 0;
         virtual std::variant<std::tuple<std::vector<rocksdb::Status>, std::vector<std::string>>, std::exception> multiGet(std::vector<std::string> *keys) = 0;

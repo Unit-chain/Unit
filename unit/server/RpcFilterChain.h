@@ -145,15 +145,16 @@ void BasicBalanceHistoryFilter::filter(boost::json::value *parameter) {
 /// Used for process current block request
 class BasicBlockHeightFilter : public RpcFilterChain {
 public:
-    BasicBlockHeightFilter(http::response<http::dynamic_body> *response, Block *last) : response(response), last(last) {}
+    BasicBlockHeightFilter(http::response<http::dynamic_body> *response, unit::DB *blockProvider) : response(response), blockProvider(blockProvider) {}
     void filter(boost::json::value *parameter) override;
 protected:
     http::response<http::dynamic_body> *response;
-    Block *last;
+    unit::DB *blockProvider;
+    std::string key = "current";
 };
 
 void BasicBlockHeightFilter::filter(boost::json::value *parameter) {
-    create_success_response(rpcResponse::processSimpleResponse((this->last != nullptr) ? this->last->serializeBlock() : "null", boost::json::value_to<std::string>(parameter->at("id"))), this->response);
+    create_success_response(rpcResponse::processSimpleResponse(this->blockProvider->get(this->key), boost::json::value_to<std::string>(parameter->at("id"))), this->response);
 }
 
 /// Used for process transaction by hash request

@@ -21,7 +21,7 @@ public:
     Block(std::string hash, std::string previousHash, const std::string &merkleRoot,
              uint64_t time, uint64_t version, uint64_t transactionCount, uint64_t index, uint32_t size,
              int nonce, std::string message, std::string signP, std::string rewardP,
-             const unit::vector<Shard> &shardList, uint64_t reward) : blockHeader(std::move(hash), std::move(previousHash), merkleRoot, time, version, transactionCount, index, size, nonce),
+             const unit::vector<Shard> &shardList, std::string reward) : blockHeader(std::move(hash), std::move(previousHash), merkleRoot, time, version, transactionCount, index, size, nonce),
                                                                     message(std::move(message)), signP(std::move(signP)),
                                                                     rewardProverAddress(std::move(rewardP)), shardList(shardList),
                                                                     reward(reward) {}
@@ -35,8 +35,8 @@ public:
     std::string rewardProverAddress;
     std::string logsBloom = "0x0";
     unit::vector<Shard> shardList{};
-    uint64_t reward{};
-    uint64_t epoch{};
+    std::string reward{};
+    std::string epoch{};
 
     std::string serializeBlock();
     std::string serializeForSigning();
@@ -63,9 +63,9 @@ public:
 
     void setTxList(const unit::vector<ValidTransaction> &txList);
 
-    uint64_t getReward() const;
+    std::string getReward() const;
 
-    void setReward(uint64_t reward);
+    void setReward(std::string &reward);
 
     const std::string &getRp() const;
 
@@ -75,9 +75,9 @@ public:
 
     void setSp(const std::string &sP);
 
-    uint64_t getEpoch() const;
+    std::string getEpoch() const;
 
-    void setEpoch(uint64_t epoch);
+    void setEpoch(std::string &epoch);
 
     void setShardList(const unit::vector<Shard> &txList);
 
@@ -98,18 +98,30 @@ public:
     std::string serializeShards();
 
     Block &operator=(const Block& c2) {
+//        this->blockHeader = c2.blockHeader;
+//        this->message = c2.message;
+//        this->signP = c2.signP;
+//        this->rP = c2.rP;
+//        this->sP = c2.sP;
+//        this->difficulty = c2.difficulty;
+//        this->miner = c2.miner;
+//        this->rewardProverAddress = c2.rewardProverAddress;
+//        this->logsBloom = c2.logsBloom;
+//        this->shardList = c2.shardList;
+//        this->reward = c2.reward;
+//        this->epoch = c2.epoch;
         this->blockHeader = c2.blockHeader;
-        this->message = c2.message;
-        this->signP = c2.signP;
-        this->rP = c2.rP;
-        this->sP = c2.sP;
-        this->difficulty = c2.difficulty;
-        this->miner = c2.miner;
-        this->rewardProverAddress = c2.rewardProverAddress;
-        this->logsBloom = c2.logsBloom;
+        this->message = "a";
+        this->signP = "a";
+        this->rP = "a";
+        this->sP = "a";
+        this->difficulty = "0x0";
+        this->miner = "UNT_0";
+        this->rewardProverAddress = "UNT_0";
+        this->logsBloom = "0x0";
         this->shardList = c2.shardList;
-        this->reward = c2.reward;
-        this->epoch = c2.epoch;
+        this->reward = "0x0";
+        this->epoch = "0x0";
     }
 };
 
@@ -124,9 +136,9 @@ std::string Block::serializeShards() {
 
 std::string Block::serializeBlock() {
     std::stringstream ss;
-    ss << blockHeader.serializeBlockHeader() << R"(", "message":")" << this->message << R"(", "signP":")" << this->signP << R"(", "rP":")" << this->rP << R"(", "sP":")" << this->sP << R"(", "rewardProverAddress":")"
+    ss << blockHeader.serializeBlockHeader() << R"(, "message":")" << this->message << R"(", "signP":")" << this->signP << R"(", "rP":")" << this->rP << R"(", "sP":")" << this->sP << R"(", "rewardProverAddress":")"
        << this->rewardProverAddress << R"(", "logsBloom": ")" << this->logsBloom << R"(", "difficulty":")" << this->difficulty << R"(", "miner":")" << this->miner
-       << R"(", "miner":")" << this->miner << R"(", "reward":")" << this->reward << R"(", "shards":[)" << this->serializeShards() << R"(]})";
+       << R"(", "reward":")" << this->reward << R"(", "shards":[)" << this->serializeShards() << R"(]})";
     return ss.str();
 }
 
@@ -212,11 +224,11 @@ void Block::setShardList(const unit::vector<Shard> &txList) {
     Block::shardList = txList;
 }
 
-uint64_t Block::getReward() const {
+std::string Block::getReward() const {
     return reward;
 }
 
-void Block::setReward(uint64_t reward) {
+void Block::setReward(std::string &reward) {
     Block::reward = reward;
 }
 
@@ -236,11 +248,11 @@ void Block::setSp(const std::string &sP) {
     Block::sP = sP;
 }
 
-uint64_t Block::getEpoch() const {
+std::string Block::getEpoch() const {
     return epoch;
 }
 
-void Block::setEpoch(uint64_t epoch) {
+void Block::setEpoch(std::string &epoch) {
     Block::epoch = epoch;
 }
 

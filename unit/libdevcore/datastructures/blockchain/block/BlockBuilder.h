@@ -14,7 +14,7 @@
 class BlockBuilder {
 public:
     BlockBuilder() = default;
-    explicit BlockBuilder(BIP44Result bip44Result) : bip44Result(std::move(bip44Result)) {}
+    explicit BlockBuilder(BIP44Result &bip44Result) : bip44Result(bip44Result) {}
 
     inline BlockBuilder *setBlock(Block *block) {
         this->currentBlock = block;
@@ -61,7 +61,7 @@ public:
         return this;
     }
 
-    inline BlockBuilder *setEpoch(uint64_t epoch) {
+    inline BlockBuilder *setEpoch(std::string epoch) {
         this->currentBlock->setEpoch(epoch);
         return this;
     }
@@ -84,8 +84,8 @@ public:
         return this;
     }
 
-    inline BlockBuilder *insertShard(std::shared_ptr<Shard> &shard) {
-        if (shard == nullptr) return this;
+    inline BlockBuilder *insertShard(std::optional<Shard> &shard) {
+        if (!shard.has_value()) return this;
         this->currentBlock->shardList.emplace_back(*shard);
         return this;
     }
