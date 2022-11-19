@@ -118,12 +118,12 @@ int main(int argc, char **argv) {
     #if 0
         std::string testKey = "test0";
         std::string path = "/Users/kirillzhukov/Documents/unit_db/";
-        DBWriter blockWriter = DBWriter(path);
+        DBWriter unitDb = DBWriter(path);
         std::vector<std::string> vec;
         vec.reserve(10000);
         for (int i = 0; i < 10000; ++i) vec.emplace_back("test"+std::to_string(i));
         vec.insert(vec.begin(), testKey);
-        operationDBStatus::DBTupleResponse tuple = blockWriter.getProvider()->multiRead(&vec);
+        operationDBStatus::DBTupleResponse tuple = unitDb.getProvider()->multiRead(&vec);
         std::cout << "size in main: " << (int) tuple.statuses.at(0).code() << std::endl;
     #endif
     #if 0
@@ -147,16 +147,16 @@ int main(int argc, char **argv) {
                   }
                 })";
         std::string path = "/Users/kirillzhukov/Documents/unit_db/";
-        DBWriter blockWriter = DBWriter(path);
-        std::deque<WriteBatch *> *deque = blockWriter.getDeque();
-        std::shared_ptr<rocksdb::WriteBatch> writeBatch = blockWriter.getProvider()->getBatch();
-        blockWriter.init();
+        DBWriter unitDb = DBWriter(path);
+        std::deque<WriteBatch *> *deque = unitDb.getDeque();
+        std::shared_ptr<rocksdb::WriteBatch> writeBatch = unitDb.getProvider()->getBatch();
+        unitDb.init();
         for (int i = 0; i < 100000; i++) writeBatch->Put(
                 rocksdb::Slice(key+std::to_string(i)),
                 rocksdb::Slice(str));
         deque->emplace_back(writeBatch.get());
         std::string testKey = key+"1";
-        operationDBStatus::DBResponse<std::string> dbResponse = blockWriter.getProvider()->read<std::string>(&testKey);
+        operationDBStatus::DBResponse<std::string> dbResponse = unitDb.getProvider()->read<std::string>(&testKey);
         std::cout << std::endl << "reading error: " << (int) dbResponse.errorResponse << std::endl;
         std::cout << std::endl << "reading value: " <<  *dbResponse.value << std::endl;
     #endif

@@ -50,7 +50,8 @@ public:
     static std::optional<WalletAccount> parseWallet(std::string *ptr);
     static WalletAccount createEmptyWallet(const std::string &);
     static WalletAccount *createEmptyPtrWallet(const std::string &address);
-    bool parseHistory(std::string *ptr);
+    static WalletAccount *createPtrWallet(const std::string &wallet);
+    bool parseHistory(const std::string& ptr);
     operationStatus::WalletErrorsCode subtract(const uint256_t& value, const std::string& outputHash);
     operationStatus::WalletErrorsCode subtractToken(const uint256_t& value, const std::string& inputHash, const std::string &tokenName);
     void increase(const uint256_t& value, const std::string& inputHash);
@@ -69,6 +70,7 @@ public:
 
 std::optional<WalletAccount> WalletAccount::parseWallet(std::string *ptr) {
     if (ptr == nullptr) return std::nullopt;
+    std::cout << *ptr << std::endl;
     json::error_code ec;
     try {
         json::value value = json::parse(*ptr, ec);
@@ -128,11 +130,10 @@ WalletAccount::WalletAccount(std::string address, uint256_t balance, json::objec
     this->tokensBalance = boost::json::parse("{}");
 }
 
-bool WalletAccount::parseHistory(std::string *ptr) {
-    if (ptr == nullptr) return false;
+bool WalletAccount::parseHistory(const std::string& ptr) {
     json::error_code ec;
     try {
-        json::value value = json::parse(*ptr, ec);
+        json::value value = json::parse(ptr, ec);
         this->txOutputs = value.at("out").as_array();
         this->txInputs = value.at("in").as_array();
         return true;
@@ -170,6 +171,18 @@ WalletAccount WalletAccount::createEmptyWallet(const std::string &address) {
 }
 WalletAccount *WalletAccount::createEmptyPtrWallet(const std::string &address) {
     return new WalletAccount(address);
+}
+WalletAccount *WalletAccount::createPtrWallet(const std::string &wallet) {
+    json::error_code ec;
+    try {
+        json::value value = json::parse(wallet, ec);
+        auto address = boost::json::value_to<std::string>(value.at("address"));
+        auto tokensBalance = value.at("tokensBalance").as_object();
+        return new WalletAccount(address, uint256_t(boost::json::value_to<std::string>(value.at("balance"))), tokensBalance, value.at("nonce").as_int64());
+    } catch (const boost::exception &o) {
+        std::cout << ec.message() << std::endl;
+        return nullptr;
+    }
 }
 
 int WalletAccount::compareNativeTokenBalance(const json::value &amount) const {

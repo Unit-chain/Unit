@@ -146,7 +146,7 @@ void BlockHandler::startBlockGenerator() {
         txThread.join();
         this->blockWriter.commit(blockBatchPtr);
         if (txBatch->HasPut()) this->transactionWriter.commit(txBatch);
-//        std::cout << "block: " << this->currentBlock->serializeBlock() << std::endl;
+        std::cout << "block: " << this->currentBlock->serializeBlock() << std::endl;
         this->previousBlock = nullptr;
         delete this->previousBlock;
         this->previousBlock = currentBlock;
