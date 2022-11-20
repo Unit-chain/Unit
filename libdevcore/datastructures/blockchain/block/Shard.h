@@ -11,6 +11,7 @@
 
 class Shard {
 public:
+    Shard() {}
     explicit Shard(const unit::vector<ValidTransaction> &transactionList) : transactionList(transactionList) {}
     std::string transactionMerkleRoot;
     unit::vector<ValidTransaction> transactionList;

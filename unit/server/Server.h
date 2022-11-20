@@ -30,14 +30,14 @@ public:
 class http_connection : public std::enable_shared_from_this<http_connection> {
 public:
     http_connection(tcp::socket socket) : socket_(std::move(socket)){}
-    http_connection(tcp::socket socket, std::string& path) : socket_(std::move(socket)), userProvider(path){}
+//    http_connection(tcp::socket socket) : socket_(std::move(socket)){}
     // Initiate the asynchronous operations associated with the connection.
-    void start(TransactionPool *transactionPool, std::string *userDBPath, std::string *historyPath, std::string *blockPath, std::string *transactionPath) {
+    void start(TransactionPool *transactionPool, const std::string &userDBPath, const std::string &historyPath, const std::string &blockPath, const std::string &transactionPath) {
         this->transactionPool = transactionPool;
-        this->userProvider = unit::BasicDB(*userDBPath);
-        this->historyProvider = unit::BasicDB(*historyPath);
-        this->blockDBProvider = unit::BasicDB(*blockPath);
-        this->transactionDBProvider = unit::BasicDB(*transactionPath);
+        this->userProvider = unit::BasicDB(userDBPath);
+        this->historyProvider = unit::BasicDB(historyPath);
+        this->blockDBProvider = unit::BasicDB(blockPath);
+        this->transactionDBProvider = unit::BasicDB(transactionPath);
         read_request();
         check_deadline();
     }
@@ -175,7 +175,7 @@ private:
 
 // "Loop" forever accepting new connections.
 void http_server(tcp::acceptor &acceptor, tcp::socket &socket, TransactionPool *transactionPool,
-                 std::string *userDBPath, std::string *historyPath, std::string *blockPath, std::string *transactionPath) {
+                 const std::string &userDBPath, const std::string &historyPath, const std::string &blockPath, const std::string &transactionPath) {
     acceptor.async_accept(socket,
                           [&, transactionPool, userDBPath, historyPath, transactionPath](beast::error_code ec){
                               if (!ec) std::make_shared<http_connection>(std::move(socket))->start(transactionPool, userDBPath, historyPath, blockPath, transactionPath);
@@ -193,7 +193,7 @@ int Server::start_server(TransactionPool *transactionPool, std::string &userDBPa
         net::io_context ioc{2};
         tcp::acceptor acceptor{ioc, {address, port}};
         tcp::socket socket{ioc};
-        http_server(acceptor, socket, transactionPool, &userDBPath, &historyPath, &blockPath, &transactionPath);
+        http_server(acceptor, socket, transactionPool, userDBPath, historyPath, blockPath, transactionPath);
         std::cout << "server started" << std::endl;
         ioc.run();
     } catch (std::exception const &e) {

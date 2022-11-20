@@ -21,6 +21,12 @@
 namespace json = boost::json;
 using namespace boost::multiprecision;
 
+std::string hexView(const uint256_t& value) {
+    std::stringstream ss;
+    ss << std::hex << value;
+    return ss.str();
+}
+
 class RawTransaction {
 public:
     virtual ~RawTransaction() = default;
@@ -95,36 +101,37 @@ public:
 
     inline void generateHash() {
         SHA3 sha3 = SHA3(SHA3::Bits256);
-        this->hash = sha3(sha3(*this->serializeToRawTransaction()));
+        this->hash = sha3(sha3(this->serializeToRawTransaction()));
     }
 
-    [[nodiscard]] inline std::shared_ptr<std::string> serializeWithoutSignatures() const {
+    [[nodiscard]] inline std::string serializeWithoutSignatures() const {
         std::stringstream ss;
-        if (type == 0)
-            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)" << std::scientific << this->amount << R"(, "type":)"
-               << this->type << R"(, "date":)" << this->date << R"(, "fee":)" << this->fee << R"(, "nonce":)" << this->nonce << R"(})";
-        else {
-            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)" << std::scientific
-               << this->amount << R"(, "type":)"
-               << this->type << R"(, "date":)" << this->date << R"(, "extradata":{)" << R"("name":")" << json::value_to<std::string>(this->extra.at("name"))
+        if (type == 0) {
+            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "type":)"
+               << this->type << R"(, "fee":)" << this->fee << R"(, "nonce":)"
+               << this->nonce << R"(, "amount":")" << "0x" << hexView(this->amount) << R"("})";
+        } else {
+            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":")" << "0x"
+               << hexView(this->amount) << R"(", "type":)"
+               << this->type << R"(, "extradata":{)" << R"("name":")" << json::value_to<std::string>(this->extra.at("name"))
                << R"(", "value":)" << RawTransaction::uint256_jv_2string(this->extra.at("value")) << R"(, "bytecode": ")" << json::value_to<std::string>(this->extra.at("bytecode"))
                << R"("})" << R"(, "fee":)" << this->fee << R"(, "nonce":)" << this->nonce << R"(})";
         }
-        return std::make_shared<std::string>(ss.str());
+        return ss.str();
     }
 
-    [[nodiscard]] inline std::shared_ptr<std::string> serializeForSending() const {
+    [[nodiscard]] inline std::string serializeForSending() const {
         std::stringstream ss;
         if (type == 0)
-            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)"
-               << this->amount << R"(, "type":)"
+            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":")" << "0x"
+               << hexView(this->amount) << R"(", "type":)"
                << this->type << R"(, "date":)" << this->date << R"(, "fee":)"
                << this->fee << R"(, "nonce":)" << this->nonce << R"(, "signature":")" << this->sign << R"(", "r":")"
                << this->r << R"(", "s":")" << this->s
                << R"("})";
         else {
-            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)"
-               << this->amount << R"(, "type":)"
+            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":")" << "0x"
+               << hexView(this->amount) << R"(", "type":)"
                << this->type << R"(, "date":)" << this->date << R"(, "extradata":{)" << R"("name":")" << json::value_to<std::string>(this->extra.at("name"))
                << R"(", "value":")" << RawTransaction::uint256_jv_2string(this->extra.at("value")) << R"(", "bytecode": ")" << json::value_to<std::string>(this->extra.at("bytecode"))
                << R"("})" << R"(, "fee":)" << this->fee << R"(, "nonce":)"
@@ -132,21 +139,21 @@ public:
                << this->r << R"(", "s":")" << this->s
                << R"("})";
         }
-        return std::make_shared<std::string>(ss.str());
+        return ss.str();
     }
 
-    [[nodiscard]] inline std::shared_ptr<std::string> serializeToRawTransaction() const {
+    [[nodiscard]] inline std::string serializeToRawTransaction() const {
         std::stringstream ss;
         if (type == 0)
-            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)"
-               << this->amount << R"(, "type":)"
+            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":")" << "0x"
+               << hexView(this->amount) << R"(", "type":)"
                << this->type << R"(, "date":)" << this->date << R"(, "fee":)"
                << this->fee << R"(, "nonce":)" << this->nonce << R"(, "signature":")" << this->sign << R"(", "r":")"
                << this->r << R"(", "s":")" << this->s
                << R"("})";
         else {
-            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)"
-               << this->amount << R"(, "type":)"
+            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":")" << "0x"
+               << hexView(this->amount) << R"(", "type":)"
                << this->type << R"(, "date":)" << this->date << R"(, "extradata":{)" << R"("name":")" << json::value_to<std::string>(this->extra.at("name"))
                << R"(", "value":")" << RawTransaction::uint256_jv_2string(this->extra.at("value")) << R"(", "bytecode": ")" << json::value_to<std::string>(this->extra.at("bytecode"))
                << R"("})" << R"(, "fee":)" << this->fee << R"(, "nonce":)"
@@ -154,21 +161,21 @@ public:
                << this->r << R"(", "s":")" << this->s
                << R"("})";
         }
-        return std::make_shared<std::string>(ss.str());
+        return ss.str();
     }
 
     [[nodiscard]] inline std::shared_ptr<std::string> serializeToJsonTransaction() const {
         std::stringstream ss;
         if (type == 0)
-            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)"
-               << this->amount << R"(, "type":)"
+            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":")" << "0x"
+               << hexView(this->amount) << R"(", "type":)"
                << this->type << R"(, "date":)" << this->date << R"(, "fee":)"
                << this->fee << R"(, "nonce":)" << this->nonce << R"(, "signature":")" << this->sign << R"(", "r":")"
                << this->r << R"(", "s":")" << this->s
                << R"("})";
         else {
-            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":)"
-               << this->amount << R"(, "type":)"
+            ss << R"({"from":")" << this->from << R"(", "to":")" << this->to << R"(", "amount":")" << "0x"
+               << hexView(this->amount) << R"(, "type":)"
                << this->type << R"(, "date":)" << this->date << R"(, "extradata":{)" << R"("name":")" << json::value_to<std::string>(this->extra.at("name"))
                << R"(", "value":")" << RawTransaction::uint256_jv_2string(this->extra.at("value")) << R"(", "bytecode": ")" << json::value_to<std::string>(this->extra.at("bytecode"))
                << R"("})" << R"(, "fee":)" << this->fee << R"(, "nonce":)"
@@ -179,31 +186,45 @@ public:
         return std::make_shared<std::string>(ss.str());
     }
 
-    static std::shared_ptr<RawTransaction> parse(boost::json::value *params) {
+    static RawTransaction parse(boost::json::value *params) {
         boost::json::object transactionRequestJson = params->as_object();
-        transactionRequestJson = transactionRequestJson["data"].as_object();
-        if (params->at("type") == 0)
-            return std::make_shared<RawTransaction>(RawTransaction(
+        transactionRequestJson = transactionRequestJson["params"].as_object();
+        auto type = boost::json::value_to<uint64_t>(transactionRequestJson.at("type"));
+        if (type == 0)
+            return {
                     boost::json::value_to<std::string>(transactionRequestJson.at("from")),
                     boost::json::value_to<std::string>(transactionRequestJson.at("to")),
                     boost::json::value_to<uint64_t>(transactionRequestJson.at("type")),
-                    boost::json::value_to<std::string>(transactionRequestJson.at("sign")),
+                    boost::json::value_to<std::string>(transactionRequestJson.at("signature")),
                     boost::json::value_to<std::string>(transactionRequestJson.at("r")),
                     boost::json::value_to<std::string>(transactionRequestJson.at("s")),
                     uint256_t(boost::json::value_to<std::string>(transactionRequestJson.at("amount"))),
                     boost::json::value_to<uint64_t>(transactionRequestJson.at("fee")),
-                    boost::json::value_to<uint64_t>(transactionRequestJson.at("nonce"))));
-        return std::make_shared<RawTransaction>(RawTransaction(
+                    boost::json::value_to<uint64_t>(transactionRequestJson.at("nonce"))};
+        return {
                 boost::json::value_to<std::string>(transactionRequestJson.at("from")),
                 boost::json::value_to<std::string>(transactionRequestJson.at("to")),
                 boost::json::value_to<uint64_t>(transactionRequestJson.at("type")),
                 transactionRequestJson.at("extradata"),
-                boost::json::value_to<std::string>(transactionRequestJson.at("sign")),
+                boost::json::value_to<std::string>(transactionRequestJson.at("signature")),
                 boost::json::value_to<std::string>(transactionRequestJson.at("r")),
                 boost::json::value_to<std::string>(transactionRequestJson.at("s")),
                 uint256_t(boost::json::value_to<std::string>(transactionRequestJson.at("amount"))),
                 boost::json::value_to<uint64_t>(transactionRequestJson.at("fee")),
-                boost::json::value_to<uint64_t>(transactionRequestJson.at("nonce"))));
+                boost::json::value_to<uint64_t>(transactionRequestJson.at("nonce"))};
+    }
+
+    [[maybe_unused]] static RawTransaction parseToGenesis(const std::string& serializedTx) {
+        boost::json::value transactionRequestJson = boost::json::parse(serializedTx);
+        return {boost::json::value_to<std::string>(transactionRequestJson.at("from")),
+                boost::json::value_to<std::string>(transactionRequestJson.at("to")),
+                boost::json::value_to<uint64_t>(transactionRequestJson.at("type")),
+                boost::json::value_to<std::string>(transactionRequestJson.at("signature")),
+                boost::json::value_to<std::string>(transactionRequestJson.at("r")),
+                boost::json::value_to<std::string>(transactionRequestJson.at("s")),
+                uint256_t(boost::json::value_to<std::string>(transactionRequestJson.at("amount"))),
+                boost::json::value_to<uint64_t>(transactionRequestJson.at("fee")),
+                boost::json::value_to<uint64_t>(transactionRequestJson.at("nonce"))};
     }
 
     void setConfirmations(uint32_t confirmations) {

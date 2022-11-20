@@ -64,7 +64,7 @@ void BlockHandler::startBlockGenerator() {
     if (this->currentBlock == nullptr) currentBlock = new Block();
     while (true) {
         if (this->previousBlock != nullptr) {
-            std::optional<Shard> opShard = (!shardList->empty()) ? std::optional<Shard>(shardList->back())
+            std::optional<Shard> opShard = (!shardList->empty()) ? std::optional<Shard>(shardList->front())
                                                                  : std::nullopt;
             uint64_t index = ++this->previousBlock->blockHeader.index;
             this->blockBuilder.setBlock(this->currentBlock)
@@ -89,29 +89,24 @@ void BlockHandler::startBlockGenerator() {
                 std::string dbResponse = this->blockWriter.get(currentBlockKey);
                 boost::json::value blockFromDB = boost::json::parse(dbResponse);
                 parentHash = boost::json::value_to<std::string>(blockFromDB.at("hash"));
-                std::optional<Shard> opShard = (!shardList->empty()) ? std::optional<Shard>(shardList->front())
-                                                                     : std::nullopt;
-                auto index = boost::json::value_to<uint64_t>(blockFromDB.at("index"));
                 this->blockBuilder.setBlock(this->currentBlock)
                         ->setPreviousHash(parentHash)
                         ->setTime(std::chrono::duration_cast<std::chrono::nanoseconds>(
                                 std::chrono::system_clock::now().time_since_epoch()).count())
                         ->setVersion(1) /// previous version was implemented earlier. Now it's second version, e.g 1
-                        ->setIndex(++index)
+                        ->setIndex(boost::json::value_to<uint64_t>(blockFromDB.at("index")))
                         ->setNonce(0) /// while no consensus implemented
                         ->setEpoch("0x0") /// while no consensus implemented
                         ->setBlockHeader()
                         ->setMessage("test block")
                         ->setRewardProverAddress(addressP)
-                        ->insertShard(opShard)
                         ->generateHash()
                         ->generateRoot()
                         ->setProverSign()
                         ->build();
-                if (opShard.has_value()) shardList->pop_back();
             } catch (std::exception &e) {
                 parentHash = "genesis";
-                std::optional<Shard> opShard = (!shardList->empty()) ? std::optional<Shard>(shardList->back())
+                std::optional<Shard> opShard = (!shardList->empty()) ? std::optional<Shard>(shardList->front())
                                                                      : std::nullopt;
                 unit::vector<ValidTransaction> genesisList{};
                 RawTransaction rawTransaction = RawTransaction::parseToGenesis(R"({"from": "UNTCoinbase","to": "UNTxPFeHHV1vu84dB2g6TLK5RT3pbPA","amount": "0x55730","type": 0,"signature": "null","r": "null","s": "null","nonce": 0,"fee":0})");
@@ -139,8 +134,8 @@ void BlockHandler::startBlockGenerator() {
         }
         std::shared_ptr<rocksdb::WriteBatch> txBatch = unit::BasicDB::getBatch();
         std::thread txThread(DBStaticWriter::setTxBatch, this->currentBlock, txBatch.get(),
-                             &this->userWriter, &this->tokenWriter, &this->historyWriter);
-        std::shared_ptr<rocksdb::WriteBatch> blockBatchPtr = unit::BasicDB::getBatch();
+                             &this->userWriter, &this->tokenWriter, &this->historyWriter, &(this->currentBlock->blockHeader.size));
+        std::shared_ptr<rocksdb::WriteBatch> blockBatchPtr = DBWriter::getBatch();
         blockBatchPtr->Put(rocksdb::Slice(this->currentBlock->blockHeader.hash), rocksdb::Slice(this->currentBlock->serializeBlock()));
         blockBatchPtr->Put(rocksdb::Slice(this->currentBlockKey), rocksdb::Slice(this->currentBlock->serializeBlock()));
         txThread.join();

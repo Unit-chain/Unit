@@ -23,50 +23,60 @@ using namespace boost::multiprecision;
 
 class WalletAccount : public AbstractAccount {
 public:
-    WalletAccount() = default;
+    WalletAccount() {
+        this->tokensBalance = boost::json::parse("{}");
+    }
     WalletAccount(std::string address, uint256_t balance, boost::json::object tokensBalance, const json::array& txOutputs,
                   const json::array& txInputs, uint64_t nonce) : address(std::move(address)), balance(std::move(balance)), txOutputs(txOutputs.storage()),
-                                                              txInputs(txInputs.storage()), tokensBalance(std::move(tokensBalance)), nonce(nonce) {}
+                                                              txInputs(txInputs.storage()), tokensBalance(std::move(tokensBalance)), nonce(nonce) {
+        this->tokensBalance = boost::json::parse("{}");
+    }
     WalletAccount(std::string address, uint256_t balance, json::object tokensBalance);
     WalletAccount(std::string address, uint256_t balance, json::object tokensBalance, uint64_t nonce);
     explicit WalletAccount(std::string address) : address(std::move(address)) {
+        this->tokensBalance = boost::json::parse("{}");
         this->balance = 0;
         this->nonce = 0;
     }
-    virtual ~WalletAccount() = default;
 
     std::string address;
     uint256_t balance{};
-    uint64_t nonce;
-    json::object tokensBalance{};
-    json::array txOutputs{};
-    json::array txInputs{};
+    uint64_t nonce = 0;
+    boost::json::value tokensBalance;
+    boost::json::array txOutputs;
+    boost::json::array txInputs;
     bool changed = false;
 
-    static std::optional<std::shared_ptr<WalletAccount>> parseWallet(std::string *ptr);
-    static WalletAccount* createEmptyWallet(const std::string &);
-    bool parseHistory(std::string *ptr);
+    static std::optional<WalletAccount> parseWallet(std::string *ptr);
+    static WalletAccount createEmptyWallet(const std::string &);
+    static WalletAccount *createEmptyPtrWallet(const std::string &address);
+    static WalletAccount *createPtrWallet(const std::string &wallet);
+    bool parseHistory(const std::string& ptr);
     operationStatus::WalletErrorsCode subtract(const uint256_t& value, const std::string& outputHash);
     operationStatus::WalletErrorsCode subtractToken(const uint256_t& value, const std::string& inputHash, const std::string &tokenName);
     void increase(const uint256_t& value, const std::string& inputHash);
     void increaseToken(const uint256_t& value, const std::string& inputHash, const std::string &tokenName);
-    void setTxOutputs(const json::array &txOutputs);
-    void setTxInputs(const json::array &txInputs);
     bool isValidNonce(RawTransaction *rawPointer) const;
     int compareNativeTokenBalance(const json::value &amount) const;
     int compareTokenBalance(const json::value &amount, const json::value &tokenName);
     [[nodiscard]] std::string serialize() const;
+
     [[nodiscard]] std::string serializeHistory() const;
+
+    void setTxInputs(const json::array &txInputs);
+
+    void setTxOutputs(const json::value &txOutputs);
 };
 
-std::optional<std::shared_ptr<WalletAccount>> WalletAccount::parseWallet(std::string *ptr) {
+std::optional<WalletAccount> WalletAccount::parseWallet(std::string *ptr) {
     if (ptr == nullptr) return std::nullopt;
+    std::cout << *ptr << std::endl;
     json::error_code ec;
     try {
         json::value value = json::parse(*ptr, ec);
         auto address = boost::json::value_to<std::string>(value.at("address"));
         auto tokensBalance = value.at("tokensBalance").as_object();
-        return std::make_shared<WalletAccount>(WalletAccount(address, uint256_t(boost::json::value_to<std::string>(value.at("balance"))), tokensBalance, value.at("nonce").as_int64()));
+        return WalletAccount(address, uint256_t(boost::json::value_to<std::string>(value.at("balance"))), tokensBalance, value.at("nonce").as_int64());
     } catch (const boost::exception &o) {
         std::cout << ec.message() << std::endl;
         return std::nullopt;
@@ -76,9 +86,10 @@ std::optional<std::shared_ptr<WalletAccount>> WalletAccount::parseWallet(std::st
 std::string WalletAccount::serialize() const {
     std::stringstream ss;
     std::stringstream balanceSS;
-    balanceSS << std::hex << this->balance;
-    ss << R"({"address":")" << this->address << R"(", "balance":")" << balanceSS.str() << R"(", "nonce":)" << this->nonce << ((tokensBalance.empty()) ? "}" : ", ");
-    if (!tokensBalance.empty()) ss << R"("tokensBalance":)" << boost::json::serialize(this->tokensBalance) << "}";
+    balanceSS << "0x" << std::hex << this->balance;
+    ss << R"({"address":")" << this->address << R"(", "balance":")" << balanceSS.str() << R"(", "nonce":)" << this->nonce;
+    if (!tokensBalance.is_null()) ss << R"(, "tokensBalance":)" << this->tokensBalance;
+    ss << "}";
     return ss.str();
 }
 
@@ -97,40 +108,32 @@ operationStatus::WalletErrorsCode WalletAccount::subtract(const uint256_t& value
 }
 
 operationStatus::WalletErrorsCode WalletAccount::subtractToken(const uint256_t& value, const std::string &inputHash, const std::string &tokenName) {
-    if (!this->tokensBalance.contains(tokenName)) return operationStatus::WalletErrorsCode::cTokenBalanceNotFound;
-    if (uint256_t(boost::json::value_to<std::string>(this->tokensBalance[tokenName])) < value) return operationStatus::WalletErrorsCode::cLowTokenBalance;
-    this->tokensBalance[tokenName] = WalletAccount::uint256_diff_2string(uint256_t(boost::json::value_to<std::string>(this->tokensBalance[tokenName])), value); // (a - b).toString();
+    if (!this->tokensBalance.as_object().contains(tokenName)) return operationStatus::WalletErrorsCode::cTokenBalanceNotFound;
+    if (uint256_t(boost::json::value_to<std::string>(this->tokensBalance.as_object()[tokenName])) < value) return operationStatus::WalletErrorsCode::cLowTokenBalance;
+    this->tokensBalance.as_object()[tokenName] = WalletAccount::uint256_diff_2string(uint256_t(boost::json::value_to<std::string>(this->tokensBalance.as_object()[tokenName])), value); // (a - b).toString();
     this->changed = true;
     return operationStatus::WalletErrorsCode::cOk;
-    #if 0
-            boost::json::object object = boost::json::parse(R"({"test":{}})").as_object();
-            object["test"].as_object()["token"] = 12123.123;
-            object["test"].as_object()["token2"] = 123.123;
-            object["test"].as_object()["token3"] = 123.123;
-            auto str = boost::json::serialize(object);
-            std::cout << str << std::endl;
-    #endif
 }
 
 void WalletAccount::increaseToken(const uint256_t& value, const std::string &inputHash, const std::string &tokenName) {
-    if (!this->tokensBalance.contains(tokenName)) {
-        this->tokensBalance[tokenName] = WalletAccount::uint256_2string(value);
+    if (!this->tokensBalance.as_object().contains(tokenName)) {
+        this->tokensBalance.as_object()[tokenName] = WalletAccount::uint256_2string(value);
         this->changed = true;
         return;
     }
-    this->tokensBalance[tokenName] = WalletAccount::uint256_sum_2string(uint256_t(boost::json::value_to<std::string>(this->tokensBalance[tokenName])), value);
+    this->tokensBalance.as_object()[tokenName] = WalletAccount::uint256_sum_2string(uint256_t(boost::json::value_to<std::string>(this->tokensBalance.as_object()[tokenName])), value);
     this->changed = true;
 }
 
 WalletAccount::WalletAccount(std::string address, uint256_t balance, json::object tokensBalance) : address(std::move(
-        address)), balance(std::move(balance)), tokensBalance(std::move(tokensBalance)) {}
+        address)), balance(std::move(balance)), tokensBalance(std::move(tokensBalance)) {
+    this->tokensBalance = boost::json::parse("{}");
+}
 
-bool WalletAccount::parseHistory(std::string *ptr) {
-    if (ptr == nullptr) return false;
+bool WalletAccount::parseHistory(const std::string& ptr) {
     json::error_code ec;
     try {
-        json::value value = json::parse(*ptr, ec);
-        std::cout << value << std::endl;
+        json::value value = json::parse(ptr, ec);
         this->txOutputs = value.at("out").as_array();
         this->txInputs = value.at("in").as_array();
         return true;
@@ -140,7 +143,7 @@ bool WalletAccount::parseHistory(std::string *ptr) {
     }
 }
 
-void WalletAccount::setTxOutputs(const json::array &txOutputs) {
+void WalletAccount::setTxOutputs(const json::value &txOutputs) {
     WalletAccount::txOutputs = boost::json::array(txOutputs.storage());
 }
 
@@ -155,14 +158,31 @@ std::string WalletAccount::serializeHistory() const {
 }
 
 WalletAccount::WalletAccount(std::string address, uint256_t balance, json::object tokensBalance, uint64_t nonce) : address(std::move(
-        address)), balance(std::move(balance)), tokensBalance(std::move(tokensBalance)), nonce(nonce) {}
+        address)), balance(std::move(balance)), tokensBalance(std::move(tokensBalance)), nonce(nonce) {
+    this->tokensBalance = boost::json::parse("{}");
+}
 
 bool WalletAccount::isValidNonce(RawTransaction *rawPointer) const {
     return this->nonce != rawPointer->nonce;
 }
 
-WalletAccount* WalletAccount::createEmptyWallet(const std::string &address) {
-    return std::make_shared<WalletAccount>(WalletAccount()).get();
+WalletAccount WalletAccount::createEmptyWallet(const std::string &address) {
+    return WalletAccount(address);
+}
+WalletAccount *WalletAccount::createEmptyPtrWallet(const std::string &address) {
+    return new WalletAccount(address);
+}
+WalletAccount *WalletAccount::createPtrWallet(const std::string &wallet) {
+    json::error_code ec;
+    try {
+        json::value value = json::parse(wallet, ec);
+        auto address = boost::json::value_to<std::string>(value.at("address"));
+        auto tokensBalance = value.at("tokensBalance").as_object();
+        return new WalletAccount(address, uint256_t(boost::json::value_to<std::string>(value.at("balance"))), tokensBalance, value.at("nonce").as_int64());
+    } catch (const boost::exception &o) {
+        std::cout << ec.message() << std::endl;
+        return nullptr;
+    }
 }
 
 int WalletAccount::compareNativeTokenBalance(const json::value &amount) const {
@@ -172,7 +192,7 @@ int WalletAccount::compareNativeTokenBalance(const json::value &amount) const {
 
 int WalletAccount::compareTokenBalance(const json::value &amount, const json::value &tokenName) {
     uint256_t amountOfTokens = uint256_t(boost::json::value_to<std::string>(amount));
-    uint256_t amountOfTokensInBalance = uint256_t(boost::json::value_to<std::string>(this->tokensBalance[boost::json::value_to<std::string>(tokenName)]));
+    uint256_t amountOfTokensInBalance = uint256_t(boost::json::value_to<std::string>(this->tokensBalance.as_object()[boost::json::value_to<std::string>(tokenName)]));
     return (amountOfTokensInBalance < amountOfTokens) ? -1 : (amountOfTokensInBalance > amountOfTokens) ? 1 : 0;
 }
 

@@ -22,6 +22,7 @@ namespace unit {
         typedef typename std::list<T, Allocator>::difference_type difference_type;
 
         explicit list( const Allocator & alloc = Allocator() ) : storage( alloc ) { }
+        explicit list(std::list<T, Allocator> list) : storage( list ) { }
         explicit list( size_type n, const T & value = T(), const Allocator & alloc = Allocator() ) : storage( n, value, alloc ) { }
         template <class InputIterator> list( InputIterator first, InputIterator last, const Allocator & alloc = Allocator() ) : storage( first, last, alloc ) { }
         list( const unit::list<T, Allocator> & x ) { std::lock_guard<std::mutex> lock(x.mutex ); storage = x.storage; }

@@ -23,6 +23,7 @@ namespace unit::error {
         [[nodiscard]] const char * what() const noexcept override { return "DB invalid argument"; }
     };
     class DBIOError : public std::exception {
+    public:
         [[nodiscard]] const char * what() const noexcept override { return "DB IO error"; }
     };
     class DBDefault : public std::exception {
