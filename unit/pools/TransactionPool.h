@@ -7,17 +7,17 @@
 #include "iostream"
 #include "TransactionPoolErrors.h"
 #include "../libdevcore/datastructures/containers/vector.h"
-#include "../libdevcore/datastructures/blockchain/transaction/ValidTransaction.h"
+#include "../libdevcore/datastructures/blockchain/transaction/Transaction.h"
 
 class TransactionPool {
 public:
     TransactionPool() = default;
-    void emplaceBack(const ValidTransaction& validTransaction);
-    void dropTransaction(ValidTransaction &validTransaction);
+    void emplaceBack(const Transaction& validTransaction);
+    void dropTransaction(Transaction &validTransaction);
     /// will be dropped transactions in: [vector::begin(); vector::begin()+tillPosition)
     void dropTransactions(uint64_t tillPosition);
-    std::variant<ValidTransaction, std::exception> getTransaction(uint64_t index);
-    const unit::vector<ValidTransaction> *getTxPool() const { return &this->transactionPool; }
+    std::variant<Transaction, std::exception> getTransaction(uint64_t index);
+    const unit::vector<Transaction> *getTxPool() const { return &this->transactionPool; }
     uint64_t getPoolSize();
 
     /// Errors checking
@@ -32,20 +32,20 @@ public:
     inline static bool isSameError(U &u, V &v) { return std::is_same_v<U, V>; }
 private:
     mutable std::mutex mutex;
-    unit::vector<ValidTransaction> transactionPool{};
+    unit::vector<Transaction> transactionPool{};
 };
 
-void TransactionPool::emplaceBack(const ValidTransaction& validTransaction) {
+void TransactionPool::emplaceBack(const Transaction& validTransaction) {
     std::lock_guard<std::mutex> lock(mutex);
     this->transactionPool.emplace_back(validTransaction);
 }
 
-void TransactionPool::dropTransaction(ValidTransaction &validTransaction) {
+void TransactionPool::dropTransaction(Transaction &validTransaction) {
     std::lock_guard<std::mutex> lock(mutex);
     this->transactionPool.remove(validTransaction);
 }
 
-std::variant<ValidTransaction, std::exception> TransactionPool::getTransaction(uint64_t index) {
+std::variant<Transaction, std::exception> TransactionPool::getTransaction(uint64_t index) {
     std::lock_guard<std::mutex> lock(mutex);
     if (index > this->transactionPool.size()) return unit::error::OutOfPoolRange();
     return this->transactionPool.at(index);

@@ -10,7 +10,7 @@
 #include "sstream"
 #include "BlockHeader.h"
 #include "Shard.h"
-#include "../transaction/ValidTransaction.h"
+#include "../transaction/Transaction.h"
 #include "../../containers/list.h"
 #include "../../containers/vector.h"
 #include "../../trees/MerkleTree.h"
@@ -61,7 +61,7 @@ public:
 
     void setRewardProverAddress(const std::string &rewardProverAddress);
 
-    void setTxList(const unit::vector<ValidTransaction> &txList);
+    void setTxList(const unit::vector<Transaction> &txList);
 
     std::string getReward() const;
 

@@ -14,7 +14,7 @@
 #include "../../../global/GlobalVariables.h"
 #include "../../../global/errors/WalletErrors.h"
 #include "../../bip44/utils.hpp"
-#include "../request/RawTransaction.h"
+#include "../blockchain/transaction/Transaction.h"
 #include "AbstractAccount.h"
 
 
@@ -56,7 +56,7 @@ public:
     operationStatus::WalletErrorsCode subtractToken(const uint256_t& value, const std::string& inputHash, const std::string &tokenName);
     void increase(const uint256_t& value, const std::string& inputHash);
     void increaseToken(const uint256_t& value, const std::string& inputHash, const std::string &tokenName);
-    bool isValidNonce(RawTransaction *rawPointer) const;
+    bool isValidNonce(Transaction *rawPointer) const;
     int compareNativeTokenBalance(const json::value &amount) const;
     int compareTokenBalance(const json::value &amount, const json::value &tokenName);
     [[nodiscard]] std::string serialize() const;
@@ -70,7 +70,6 @@ public:
 
 std::optional<WalletAccount> WalletAccount::parseWallet(std::string *ptr) {
     if (ptr == nullptr) return std::nullopt;
-    std::cout << *ptr << std::endl;
     json::error_code ec;
     try {
         json::value value = json::parse(*ptr, ec);
@@ -162,7 +161,7 @@ WalletAccount::WalletAccount(std::string address, uint256_t balance, json::objec
     this->tokensBalance = boost::json::parse("{}");
 }
 
-bool WalletAccount::isValidNonce(RawTransaction *rawPointer) const {
+bool WalletAccount::isValidNonce(Transaction *rawPointer) const {
     return this->nonce != rawPointer->nonce;
 }
 

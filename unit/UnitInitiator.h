@@ -37,9 +37,9 @@ public:
     BasicLocalShardInserter shardInserter = BasicLocalShardInserter(shardList, transactionPool, *bip44Result);
     shardInserter.shardFactory();
 }
-[[noreturn]] void transactionServerHandler(TransactionPool *transactionPool, std::string &userDBPath, std::string &historyPath,
+[[noreturn]] void transactionServerHandler(TransactionPool *transactionPool, PendingPool *pool, std::string &userDBPath, std::string &historyPath,
                                            std::string &blockPath, std::string &transactionPath) {
-    Server::start_server(transactionPool, userDBPath, historyPath, blockPath, transactionPath);
+    Server::start_server(transactionPool, pool, userDBPath, historyPath, blockPath, transactionPath);
 }
 
 class UnitInitiator {
@@ -142,13 +142,14 @@ void UnitInitiator::init(int argc, std::string argv[42]) {
     BIP44Result bip44Result = bip44.generateAddress(bip39Result, 0, EXTERNAL_CHANGE, std::stoi((flagsValues.at("--walletIndex"))));
     unit::list<Shard> shardList{};
     TransactionPool transactionPool{};
+    PendingPool pendingPool{};
     Block *previous = nullptr;
     std::thread blockTh(blockHandlingHandler, std::ref(flagsValues.at("--blockPath")),  std::ref(flagsValues.at("--userpath")),
                         std::ref(flagsValues.at("--transactionPath")),  std::ref(flagsValues.at("--historyPath")),  std::ref(flagsValues.at("--tokenPath")), std::ref(bip44Result), &shardList);
     blockTh.detach();
     std::thread shardTh(shardInserterHandler, &shardList, &transactionPool, &bip44Result);
     shardTh.detach();
-    std::thread serverTh(transactionServerHandler, &transactionPool, std::ref(flagsValues.at("--userpath")), std::ref(flagsValues.at("--historyPath")),
+    std::thread serverTh(transactionServerHandler, &transactionPool, &pendingPool, std::ref(flagsValues.at("--userpath")), std::ref(flagsValues.at("--historyPath")),
                          std::ref(flagsValues.at("--blockPath")), std::ref(flagsValues.at("--transactionPath")));
     serverTh.detach();
     while (true) {}

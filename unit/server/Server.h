@@ -14,6 +14,7 @@
 #include "ServerIncludes.h"
 #include "RpcFilterChain.h"
 #include "../pools/TransactionPool.h"
+#include "../pools/PendingPool.h"
 #include "../libdevcore/datastructures/containers/list.h"
 #include "../libdevcore/datastructures/blockchain/block/Block.h"
 #include "../libdevcore/datastructures/containers/vector.h"
@@ -23,7 +24,7 @@
 
 class Server {
 public:
-    static int start_server(TransactionPool *transactionPool, std::string &userDBPath, std::string &historyPath, std::string &blockPath, std::string &transactionPath);
+    static int start_server(TransactionPool *transactionPool, PendingPool *pool, std::string &userDBPath, std::string &historyPath, std::string &blockPath, std::string &transactionPath);
 };
 
 
@@ -32,12 +33,13 @@ public:
     http_connection(tcp::socket socket) : socket_(std::move(socket)){}
 //    http_connection(tcp::socket socket) : socket_(std::move(socket)){}
     // Initiate the asynchronous operations associated with the connection.
-    void start(TransactionPool *transactionPool, const std::string &userDBPath, const std::string &historyPath, const std::string &blockPath, const std::string &transactionPath) {
+    void start(TransactionPool *transactionPool, PendingPool *pool, const std::string &userDBPath, const std::string &historyPath, const std::string &blockPath, const std::string &transactionPath) {
         this->transactionPool = transactionPool;
         this->userProvider = unit::BasicDB(userDBPath);
         this->historyProvider = unit::BasicDB(historyPath);
         this->blockDBProvider = unit::BasicDB(blockPath);
         this->transactionDBProvider = unit::BasicDB(transactionPath);
+        this->pendingPool = pool;
         read_request();
         check_deadline();
     }
@@ -51,8 +53,10 @@ private:
     unit::BasicDB blockDBProvider{};
     // database provider for transaction DB
     unit::BasicDB transactionDBProvider{};
-    // pointer to tx deque
+    // pointer to tx pool
     TransactionPool *transactionPool;
+    // pointer to tx pool
+    PendingPool *pendingPool;
     // The socket for the currently connected client.
     tcp::socket socket_;
     // The buffer for performing reads.
@@ -174,27 +178,38 @@ private:
 };
 
 // "Loop" forever accepting new connections.
-void http_server(tcp::acceptor &acceptor, tcp::socket &socket, TransactionPool *transactionPool,
+void http_server(tcp::acceptor &acceptor, tcp::socket &socket, TransactionPool *transactionPool, PendingPool *pool,
                  const std::string &userDBPath, const std::string &historyPath, const std::string &blockPath, const std::string &transactionPath) {
     acceptor.async_accept(socket,
                           [&, transactionPool, userDBPath, historyPath, transactionPath](beast::error_code ec){
-                              if (!ec) std::make_shared<http_connection>(std::move(socket))->start(transactionPool, userDBPath, historyPath, blockPath, transactionPath);
-                              http_server(acceptor, socket, transactionPool, userDBPath, historyPath, blockPath, transactionPath);
+                              if (!ec) std::make_shared<http_connection>(std::move(socket))->start(transactionPool, pool, userDBPath, historyPath, blockPath, transactionPath);
+                              http_server(acceptor, socket, transactionPool, pool, userDBPath, historyPath, blockPath, transactionPath);
                           });
 }
 
-int Server::start_server(TransactionPool *transactionPool, std::string &userDBPath,
+int Server::start_server(TransactionPool *transactionPool, PendingPool *pool, std::string &userDBPath,
                          std::string &historyPath, std::string &blockPath, std::string &transactionPath) {
     rerun_server:;
     try {
         std::string ip_address = LOCAL_IP;
         auto const address = net::ip::make_address(ip_address);
         uint16_t port = PORT;
-        net::io_context ioc{2};
+        net::io_context ioc{1};
         tcp::acceptor acceptor{ioc, {address, port}};
         tcp::socket socket{ioc};
-        http_server(acceptor, socket, transactionPool, userDBPath, historyPath, blockPath, transactionPath);
+        http_server(acceptor, socket, transactionPool, pool, userDBPath, historyPath, blockPath, transactionPath);
         std::cout << "server started" << std::endl;
+        auto const threads = (int) std::thread::hardware_concurrency() / 2;
+        net::signal_set signals(ioc, SIGINT, SIGTERM);
+        std::vector<std::thread> v;
+        v.reserve(threads - 1);
+        for (auto i = threads - 1; i > 0; --i)
+            v.emplace_back(
+                    [&ioc] {
+                        ioc.run();
+                    });
+        ioc.run();
+        for(auto& t : v) t.join();
         ioc.run();
     } catch (std::exception const &e) {
         std::cerr << "Error: " << e.what() << std::endl;

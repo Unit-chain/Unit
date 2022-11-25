@@ -14,7 +14,7 @@
 #include "boost/unordered_map.hpp"
 #include "boost/unordered/unordered_set.hpp"
 
-#include "DBStaticWriter.h"
+#include "TransactionProcessor.h"
 #include "../global/GlobalVariables.h"
 #include "../libdevcore/datastructures/concurrency/DBWriter.h"
 #include "../libdevcore/db/DB.h"
@@ -86,7 +86,7 @@ void BlockHandler::startBlockGenerator() {
             if (opShard.has_value()) shardList->pop_back();
         } else {
             try {
-                std::string dbResponse = this->blockWriter.get(currentBlockKey);
+                std::string dbResponse = this->blockWriter.getWithIO(currentBlockKey);
                 boost::json::value blockFromDB = boost::json::parse(dbResponse);
                 parentHash = boost::json::value_to<std::string>(blockFromDB.at("hash"));
                 this->blockBuilder.setBlock(this->currentBlock)
@@ -108,10 +108,10 @@ void BlockHandler::startBlockGenerator() {
                 parentHash = "genesis";
                 std::optional<Shard> opShard = (!shardList->empty()) ? std::optional<Shard>(shardList->front())
                                                                      : std::nullopt;
-                unit::vector<ValidTransaction> genesisList{};
-                RawTransaction rawTransaction = RawTransaction::parseToGenesis(R"({"from": "UNTCoinbase","to": "UNTxPFeHHV1vu84dB2g6TLK5RT3pbPA","amount": "0x55730","type": 0,"signature": "null","r": "null","s": "null","nonce": 0,"fee":0})");
+                unit::vector<Transaction> genesisList{};
+                Transaction rawTransaction = Transaction::parseToGenesis(R"({"from": "UNTCoinbase","to": "UNTxPFeHHV1vu84dB2g6TLK5RT3pbPA","amount": "0x55730","type": 0,"signature": "null","r": "null","s": "null","nonce": 0,"fee":0})");
                 rawTransaction.generateHash();
-                genesisList.emplace_back(ValidTransaction(rawTransaction));
+                genesisList.emplace_back(rawTransaction);
                 Shard genesisShard = Shard(genesisList);
                 this->currentBlock->emplaceBack(genesisShard);
                 this->blockBuilder.setBlock(this->currentBlock)
@@ -133,12 +133,12 @@ void BlockHandler::startBlockGenerator() {
             }
         }
         std::shared_ptr<rocksdb::WriteBatch> txBatch = unit::BasicDB::getBatch();
-        std::thread txThread(DBStaticWriter::setTxBatch, this->currentBlock, txBatch.get(),
+        std::thread txThread(TransactionProcessor::setTxBatch, this->currentBlock, txBatch.get(),
                              &this->userWriter, &this->tokenWriter, &this->historyWriter, &(this->currentBlock->blockHeader.size));
         std::shared_ptr<rocksdb::WriteBatch> blockBatchPtr = DBWriter::getBatch();
+        txThread.join();
         blockBatchPtr->Put(rocksdb::Slice(this->currentBlock->blockHeader.hash), rocksdb::Slice(this->currentBlock->serializeBlock()));
         blockBatchPtr->Put(rocksdb::Slice(this->currentBlockKey), rocksdb::Slice(this->currentBlock->serializeBlock()));
-        txThread.join();
         this->blockWriter.commit(blockBatchPtr);
         if (txBatch->HasPut()) this->transactionWriter.commit(txBatch);
         std::cout << "block: " << this->currentBlock->serializeBlock() << std::endl;

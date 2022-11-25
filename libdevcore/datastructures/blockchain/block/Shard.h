@@ -5,16 +5,16 @@
 #ifndef UNIT_SHARD_H
 #define UNIT_SHARD_H
 #include "../../containers/list.h"
-#include "../transaction/ValidTransaction.h"
+#include "../transaction/Transaction.h"
 #include "../../../crypto/SHA3/sha3.h"
 #include "../../trees/MerkleTree.h"
 
 class Shard {
 public:
     Shard() {}
-    explicit Shard(const unit::vector<ValidTransaction> &transactionList) : transactionList(transactionList) {}
+    explicit Shard(const unit::vector<Transaction> &transactionList) : transactionList(transactionList) {}
     std::string transactionMerkleRoot;
-    unit::vector<ValidTransaction> transactionList;
+    unit::vector<Transaction> transactionList;
     std::string shardID;
     std::string signature;
     std::string rP;
@@ -26,21 +26,25 @@ public:
     void setTransactionMerkleRoot() {
         std::vector<std::string> transactionsHash;
         transactionsHash.reserve(transactionList.size());
-        for (auto &it : transactionList) transactionsHash.emplace_back(it.hash);
+        for (auto &it : transactionList) if (!it.hash.empty()) transactionsHash.emplace_back(it.hash);
         MerkleTree merkleTree = MerkleTree(transactionsHash);
         this->transactionMerkleRoot = merkleTree.get_root();
     }
 
-    const unit::vector<ValidTransaction> &getTransactionList() const {
+    const unit::vector<Transaction> &getTransactionList() const {
         return transactionList;
     }
 
-    void setTransactionList(const unit::vector<ValidTransaction> &transactionList) {
+    void setTransactionList(const unit::vector<Transaction> &transactionList) {
         Shard::transactionList = transactionList;
     }
 
     const std::string &getShardId() const {
         return shardID;
+    }
+
+    inline void insertList(const unit::vector<Transaction> &list) {
+        this->transactionList.insert(this->transactionList.begin(), list.begin(), list.end());
     }
 
     Shard *setShardId(const std::string &address) {
@@ -49,8 +53,8 @@ public:
         return this;
     }
 
-    void emplaceBack(ValidTransaction &validTransaction) {
-        this->transactionList.emplace_back(validTransaction);
+    void emplaceBack(Transaction &Transaction) {
+        this->transactionList.emplace_back(Transaction);
     }
 
     std::string serializeTransactions() {

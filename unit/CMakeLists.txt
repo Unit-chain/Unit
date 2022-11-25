@@ -36,10 +36,9 @@ add_executable(unit
         libdevcore/bip44/base58.hpp
         libdevcore/bip44/addresses.hpp
         libdevcore/bip44/utils.hpp
-        libdevcore/datastructures/request/RawTransaction.h
+        libdevcore/datastructures/blockchain/transaction/Transaction.h
         libdevcore/utils/StringUtil.h
         libdevcore/utils/StringUtil.cpp
-        libdevcore/datastructures/blockchain/transaction/ValidTransaction.h
         libdevcore/pointers/lazy_pointer.h
         libdevcore/datastructures/blockchain/block/Block.h
         libdevcore/datastructures/blockchain/block/Block.h
@@ -59,14 +58,14 @@ add_executable(unit
         global/errors/WalletErrors.h
         global/GlobalVariables.h
         blockHandler/BlockHandler.h
-        blockHandler/DBStaticWriter.h
+        blockHandler/TransactionProcessor.h
         server/Server.h
         server/RpcMethod.h
         server/ServerIncludes.h
         server/RpcFilterChain.h
         server/RpcExceptions.h
         pools/TransactionPool.h
-        pools/TransactionPoolErrors.h blockHandler/ShardInserter.h UnitInitiator.h)
+        pools/TransactionPoolErrors.h blockHandler/ShardInserter.h UnitInitiator.h pools/PendingPool.h)
 
 if(LINUX)
     message(STATUS ">>> Linux found")

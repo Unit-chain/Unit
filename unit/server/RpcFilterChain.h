@@ -16,7 +16,7 @@
 #include "../pools/TransactionPool.h"
 #include "../libdevcore/bip44/ecdsa.hpp"
 #include "../libdevcore/datastructures/account/WalletAccount.h"
-#include "../libdevcore/datastructures/blockchain/transaction/ValidTransaction.h"
+#include "../libdevcore/datastructures/blockchain/transaction/Transaction.h"
 
 class RpcFilterChain {
 public:
@@ -72,7 +72,7 @@ protected:
 };
 
 void BasicTransactionRpcFilter::filter(boost::json::value *parameter) {
-    RawTransaction rawTransaction = RawTransaction::parse(parameter);
+    Transaction rawTransaction = Transaction::parse(parameter);
     auto sender = boost::json::value_to<std::string>(parameter->at("params").at("from"));
     std::variant<std::string, std::exception> dbResponse = this->userProvider->get(sender);
     if (std::holds_alternative<std::exception>(dbResponse)) {
@@ -103,7 +103,7 @@ void BasicTransactionRpcFilter::filter(boost::json::value *parameter) {
         throw RpcLowBalanceException();
     }
     rawTransaction.generateHash();
-    this->transactionPool->emplaceBack(ValidTransaction(rawTransaction));
+    this->transactionPool->emplaceBack(rawTransaction);
     int id = boost::json::value_to<int>(parameter->at("id"));
     create_success_response(rpcResponse::processSimpleStringResponse(rawTransaction.hash, id), this->response);
 }

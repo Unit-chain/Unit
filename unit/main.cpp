@@ -20,7 +20,7 @@
     #include "libdevcore/db/DBProvider.h"
     #include "libdevcore/datastructures/account/WalletAccount.h"
     #include "libdevcore/datastructures/blockchain/transaction/ValidTransaction.h"
-    #include "libdevcore/datastructures/request/RawTransaction.h"
+    #include "libdevcore/datastructures/request/Transaction.h"
     #include "libdevcore/utils/StringUtil.h"
     #include "libdevcore/crypto/SHA3/sha3.h"
     #include "libdevcore/pointers/lazy_pointer.h"
@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
                 "value": 1e3,
                 "bytecode": "null"
             }})");
-        RawTransaction rawTransaction = RawTransaction(from, to, (uint64_t) 1, test.at("extradata"), str, str1, str2, 1e3, 1e3, 1000);
+        Transaction rawTransaction = Transaction(from, to, (uint64_t) 1, test.at("extradata"), str, str1, str2, 1e3, 1e3, 1000);
         std::cout << *rawTransaction.serializeForValidating() << std::endl;
     #endif
     #if 0
@@ -246,7 +246,7 @@ int main(int argc, char **argv) {
           }
         })";
 
-        RawTransaction *rawTransaction = RawTransaction::parse(&str);
+        Transaction *rawTransaction = Transaction::parse(&str);
         rawTransaction->generateHash();
         std::cout << *rawTransaction->serializeToJsonTransaction() << std::endl;
     #endif
@@ -309,7 +309,7 @@ int main(int argc, char **argv) {
         cout << "WALLET E_PUB: " << r.extended_pub << endl;
         cout << "WALLET ADDRESS: " << r.address << endl;
         cout << "\nSigning transaction: \n";
-        RawTransaction rawTransaction = RawTransaction::parseToGenesis(R"({"from": "UNTxPFeHHV1vu84dB2g6TLK5RT3pbPA","to": "UNTxp28nf2wLJzWm49YtLKyXGYh8vJ3","amount": "0xBE","type": 0,"signature": "null", "r": "null","s": "null","nonce": 1,"fee":0})");
+        Transaction rawTransaction = Transaction::parseToGenesis(R"({"from": "UNTxPFeHHV1vu84dB2g6TLK5RT3pbPA","to": "UNTxp28nf2wLJzWm49YtLKyXGYh8vJ3","amount": "0xBE","type": 0,"signature": "null", "r": "null","s": "null","nonce": 1,"fee":0})");
         std::cout << rawTransaction.serializeWithoutSignatures() << std::endl;
         ECDSASignResult sig = ecdsa_sign_message(rawTransaction.serializeWithoutSignatures(), r.prv);
         std::cout << "r: " << sig.r << std::endl;

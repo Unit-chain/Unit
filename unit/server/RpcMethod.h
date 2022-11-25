@@ -58,7 +58,7 @@ std::shared_ptr<boost::json::value> TransferMethod::validateRequest(boost::json:
 #endif //UNIT_RPCMETHOD_H
 
 
-//std::shared_ptr<RawTransaction> rawTransaction = RawTransaction::parse(params);
+//std::shared_ptr<Transaction> rawTransaction = Transaction::parse(params);
 //if (!ecdsa_verify_signature(boost::json::value_to<std::string>(params->at("r")), boost::json::value_to<std::string>(params->at("s")),
 //        *rawTransaction->serializeWithoutSignatures(), boost::json::value_to<std::string>(params->at("from")))) {
 //responseJSON.as_object()["error"].as_object().emplace("code", -32602);
