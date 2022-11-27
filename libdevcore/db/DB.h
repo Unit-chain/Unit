@@ -31,8 +31,8 @@ namespace unit {
         }
         virtual std::shared_ptr<rocksdb::DB *> newDB() = 0;
         static std::shared_ptr<rocksdb::WriteBatch> getBatch() { return std::make_shared<rocksdb::WriteBatch>(rocksdb::WriteBatch()); }
-        static inline void close(rocksdb::DB **db) { delete *db; }
-        static inline void close(const std::shared_ptr<rocksdb::DB*> &db) { delete *db; }
+        static inline void close(rocksdb::DB **db) { delete *db; *db = nullptr; }
+        static inline void close(const std::shared_ptr<rocksdb::DB*> &db) { delete *db; *db = nullptr; }
         virtual std::string get(std::string &key) = 0;
         virtual std::string getWithIO(std::string &key) = 0;
         virtual std::string get(std::string &key, std::shared_ptr<rocksdb::DB*> &db) = 0;

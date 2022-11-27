@@ -21,7 +21,7 @@ public:
     Block(std::string hash, std::string previousHash, const std::string &merkleRoot,
              uint64_t time, uint64_t version, uint64_t transactionCount, uint64_t index, uint32_t size,
              int nonce, std::string message, std::string signP, std::string rewardP,
-             const unit::vector<Shard> &shardList, std::string reward) : blockHeader(std::move(hash), std::move(previousHash), merkleRoot, time, version, transactionCount, index, size, nonce),
+             const unit::vector<Shard> &shardList, std::string &reward) : blockHeader(std::move(hash), std::move(previousHash), merkleRoot, time, version, transactionCount, index, size, nonce),
                                                                     message(std::move(message)), signP(std::move(signP)),
                                                                     rewardProverAddress(std::move(rewardP)), shardList(shardList),
                                                                     reward(reward) {}
@@ -31,7 +31,7 @@ public:
     std::string rP;
     std::string sP;
     std::string difficulty;
-    std::string miner = "LOCAL";
+    std::string miner = "LOCAL_TEST";
     std::string rewardProverAddress;
     std::string logsBloom = "0x0";
     unit::vector<Shard> shardList{};

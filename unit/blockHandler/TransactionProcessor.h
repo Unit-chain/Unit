@@ -38,11 +38,6 @@ void TransactionProcessor::setTxBatch(Block *block, rocksdb::WriteBatch *writeBa
     *blockSize = 0;
     if (block->shardList.empty()) return;
     std::map<std::string, WalletAccount*> cache = std::map<std::string, WalletAccount*>();
-#if 0
-    block->shardList.at(
-                mersenneRand(0, (block->shardList.size() -
-                                 1))).transactionList.size(); // randomly chose pre-allocated size of map
-#endif
     std::shared_ptr<rocksdb::WriteBatch> tokenBatch{};
     std::shared_ptr<rocksdb::WriteBatch> historyBatch = unit::DB::getBatch();
     std::shared_ptr<rocksdb::WriteBatch> userBatch = unit::DB::getBatch();
@@ -161,7 +156,6 @@ void TransactionProcessor::setTxBatch(Block *block, rocksdb::WriteBatch *writeBa
         }
         for (auto &[key, value]: cache)  {
             userBatch->Put(rocksdb::Slice(key), rocksdb::Slice(value->serialize()));
-            value = nullptr;
             delete value;
         }
         for (auto &valueToBeRemoved: valuesToBeDeleted) shard.transactionList.remove(valueToBeRemoved);

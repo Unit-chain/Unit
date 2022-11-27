@@ -34,30 +34,10 @@ private:
 
 void BasicLocalShardInserter::shardFactory() {
     while (true) {
-        #if 0
-                if (transactionPool->getPoolSize() == 0) continue;
-                unit::vector<ValidTransaction> transactions{};
-                transactions.reserve(transactionPool->getPoolSize());
-                Shard shard1{};
-                while (!shardList->empty()) {
-                    uint64_t lastTx = this->transactionPool->getPoolSize();
-                    transactions.assign(transactionPool->getTxPool()->begin(), transactionPool->getTxPool()->end());
-                    this->transactionPool->dropTransactions(lastTx);
-                }
-                shard1.insertList(transactions);
-                ECDSASignResult sig = ecdsa_sign_message(shard1.serializeWithoutSignatures(), this->prover.prv);
-                shard1.setShardId(prover.address)->setRp(sig.r)->setSp(sig.s)->setSignature(sig.message_hash);
-                shardList->emplace_back(shard1);
-                std::destroy(transactions.begin(), transactions.end());
-        //        this->transactionPool->dropTransactions(this->transactionPool->getPoolSize());
-        //        std::this_thread::sleep_for(std::chrono::seconds(5));
-        #endif
         if (transactionPool->getPoolSize() == 0) continue;
         unit::vector<Transaction> transactions{};
         transactions.reserve(transactionPool->getPoolSize());
-//        std::copy(transactions.begin(), transactions.end(), std::back_inserter(*transactionPool->getTxPool()));
         transactions.assign(transactionPool->getTxPool()->begin(), transactionPool->getTxPool()->end());
-//        Shard shard1 = Shard(transactions);
         Shard shard1{};
         shard1.insertList(transactions);
         ECDSASignResult sig = ecdsa_sign_message(shard1.serializeWithoutSignatures(), this->prover.prv);

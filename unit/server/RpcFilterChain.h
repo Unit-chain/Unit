@@ -26,8 +26,8 @@ public:
     virtual void filter(boost::json::value *json);
     virtual ~RpcFilterChain();
 private:
-    RpcFilterChain *next;
-    RpcFilterChain *end;
+    RpcFilterChain *next = nullptr;
+    RpcFilterChain *end = nullptr;
 protected:
     void deleteNext();
 };
@@ -51,9 +51,11 @@ void RpcFilterChain::filter(boost::json::value *json) {
 }
 
 void RpcFilterChain::deleteNext() {
-    if (this->next != this->end) this->next->deleteNext();
-    next = nullptr;
-    delete next;
+    if ((this->next != nullptr) && (this->next != this->end)) this->next->deleteNext();
+    if (this->next != nullptr) {
+        delete next;
+        next = nullptr;
+    }
 }
 
 RpcFilterChain::~RpcFilterChain() {
