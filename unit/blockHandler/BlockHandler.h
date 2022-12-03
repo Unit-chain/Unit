@@ -18,7 +18,7 @@
 #include "../global/GlobalVariables.h"
 #include "../libdevcore/datastructures/concurrency/DBWriter.h"
 #include "../libdevcore/db/DB.h"
-#include "../libdevcore/datastructures/blockchain/block/BlockBuilder.h"
+#include "BlockBuilder.h"
 #include "../libdevcore/datastructures/account/WalletAccount.h"
 #include "../libdevcore/datastructures/account/Token.h"
 #include "../libdevcore/bip44/ecdsa.hpp"

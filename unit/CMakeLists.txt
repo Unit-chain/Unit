@@ -12,6 +12,20 @@ else()
     set(APPLE TRUE)
 endif()
 
+include_directories(
+        libdevcore/bip44/
+        libdevcore/crypto/keccak/
+        libdevcore/datastructures/trees/
+        libdevcore/datastructures/concurrency/
+        libdevcore/datastructures/blockchain/transaction/
+        libdevcore/datastructures/blockchain/block/
+        libdevcore/datastructures/containers/
+        libdevcore/datastructures/account/
+        libdevcore/crypto/SHA3/
+        libdevcore/utils/
+        libdevcore/db/
+)
+
 add_executable(unit
         main.cpp
         libdevcore/bip44/BIP44.hpp
