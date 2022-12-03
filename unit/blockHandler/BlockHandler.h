@@ -15,16 +15,16 @@
 #include "boost/unordered/unordered_set.hpp"
 
 #include "TransactionProcessor.h"
-#include "../global/GlobalVariables.h"
-#include "../libdevcore/datastructures/concurrency/DBWriter.h"
-#include "../libdevcore/db/DB.h"
+#include "GlobalVariables.h"
+#include "DBWriter.h"
+#include "DB.h"
 #include "BlockBuilder.h"
-#include "../libdevcore/datastructures/account/WalletAccount.h"
-#include "../libdevcore/datastructures/account/Token.h"
-#include "../libdevcore/bip44/ecdsa.hpp"
-#include "../libdevcore/bip44/utils.hpp"
-#include "../libdevcore/bip44/BIP44.hpp"
-#include "../libdevcore/bip44/BIP39.hpp"
+#include "WalletAccount.h"
+#include "Token.h"
+#include "ecdsa.hpp"
+#include "utils.hpp"
+#include "BIP44.hpp"
+#include "BIP39.hpp"
 
 class BlockHandler {
 public:

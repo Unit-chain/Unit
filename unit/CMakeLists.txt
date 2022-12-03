@@ -13,6 +13,7 @@ else()
 endif()
 
 include_directories(
+        global/
         libdevcore/bip44/
         libdevcore/crypto/keccak/
         libdevcore/datastructures/trees/
