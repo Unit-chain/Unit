@@ -4,10 +4,10 @@
 
 #ifndef UNIT_SHARD_H
 #define UNIT_SHARD_H
-#include "../../containers/list.h"
-#include "../transaction/Transaction.h"
-#include "../../../crypto/SHA3/sha3.h"
-#include "../../trees/MerkleTree.h"
+#include "containers/list.h"
+#include "transaction/Transaction.h"
+#include "crypto/SHA3/sha3.h"
+#include "trees/MerkleTree.h"
 
 class Shard {
 public:

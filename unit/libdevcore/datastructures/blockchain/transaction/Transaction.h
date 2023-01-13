@@ -14,9 +14,8 @@
 #include "boost/json.hpp"
 #include "boost/json/src.hpp"
 #include "boost/multiprecision/cpp_int.hpp"
-#include "../../../../global/GlobalVariables.h"
-#include "../../../utils/StringUtil.h"
-#include "../../../crypto/SHA3/sha3.h"
+#include "utils/StringUtil.h"
+#include "crypto/SHA3/sha3.h"
 
 namespace json = boost::json;
 using namespace boost::multiprecision;

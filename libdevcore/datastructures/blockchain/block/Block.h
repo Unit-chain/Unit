@@ -10,10 +10,10 @@
 #include "sstream"
 #include "BlockHeader.h"
 #include "Shard.h"
-#include "../transaction/Transaction.h"
-#include "../../containers/list.h"
-#include "../../containers/vector.h"
-#include "../../trees/MerkleTree.h"
+#include "transaction/Transaction.h"
+#include "containers/list.h"
+#include "containers/vector.h"
+#include "trees/MerkleTree.h"
 
 class Block {
 public:

@@ -10,13 +10,12 @@
 #include "iostream"
 #include "boost/json.hpp"
 #include "boost/json/src.hpp"
-
 #include "RpcExceptions.h"
 #include "ServerIncludes.h"
-#include "../pools/TransactionPool.h"
-#include "../libdevcore/bip44/ecdsa.hpp"
-#include "../libdevcore/datastructures/account/WalletAccount.h"
-#include "../libdevcore/datastructures/blockchain/transaction/Transaction.h"
+#include "TransactionPool.h"
+#include "bip44/ecdsa.hpp"
+#include "account/WalletAccount.h"
+#include "transaction/Transaction.h"
 
 class RpcFilterChain {
 public:

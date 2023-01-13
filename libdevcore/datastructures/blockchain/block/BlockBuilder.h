@@ -8,8 +8,8 @@
 
 #include "iostream"
 #include "Block.h"
-#include "../../../bip44/BIP44.hpp"
-#include "../../../bip44/ecdsa.hpp"
+#include "bip44/BIP44.hpp"
+#include "bip44/ecdsa.hpp"
 
 class BlockBuilder {
 public:

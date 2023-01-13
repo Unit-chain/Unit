@@ -8,8 +8,8 @@
 #include "iostream"
 #include "boost/json.hpp"
 #include "boost/json/src.hpp"
-#include "../libdevcore/datastructures/account/WalletAccount.h"
-#include "../libdevcore/bip44/ecdsa.hpp"
+#include "account/WalletAccount.h"
+#include "bip44/ecdsa.hpp"
 
 class RpcMethod {
 public:

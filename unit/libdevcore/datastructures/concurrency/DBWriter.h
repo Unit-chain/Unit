@@ -8,7 +8,7 @@
 #include "iostream"
 #include "deque"
 #include "thread"
-#include "../../db/DB.h"
+#include "db/DB.h"
 
 [[noreturn]] void commit(std::deque<rocksdb::WriteBatch> *deque, unit::BasicDB* dbProvider) {
     while (true) {

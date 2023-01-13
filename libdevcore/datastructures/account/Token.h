@@ -12,7 +12,7 @@
 #include "boost/json.hpp"
 #include "boost/json/src.hpp"
 #include "boost/multiprecision/cpp_int.hpp"
-#include "../../../global/GlobalVariables.h"
+#include "GlobalVariables.h"
 #include "AbstractAccount.h"
 
 using namespace boost::multiprecision;

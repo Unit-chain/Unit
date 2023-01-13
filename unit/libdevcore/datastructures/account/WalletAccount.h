@@ -11,10 +11,9 @@
 #include "boost/json.hpp"
 #include "boost/json/src.hpp"
 #include "boost/json/array.hpp"
-#include "../../../global/GlobalVariables.h"
-#include "../../../global/errors/WalletErrors.h"
-#include "../../bip44/utils.hpp"
-#include "../blockchain/transaction/Transaction.h"
+#include "errors/WalletErrors.h"
+#include "bip44/utils.hpp"
+#include "transaction/Transaction.h"
 #include "AbstractAccount.h"
 
 

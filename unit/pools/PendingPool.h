@@ -8,7 +8,7 @@
 #include "iostream"
 #include "TransactionPoolErrors.h"
 #include "boost/unordered_map.hpp"
-#include "../libdevcore/datastructures/blockchain/transaction/Transaction.h"
+#include "datastructures/blockchain/transaction/Transaction.h"
 
 class PendingPool {
 public:

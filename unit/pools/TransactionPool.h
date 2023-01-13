@@ -6,8 +6,8 @@
 #define UNIT_TRANSACTIONPOOL_H
 #include "iostream"
 #include "TransactionPoolErrors.h"
-#include "../libdevcore/datastructures/containers/vector.h"
-#include "../libdevcore/datastructures/blockchain/transaction/Transaction.h"
+#include "containers/vector.h"
+#include "transaction/Transaction.h"
 
 class TransactionPool {
 public:

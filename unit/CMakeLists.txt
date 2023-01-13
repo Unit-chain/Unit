@@ -12,64 +12,10 @@ else()
     set(APPLE TRUE)
 endif()
 
-include_directories(
-        global/
-        libdevcore/bip44/
-        libdevcore/crypto/keccak/
-        libdevcore/datastructures/trees/
-        libdevcore/datastructures/concurrency/
-        libdevcore/datastructures/blockchain/transaction/
-        libdevcore/datastructures/blockchain/block/
-        libdevcore/datastructures/containers/
-        libdevcore/datastructures/account/
-        libdevcore/crypto/SHA3/
-        libdevcore/utils/
-        libdevcore/db/
-)
-
-add_executable(unit
+include_directories(libdevcore)
+add_subdirectory(libdevcore)
+add_executable(${PROJECT_NAME}
         main.cpp
-        libdevcore/bip44/BIP44.hpp
-        libdevcore/bip44/BIP39.hpp
-        libdevcore/bip44/BIP32.hpp
-        libdevcore/bip44/SHA256.cpp
-        libdevcore/bip44/SHA256.h
-        libdevcore/bip44/base58.hpp
-        libdevcore/bip44/addresses.hpp
-        libdevcore/crypto/keccak/kec256.cpp
-        libdevcore/crypto/keccak/kec256.h libdevcore/crypto/Hex.h
-        libdevcore/datastructures/trees/MerkleTree.h
-        libdevcore/datastructures/trees/MerkleTree.cpp
-        libdevcore/crypto/SHA3/sha3.h
-        libdevcore/crypto/SHA3/sha3.cpp
-        libdevcore/bip44/BIP44.hpp
-        libdevcore/bip44/BIP39.hpp
-        libdevcore/bip44/BIP32.hpp
-        libdevcore/bip44/SHA256.cpp
-        libdevcore/bip44/SHA256.h
-        libdevcore/bip44/ecdsa.hpp
-        libdevcore/bip44/base58.hpp
-        libdevcore/bip44/addresses.hpp
-        libdevcore/bip44/utils.hpp
-        libdevcore/datastructures/blockchain/transaction/Transaction.h
-        libdevcore/utils/StringUtil.h
-        libdevcore/utils/StringUtil.cpp
-        libdevcore/pointers/lazy_pointer.h
-        libdevcore/datastructures/blockchain/block/Block.h
-        libdevcore/datastructures/blockchain/block/Block.h
-        libdevcore/datastructures/blockchain/block/BlockHeader.h
-        libdevcore/datastructures/blockchain/block/Shard.h
-        libdevcore/datastructures/containers/list.h
-        libdevcore/datastructures/containers/vector.h
-        libdevcore/datastructures/account/WalletAccount.h
-        libdevcore/datastructures/account/AbstractAccount.h
-        libdevcore/db/JsonMergeOperator.h
-        libdevcore/db/DB.h
-        libdevcore/db/DBError.h
-        libdevcore/datastructures/concurrency/ThreadPool.h
-        libdevcore/datastructures/concurrency/DBWriter.h
-        libdevcore/datastructures/blockchain/block/BlockBuilder.h
-        libdevcore/datastructures/account/Token.h
         global/errors/WalletErrors.h
         global/GlobalVariables.h
         blockHandler/BlockHandler.h
@@ -80,7 +26,23 @@ add_executable(unit
         server/RpcFilterChain.h
         server/RpcExceptions.h
         pools/TransactionPool.h
-        pools/TransactionPoolErrors.h blockHandler/ShardInserter.h UnitInitiator.h pools/PendingPool.h)
+        pools/TransactionPoolErrors.h
+        blockHandler/ShardInserter.h
+        UnitInitiator.h
+        pools/PendingPool.h
+        )
+
+target_link_libraries(${PROJECT_NAME} libdevcore)
+include_directories(
+        pools/
+        global/
+        global/errors
+        libdevcore/
+        libdevcore/bip44/
+        libdevcore/crypto/
+        libdevcore/datastructures/
+        libdevcore/datastructures/blockchain/
+)
 
 if(LINUX)
     message(STATUS ">>> Linux found")
@@ -95,8 +57,9 @@ if(LINUX)
 elseif(APPLE)
     find_package(OpenSSL REQUIRED)
     target_link_libraries(${PROJECT_NAME} OpenSSL::SSL)
+#    target_link_libraries(${PROJECT_NAME} LibreSSL::SSL)
     find_package(RocksDB REQUIRED) # add rocksdb library to interact with RocksDB
-    find_package(Boost)
+    find_package(Boost REQUIRED)
     target_link_libraries(${PROJECT_NAME} RocksDB::rocksdb)
     target_link_libraries(${PROJECT_NAME} Boost::boost)
 elseif(WIN)

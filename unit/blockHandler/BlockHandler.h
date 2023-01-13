@@ -16,15 +16,15 @@
 
 #include "TransactionProcessor.h"
 #include "GlobalVariables.h"
-#include "DBWriter.h"
 #include "DB.h"
-#include "BlockBuilder.h"
-#include "WalletAccount.h"
-#include "Token.h"
+#include "blockchain/block/BlockBuilder.h"
+#include "account/WalletAccount.h"
+#include "account/Token.h"
 #include "ecdsa.hpp"
 #include "utils.hpp"
 #include "BIP44.hpp"
 #include "BIP39.hpp"
+#include "concurrency/DBWriter.h"
 
 class BlockHandler {
 public:

@@ -11,8 +11,8 @@
 #include <boost/beast/version.hpp>
 #include <boost/asio.hpp>
 #include <boost/json.hpp>
-#include "../libdevcore/db/DB.h"
-#include "../libdevcore/datastructures/blockchain/block/Block.h"
+#include "db/DB.h"
+#include "block/Block.h"
 
 namespace beast = boost::beast;   // from <boost/beast.hpp>
 namespace http = beast::http;     // from <boost/beast/http.hpp>

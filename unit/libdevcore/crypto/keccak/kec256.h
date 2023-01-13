@@ -7,7 +7,7 @@
 #include "iostream"
 #include "vector"
 #include "algorithm"
-#include "../Hex.h"
+#include "Hex.h"
 
 class kec256 {
 public:

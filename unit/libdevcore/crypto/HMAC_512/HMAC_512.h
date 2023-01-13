@@ -5,8 +5,8 @@
 #ifndef UVM_HMAC_512_H
 #define UVM_HMAC_512_H
 #include "iostream"
-#include "../SHA512/SHA512.h"
-#include "../../Hex.h"
+#include "SHA512/SHA512.h"
+#include "Hex.h"
 
 namespace unit {
     class HMAC_512 {

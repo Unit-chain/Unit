@@ -5,11 +5,11 @@
 #ifndef UNIT_SHARDINSERTER_H
 #define UNIT_SHARDINSERTER_H
 #include "iostream"
-#include "../libdevcore/datastructures/blockchain/block/Shard.h"
-#include "../libdevcore/datastructures/blockchain/block/Block.h"
-#include "../libdevcore/bip44/BIP44.hpp"
-#include "../libdevcore/bip44/ecdsa.hpp"
-#include "../pools/TransactionPool.h"
+#include "block/Shard.h"
+#include "block/Block.h"
+#include "bip44/BIP44.hpp"
+#include "bip44/ecdsa.hpp"
+#include "TransactionPool.h"
 
 class InvalidBlockAccess : public std::exception {
     [[nodiscard]] const char * what() const noexcept override {

@@ -6,14 +6,14 @@
 #define UNIT_TRANSACTIONPROCESSOR_H
 #include "iostream"
 #include <random>
-#include "../libdevcore/db/DB.h"
-#include "../libdevcore/datastructures/account/Token.h"
-#include "../libdevcore/datastructures/containers/vector.h"
-#include "../libdevcore/datastructures/account/WalletAccount.h"
-#include "../libdevcore/datastructures/blockchain/block/Shard.h"
+#include "db/DB.h"
+#include "account/Token.h"
+#include "containers/vector.h"
+#include "account/WalletAccount.h"
+#include "block/Block.h"
+#include "block/Shard.h"
 #include "boost/unordered_map.hpp"
 #include "rocksdb/db.h"
-#include "../libdevcore/datastructures/blockchain/block/Block.h"
 
 inline std::mt19937& generator() {
     // the generator will only be seeded once (per thread) since it's static

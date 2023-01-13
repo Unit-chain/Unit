@@ -9,8 +9,8 @@
 #include "string"
 #include "cmath"
 #include "optional"
-#include "../../crypto/SHA3/sha3.h"
-#include "../containers/vector.h"
+#include "SHA3/sha3.h"
+#include "containers/vector.h"
 
 class MerkleTree {
 public:

@@ -13,11 +13,11 @@
 #include "RpcMethod.h"
 #include "ServerIncludes.h"
 #include "RpcFilterChain.h"
-#include "../pools/TransactionPool.h"
-#include "../pools/PendingPool.h"
-#include "../libdevcore/datastructures/containers/list.h"
-#include "../libdevcore/datastructures/blockchain/block/Block.h"
-#include "../libdevcore/datastructures/containers/vector.h"
+#include "TransactionPool.h"
+#include "PendingPool.h"
+#include "containers/list.h"
+#include "block/Block.h"
+#include "containers/vector.h"
 
 #define LOCAL_IP "127.0.0.1"
 #define PORT 29000

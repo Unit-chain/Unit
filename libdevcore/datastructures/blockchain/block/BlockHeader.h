@@ -6,7 +6,7 @@
 #define UNIT_BLOCKHEADER_H
 #include "iostream"
 #include "sstream"
-#include "../../../crypto/SHA3/sha3.h"
+#include "crypto/SHA3/sha3.h"
 
 struct BlockHeader {
     BlockHeader() = default;
