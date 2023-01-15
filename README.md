@@ -6,7 +6,7 @@
 
 # Dependencies 
 
-* boost 1.79.0
+* boost 1.80.0
 * openSSL
 * RocksDB
 
