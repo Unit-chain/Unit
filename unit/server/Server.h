@@ -18,13 +18,16 @@
 #include "containers/list.h"
 #include "block/Block.h"
 #include "containers/vector.h"
+#include "boost/smart_ptr.hpp"
 
 #define LOCAL_IP "127.0.0.1"
 #define PORT 29000
 
+
 class Server {
 public:
-    static int start_server(TransactionPool *transactionPool, PendingPool *pool, std::string &userDBPath, std::string &historyPath, std::string &blockPath, std::string &transactionPath);
+    static int start_server(TransactionPool *transactionPool, PendingPool *pool, std::string &userDBPath, std::string &historyPath, std::string &blockPath,
+                            std::string &transactionPath, boost::shared_ptr<unit::vector<std::string>> &queue);
 };
 
 
@@ -33,13 +36,15 @@ public:
     http_connection(tcp::socket socket) : socket_(std::move(socket)){}
 //    http_connection(tcp::socket socket) : socket_(std::move(socket)){}
     // Initiate the asynchronous operations associated with the connection.
-    void start(TransactionPool *transactionPool, PendingPool *pool, const std::string &userDBPath, const std::string &historyPath, const std::string &blockPath, const std::string &transactionPath) {
+    void start(TransactionPool *transactionPool, PendingPool *pool, const std::string &userDBPath, const std::string &historyPath,
+               const std::string &blockPath, const std::string &transactionPath, boost::shared_ptr<unit::vector<std::string>> queue) {
         this->transactionPool = transactionPool;
         this->userProvider = unit::BasicDB(userDBPath);
         this->historyProvider = unit::BasicDB(historyPath);
         this->blockDBProvider = unit::BasicDB(blockPath);
         this->transactionDBProvider = unit::BasicDB(transactionPath);
         this->pendingPool = pool;
+        this->queue_explorer = queue;
         read_request();
         check_deadline();
     }
@@ -55,6 +60,8 @@ private:
     unit::BasicDB transactionDBProvider{};
     // pointer to tx pool
     TransactionPool *transactionPool;
+    // explorer queue for messages
+    boost::shared_ptr<unit::vector<std::string>> queue_explorer;
     // pointer to tx pool
     PendingPool *pendingPool;
     // The socket for the currently connected client.
@@ -154,7 +161,7 @@ private:
             auto method = boost::json::value_to<std::string>(json.at("method"));
             RpcFilterChain rpcFilterChain{};
             if ("transfer" == method) {
-                rpcFilterChain.add(new BasicTransactionRpcFilter(&(this->userProvider),&(this->response_), this->transactionPool));
+                rpcFilterChain.add(new BasicTransactionRpcFilter(&(this->userProvider),&(this->response_), this->transactionPool, this->queue_explorer));
             } else if ("unit_get_balance" == method) {
                 rpcFilterChain.add(new BasicBalanceFilter(&(this->userProvider),&(this->response_)));
             } else if ("unit_get_tx_pool_size" == method) {
@@ -179,16 +186,19 @@ private:
 
 // "Loop" forever accepting new connections.
 void http_server(tcp::acceptor &acceptor, tcp::socket &socket, TransactionPool *transactionPool, PendingPool *pool,
-                 const std::string &userDBPath, const std::string &historyPath, const std::string &blockPath, const std::string &transactionPath) {
+                 const std::string &userDBPath, const std::string &historyPath, const std::string &blockPath, const std::string &transactionPath,
+                 const boost::shared_ptr<unit::vector<std::string>> &queue) {
     acceptor.async_accept(socket,
-                          [&, transactionPool, userDBPath, historyPath, transactionPath](beast::error_code ec){
-                              if (!ec) std::make_shared<http_connection>(std::move(socket))->start(transactionPool, pool, userDBPath, historyPath, blockPath, transactionPath);
-                              http_server(acceptor, socket, transactionPool, pool, userDBPath, historyPath, blockPath, transactionPath);
+                          [&, transactionPool, userDBPath, historyPath, transactionPath, queue](beast::error_code ec){
+                              if (!ec) std::make_shared<http_connection>(std::move(socket))->start(transactionPool, pool, userDBPath, historyPath, blockPath,
+                                                                                                   transactionPath, queue);
+                              http_server(acceptor, socket, transactionPool, pool, userDBPath, historyPath, blockPath, transactionPath, queue);
                           });
 }
 
 int Server::start_server(TransactionPool *transactionPool, PendingPool *pool, std::string &userDBPath,
-                         std::string &historyPath, std::string &blockPath, std::string &transactionPath) {
+                         std::string &historyPath, std::string &blockPath, std::string &transactionPath,
+                         boost::shared_ptr<unit::vector<std::string>> &queue) {
     rerun_server:;
     try {
         std::string ip_address = LOCAL_IP;
@@ -197,8 +207,8 @@ int Server::start_server(TransactionPool *transactionPool, PendingPool *pool, st
         net::io_context ioc{1};
         tcp::acceptor acceptor{ioc, {address, port}};
         tcp::socket socket{ioc};
-        http_server(acceptor, socket, transactionPool, pool, userDBPath, historyPath, blockPath, transactionPath);
-        std::cout << "server started" << std::endl;
+        http_server(acceptor, socket, transactionPool, pool, userDBPath, historyPath, blockPath, transactionPath, queue);
+        printf("%lu: [INFO] --- server started\n", time(nullptr));
         auto const threads = (int) std::thread::hardware_concurrency() / 2;
         net::signal_set signals(ioc, SIGINT, SIGTERM);
         std::vector<std::thread> v;

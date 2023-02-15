@@ -16,6 +16,8 @@
 #include "bip44/ecdsa.hpp"
 #include "account/WalletAccount.h"
 #include "transaction/Transaction.h"
+#include "boost/smart_ptr.hpp"
+#include "containers/vector.h"
 
 class RpcFilterChain {
 public:
@@ -63,13 +65,15 @@ RpcFilterChain::~RpcFilterChain() {
 
 class BasicTransactionRpcFilter : public RpcFilterChain {
 public:
-    BasicTransactionRpcFilter(unit::DB *userProvider, http::response<http::dynamic_body> *response, TransactionPool *transactionPool)
-            : userProvider(userProvider), response(response), transactionPool(transactionPool) {}
+    BasicTransactionRpcFilter(unit::DB *userProvider, http::response<http::dynamic_body> *response, TransactionPool *transactionPool,
+    boost::shared_ptr<unit::vector<std::string>>& explorer_queue)
+            : userProvider(userProvider), response(response), transactionPool(transactionPool), explorer_queue(explorer_queue) {}
     void filter(boost::json::value *parameter) override;
 protected:
     unit::DB *userProvider;
     http::response<http::dynamic_body> *response;
     TransactionPool *transactionPool;
+    boost::shared_ptr<unit::vector<std::string>>& explorer_queue;
 };
 
 void BasicTransactionRpcFilter::filter(boost::json::value *parameter) {
@@ -104,8 +108,10 @@ void BasicTransactionRpcFilter::filter(boost::json::value *parameter) {
         throw RpcLowBalanceException();
     }
     rawTransaction.generateHash();
+    this->explorer_queue->emplace_back(rawTransaction.serializeForResponse());
     this->transactionPool->emplaceBack(rawTransaction);
     int id = boost::json::value_to<int>(parameter->at("id"));
+    std::cout << "tx success" << std::endl;
     create_success_response(rpcResponse::processSimpleStringResponse(rawTransaction.hash, id), this->response);
 }
 

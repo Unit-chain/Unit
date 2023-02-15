@@ -1,7 +1,18 @@
-cmake_minimum_required(VERSION 3.15)
-project(BIP39)
+cmake_minimum_required(VERSION 3.24)
+project(bip44)
+set(CMAKE_CXX_STANDARD 20)
 
-set(CMAKE_CXX_STANDARD 17)
-add_executable(BIP39 utils.hpp BIP44.hpp BIP39.hpp BIP32.hpp SHA256.cpp SHA256.h base58.hpp addresses.hpp ecdsa.hpp)
+add_library(${PROJECT_NAME}
+        utils.hpp
+        BIP44.hpp
+        BIP39.hpp
+        BIP32.hpp
+        SHA256.cpp
+        SHA256.h
+        base58.hpp
+        addresses.hpp
+        ecdsa.hpp)
+
 find_package(OpenSSL REQUIRED)
-target_link_libraries(BIP39 OpenSSL::SSL)
+target_link_libraries(${PROJECT_NAME}
+        OpenSSL::SSL)

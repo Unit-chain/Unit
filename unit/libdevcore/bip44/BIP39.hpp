@@ -1771,7 +1771,7 @@ private:
         "stairs",
         "stamp",
         "stand",
-        "startBlockGenerator",
+        "start",
         "state",
         "stay",
         "steak",

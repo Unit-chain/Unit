@@ -6,9 +6,10 @@
 #define UNIT_UNITINITIATOR_H
 #include "iostream"
 #include "thread"
-#include "blockHandler/BlockHandler.h"
+#include "blockHandler/Blockchain.h"
 #include "blockHandler/ShardInserter.h"
 #include "server/Server.h"
+#include "server/explorer_handler.h"
 
 class NoArgsException : public std::exception {
     [[nodiscard]] const char * what() const noexcept override {
@@ -29,17 +30,22 @@ public:
 
 // I know it's awful, but it'll exist till end of tests
 [[noreturn]] void blockHandlingHandler(std::string &blockPath, std::string &userPath, std::string &transactionPath,
-                                       std::string &historyPath, std::string &tokenPath, BIP44Result &bip44Result, unit::list<Shard> *shardList) {
-    BlockHandler blockHandler = BlockHandler(blockPath, userPath, transactionPath, historyPath, tokenPath, bip44Result, shardList);
-    blockHandler.startBlockGenerator();
+                                       std::string &historyPath, std::string &tokenPath, BIP44Result &bip44Result, unit::list<Shard> *shardList,
+                                       boost::shared_ptr<unit::vector<std::string>> &queue) {
+    Blockchain blockHandler = Blockchain(blockPath, userPath, transactionPath, historyPath, tokenPath, bip44Result, shardList, queue);
+    blockHandler.start();
 }
 [[noreturn]] void shardInserterHandler(unit::list<Shard> *shardList, TransactionPool *transactionPool, BIP44Result *bip44Result) {
     BasicLocalShardInserter shardInserter = BasicLocalShardInserter(shardList, transactionPool, *bip44Result);
     shardInserter.shardFactory();
 }
 [[noreturn]] void transactionServerHandler(TransactionPool *transactionPool, PendingPool *pool, std::string &userDBPath, std::string &historyPath,
-                                           std::string &blockPath, std::string &transactionPath) {
-    Server::start_server(transactionPool, pool, userDBPath, historyPath, blockPath, transactionPath);
+                                           std::string &blockPath, std::string &transactionPath,
+                                           boost::shared_ptr<unit::vector<std::string>> &queue) {
+    Server::start_server(transactionPool, pool, userDBPath, historyPath, blockPath, transactionPath, queue);
+}
+[[noreturn]] void explorerServer(boost::shared_ptr<unit::vector<std::string>> &queue) {
+    start_explorer_server(queue);
 }
 
 class UnitInitiator {
@@ -144,13 +150,17 @@ void UnitInitiator::init(int argc, std::string argv[42]) {
     TransactionPool transactionPool{};
     PendingPool pendingPool{};
     Block *previous = nullptr;
+    boost::shared_ptr<unit::vector<std::string>> queue = boost::make_shared<unit::vector<std::string>>();
+    std::thread explorerTh(explorerServer, std::ref(queue));
+    explorerTh.detach();
     std::thread blockTh(blockHandlingHandler, std::ref(flagsValues.at("--blockPath")),  std::ref(flagsValues.at("--userpath")),
-                        std::ref(flagsValues.at("--transactionPath")),  std::ref(flagsValues.at("--historyPath")),  std::ref(flagsValues.at("--tokenPath")), std::ref(bip44Result), &shardList);
+                        std::ref(flagsValues.at("--transactionPath")),  std::ref(flagsValues.at("--historyPath")),
+                        std::ref(flagsValues.at("--tokenPath")), std::ref(bip44Result), &shardList, std::ref(queue));
     blockTh.detach();
     std::thread shardTh(shardInserterHandler, &shardList, &transactionPool, &bip44Result);
     shardTh.detach();
     std::thread serverTh(transactionServerHandler, &transactionPool, &pendingPool, std::ref(flagsValues.at("--userpath")), std::ref(flagsValues.at("--historyPath")),
-                         std::ref(flagsValues.at("--blockPath")), std::ref(flagsValues.at("--transactionPath")));
+                         std::ref(flagsValues.at("--blockPath")), std::ref(flagsValues.at("--transactionPath")), std::ref(queue));
     serverTh.detach();
     while (true) {}
 }

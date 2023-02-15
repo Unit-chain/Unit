@@ -87,8 +87,11 @@ ECDSASignResult ecdsa_sign_message(std::string msg, std::string prv_key)
     OPENSSL_free(signature);
     EC_KEY_free(key_pair_obj);
 
-    if (verification == 0)
-        return ECDSASignResult("", "", "");
+    if (verification == 0) return ECDSASignResult("", "", "");
+//    delete digest;
+//    delete signature;
+//    digest = nullptr;
+//    signature = nullptr;
 
     return ECDSASignResult(r_sig, s_sig, sha_string);
 }
@@ -175,6 +178,8 @@ bool ecdsa_verify_signature(std::string r, std::string s, std::string msg, std::
     EC_GROUP_free(secp256k1_group);
     EC_POINT_free(R1_point);
     EC_POINT_free(R2_point);
+//    delete digest;
+//    digest = nullptr;
 
     return (address == address_1 || address == address_2);
 }

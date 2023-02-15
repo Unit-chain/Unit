@@ -22,12 +22,13 @@ namespace unit {
         explicit DB(std::string path) : path(std::move(path)) {
             int cpuPiece = (int) std::thread::hardware_concurrency() / 2;
             this->options.create_if_missing = true;
+            this->options.error_if_exists = false;
             this->options.create_missing_column_families = true;
             this->options.unordered_write = true;
             this->options.bottommost_compression = rocksdb::kZSTD;
             this->options.compression = rocksdb::kLZ4Compression;
             this->options.IncreaseParallelism(cpuPiece);
-            this->options.max_background_jobs = (cpuPiece / 2  <= 2) ? 2 : cpuPiece / 2;
+            this->options.max_background_jobs = (cpuPiece / 2  <= 2) ? 1 : cpuPiece / 2;
         }
         virtual std::shared_ptr<rocksdb::DB *> newDB() = 0;
         static std::shared_ptr<rocksdb::WriteBatch> getBatch() { return std::make_shared<rocksdb::WriteBatch>(rocksdb::WriteBatch()); }
@@ -133,7 +134,7 @@ namespace unit {
         if (status.code() == rocksdb::Status::Code::kCorruption) return {unit::error::DBCorruption()};
         if (status.code() == rocksdb::Status::Code::kIOError) return {unit::error::DBIOError()};
         while (status.code() != rocksdb::Status::Code::kOk) {
-            status = rocksdb::DB::OpenForReadOnly(this->options, this->path, &db);
+            status = rocksdb::DB::Open(this->options, this->path, &db);
             if (status.code() != rocksdb::Status::Code::kOk) std::this_thread::sleep_for(std::chrono::seconds(3));
             return {unit::error::DBIOError()};
         }

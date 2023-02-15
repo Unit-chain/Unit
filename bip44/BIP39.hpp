@@ -308,7 +308,7 @@ private:
         "buddy",
         "budget",
         "buffalo",
-        "build",
+        "filter",
         "bulb",
         "bulk",
         "bullet",
@@ -2133,7 +2133,6 @@ BIP39Result BIP39::generateMnemonic(std::string passphrase)
         // randomize 256 bits
         bits[i] = (r_buf[i]) % 2;
     }
-    // std::cout << bits << std::endl;
 
     uint8_t split_bits_for_sha[32];
     for (int j = 0; j < 32; ++j)
@@ -2148,16 +2147,9 @@ BIP39Result BIP39::generateMnemonic(std::string passphrase)
         // std::cout << t_bits << std::endl;
         split_bits_for_sha[j] = static_cast<uint8_t>(t_bits.to_ulong());
     }
-    // for (int j = 0; j < 32; ++j) {
-    //     std::cout << unsigned(split_bits_for_sha[j]) << std::endl;
-    // }
     SHA256_Legacy sha;
     std::string mySHA = sha(split_bits_for_sha, 32);
-    // std::cout << mySHA << std::endl;
-    //    sha.update(split_bits_for_sha, 32);
-    //    uint8_t last_sha_digest = sha.digest()[0];
     unsigned long last_sha_digest = hex2dec(mySHA.substr(0, 2));
-    // std::cout << unsigned(last_sha_digest) << std::endl;
     std::bitset<8> sign_bits;
     uint8_t i = 0;
     while (last_sha_digest > 0 && i < 8)
@@ -2177,26 +2169,12 @@ BIP39Result BIP39::generateMnemonic(std::string passphrase)
     bits[262] = sign_bits[1];
     bits[263] = sign_bits[0];
 
-    // std::cout << bits << std::endl;
     std::vector<std::string> words = bitsToWords(bits);
     std::string final_mnemonic = "";
     for (int i = 0; i < 24; ++i)
     {
         final_mnemonic.append(words[i] + (i == 23 ? "" : " "));
     }
-
-    // std::string mnemonic_salt = "mnemonic"+passphrase;
-    // // std::cout << "SALT LENGTH:" << mnemonic_salt.length() << std::endl;
-    // unsigned char slt[mnemonic_salt.length()];
-    // strcpy((char*)slt, mnemonic_salt.c_str());
-    // unsigned char result[64];
-    // PKCS5_PBKDF2_HMAC(final_mnemonic.c_str(), final_mnemonic.length(), slt, mnemonic_salt.length(), 2048, EVP_sha512(), 64, result);
-
-    // BIGNUM* bn_seed = BN_new();
-    // BN_bin2bn(result, 64, bn_seed);
-    // std::string res(BN_bn2hex(bn_seed));
-    // BN_free(bn_seed);
-
     return BIP39Result(final_mnemonic, phraseToSeed(final_mnemonic, passphrase));
 }
 
@@ -2230,7 +2208,6 @@ BIP39Result BIP39::generateMnemonic_12(std::string passphrase)
         // randomize 128 bits
         bits[i] = ((uint8_t)r_buf[i]) % 2;
     }
-    // std::cout << bits << std::endl;
 
     uint8_t split_bits_for_sha[16];
     for (int j = 0; j < 16; ++j)
@@ -2242,19 +2219,11 @@ BIP39Result BIP39::generateMnemonic_12(std::string passphrase)
             t_bits[7 - t] = bits[i];
             t++;
         }
-        // std::cout << t_bits << std::endl;
         split_bits_for_sha[j] = static_cast<uint8_t>(t_bits.to_ulong());
     }
-    // for (int j = 0; j < 16; ++j) {
-    //     std::cout << unsigned(split_bits_for_sha[j]) << std::endl;
-    // }
     SHA256_Legacy sha;
     std::string mySHA = sha(split_bits_for_sha, 16);
-    // std::cout << mySHA << std::endl;
-    //    sha.update(split_bits_for_sha, 32);
-    //    uint8_t last_sha_digest = sha.digest()[0];
     unsigned long last_sha_digest = hex2dec(mySHA.substr(0, 1));
-    // std::cout << unsigned(last_sha_digest) << std::endl;
     std::bitset<4> sign_bits;
     uint8_t i = 0;
     while (last_sha_digest > 0 && i < 4)
@@ -2270,30 +2239,12 @@ BIP39Result BIP39::generateMnemonic_12(std::string passphrase)
     bits[130] = sign_bits[1];
     bits[131] = sign_bits[0];
 
-    // std::cout << bits << std::endl;
     std::vector<std::string> words = bitsToWords_12(bits);
     std::string final_mnemonic;
     for (int i = 0; i < 12; ++i)
     {
         final_mnemonic.append(words[i] + (i == 11 ? "" : " "));
     }
-
-    // std::string mnemonic_salt = "mnemonic"+passphrase;
-    // unsigned char slt[mnemonic_salt.length()];
-    // strcpy((char*)slt, mnemonic_salt.c_str());
-    // unsigned char result[64];
-    // PKCS5_PBKDF2_HMAC(final_mnemonic.c_str(), final_mnemonic.length(), slt, mnemonic_salt.length(), 2048, EVP_sha512(), 64, result);
-
-    // BIGNUM* bn_seed = BN_new();
-    // BN_bin2bn(result, 64, bn_seed);
-    // std::string res(BN_bn2hex(bn_seed));
-    // BN_free(bn_seed);
-
-    // std::stringstream ss;
-    // for (uint8_t i = 0; i < 64; i++)
-    //     ss << std::setfill('0') << std::setw(2) << std::hex << (int)result[i];
-    // std::string res(ss.str());
-
     return BIP39Result(final_mnemonic, phraseToSeed(final_mnemonic, passphrase));
 }
 
@@ -2317,7 +2268,6 @@ std::vector<std::string> BIP39::bitsToWords_12(std::bitset<132> bits)
 std::string BIP39::phraseToSeed(std::string phrase, std::string password)
 {
     std::string mnemonic_salt = "mnemonic"+password;
-    // std::cout << "SALT LENGTH:" << mnemonic_salt.length() << std::endl;
     unsigned char slt[mnemonic_salt.length()];
     strcpy((char*)slt, mnemonic_salt.c_str());
     unsigned char result[64];

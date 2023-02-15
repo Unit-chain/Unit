@@ -40,7 +40,7 @@ add_library(${PROJECT_NAME}
             pointers/lazy_pointer.h
             utils/StringUtil.h
             utils/StringUtil.cpp
-        )
+        datastructures/containers/queue.h datastructures/containers/unordered_set.h)
 
 add_subdirectory(bip44)
 target_link_libraries(${PROJECT_NAME}

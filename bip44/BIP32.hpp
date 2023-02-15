@@ -195,7 +195,6 @@ BIP32::BIP32NodeResult BIP32::gen_child_from_xprv(BIP32::BIP32NodeResult parent_
     std::string parent_child_number = parent_node.hex_prv_key.substr(18, 8);
     std::string parent_chaincode = parent_node.hex_prv_key.substr(26, 64);
     std::string parent_private_key = parent_node.ecdsa_prv;
-    // std::string parent_public_key = parent_node.hex_pub_key.substr();
 
     std::stringstream ss;
     ss << std::setfill('0') << std::setw(8) << std::hex << keypair_index;
@@ -283,8 +282,6 @@ BIP32::BIP32NodeResult BIP32::gen_child_from_xprv(BIP32::BIP32NodeResult parent_
     ss1 << std::setfill('0') << std::setw(64) << std::hex << child_prv_key_decimal;
     std::string child_data_prv = ss1.str();
 
-    // std::cout << "KEYPAIR INDEX: " << keypair_index_hex << std::endl;
-
     std::string child_ext_private_key_raw = parent_prv_version + depth + fingerprint + keypair_index_hex + chaincode + "00" + child_data_prv;
 
     uint8_t prv_fro_sha[child_ext_private_key_raw.length() / 2];
@@ -307,7 +304,6 @@ BIP32::BIP32NodeResult BIP32::gen_child_from_xprv(BIP32::BIP32NodeResult parent_
     std::string child_ext_private_key_base58 = b58.EncodeBase58(child_ext_private_key_bytes, b58.base58map);
 
     BIP32::secp256k1_result curve = get_pub_from_seed_secp256k1(child_data_prv);
-    // std::cout << "^POINT X:^ " << curve.point_x << std::endl;
     if (curve.point_x == "")
     {
         return BIP32::BIP32NodeResult();
@@ -369,7 +365,6 @@ BIP32::secp256k1_result BIP32::get_pub_from_seed_secp256k1(std::string seed)
     }
     EC_KEY_set_public_key(key_pair_obj, pub_key);
 
-    // priv_key_char = BN_bn2hex(priv_key);
     pub_key_char = EC_POINT_point2hex(secp256k1_group, pub_key, POINT_CONVERSION_COMPRESSED, nullptr);
 
     BIGNUM *x = BN_new();
