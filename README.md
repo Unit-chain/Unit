@@ -11,7 +11,7 @@
 * RocksDB
 
 # Donations
-e-mail: unitchainorg@gmail.com
+e-mail: unit@unitchain.org
 
 BTC(Taproot): bc1pjqaqvruh04wncfcedvntuk0vx9l7kw0t0vem5q964s4gx0nmfu8sj90a34
 
