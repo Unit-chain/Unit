@@ -3,4 +3,4 @@ project(udp C)
 
 set(CMAKE_C_STANDARD 17)
 
-add_executable(udp main.c udp_package.h crc32_table.h crc32.h queue.h queue.c)
+add_executable(udp main.c udp_package.h crc32_table.h crc32.h queue.h queue.c udp_server.h udp_server.c)

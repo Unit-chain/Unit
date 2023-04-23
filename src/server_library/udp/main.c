@@ -5,98 +5,151 @@
 #include <netinet/in.h>
 #include <poll.h>
 #include <unistd.h>
+#include <arpa/inet.h>
+#include "udp_server.h"
+
+#if 0
+#define MAX_BUFFER_SIZE 1024
+#define MAX_CLIENTS 10
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <poll.h>
+#include <unistd.h>
 #include <netdb.h>
+#include <arpa/inet.h>
 
 #define PORT "8080"
 #define CLIENT_PORT "8081"
-#define MAX_MESSAGE_SIZE 1024
+#define MAX_BUFFER_SIZE 1024
 #define MAX_CLIENTS 10
 
-void print_address_info(const struct sockaddr_storage *addr) {
-    char host[NI_MAXHOST];
-    char port[NI_MAXSERV];
-    int error;
-
-    // resolve address to human-readable form
-    error = getnameinfo((const struct sockaddr *)addr, sizeof(*addr), host, sizeof(host), port, sizeof(port), NI_NUMERICSERV);
-    if (error != 0) {
-        fprintf(stderr, "getnameinfo error: %s\n", gai_strerror(error));
-        return;
-    }
-
-    // print host and port
-    printf("Address: %s:%s\n", host, port);
-
-    // extract port number
-    if (addr->ss_family == AF_INET) {
-        const struct sockaddr_in *ipv4 = (const struct sockaddr_in *)addr;
-        uint16_t port_number = ntohs(ipv4->sin_port);
-        printf("Port number: %hu\n", port_number);
-    }
-    else if (addr->ss_family == AF_INET6) {
-        const struct sockaddr_in6 *ipv6 = (const struct sockaddr_in6 *)addr;
-        uint16_t port_number = ntohs(ipv6->sin6_port);
-        printf("Port number: %hu\n", port_number);
-    }
-}
-
-void open_server(char *port, int ipv) {
+void start_udp_server(const char* ip_address, int port, int is_ipv6) {
+    // Create socket
     int sockfd;
-    struct addrinfo hints, *servinfo, *p;
-    int rv;
-    int yes = 1;
-
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = ipv; // use AF_INET6 to force IPv6
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE; // use my IP address
-    if ((rv = getaddrinfo(NULL, port, &hints, &servinfo)) != 0) {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+    if (is_ipv6) {
+        sockfd = socket(AF_INET6, SOCK_DGRAM, 0);
+    } else {
+        sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    }
+    if (sockfd == -1) {
+        perror("socket");
         exit(1);
     }
-    // Loop through all the results and bind to the first possible
-    for (p = servinfo; p != NULL; p = p->ai_next) {
-        sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-        if (sockfd == -1) {
-            perror("socket");
-            continue;
-        }
 
-        // Enable address reuse to avoid "Address already in use" errors
-        if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1) {
-            perror("setsockopt");
-            exit(EXIT_FAILURE);
-        }
+    // Bind socket to address and port
+    struct sockaddr_in6 servaddr6;
+    struct sockaddr_in servaddr;
+    memset(&servaddr6, 0, sizeof(servaddr6));
+    memset(&servaddr, 0, sizeof(servaddr));
 
-        if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-            close(sockfd);
+    if (is_ipv6) {
+        servaddr6.sin6_family = AF_INET6;
+        inet_pton(AF_INET6, ip_address, &servaddr6.sin6_addr);
+        servaddr6.sin6_port = htons(port);
+        if (bind(sockfd, (struct sockaddr*) &servaddr6, sizeof(servaddr6)) == -1) {
             perror("bind");
-            continue;
+            exit(1);
         }
-
-        break;
+    } else {
+        servaddr.sin_family = AF_INET;
+        inet_pton(AF_INET, ip_address, &servaddr.sin_addr);
+        servaddr.sin_port = htons(port);
+        if (bind(sockfd, (struct sockaddr*) &servaddr, sizeof(servaddr)) == -1) {
+            perror("bind");
+            exit(1);
+        }
     }
-    freeaddrinfo(servinfo);
-    if (p == NULL) {
-        fprintf(stderr, "Failed to bind socket\n");
-        exit(EXIT_FAILURE);
+
+    // Receive and print incoming packets
+    char buffer[MAX_BUFFER_SIZE];
+    struct sockaddr_in6 clientaddr6;
+    struct sockaddr_in clientaddr;
+    socklen_t clientaddrlen;
+    while (1) {
+        memset(&clientaddr6, 0, sizeof(clientaddr6));
+        memset(&clientaddr, 0, sizeof(clientaddr));
+        memset(buffer, 0, MAX_BUFFER_SIZE);
+        if (is_ipv6) {
+            clientaddrlen = sizeof(clientaddr6);
+            char str[INET6_ADDRSTRLEN]; // Define the char array to store the IP address string
+            int n = recvfrom(sockfd, buffer, MAX_BUFFER_SIZE, 0, (struct sockaddr*) &clientaddr6, &clientaddrlen);
+            if (n == -1) {
+                perror("recvfrom");
+                exit(1);
+            }
+            printf("Received packet from %s:%d\n", inet_ntop(AF_INET6, &clientaddr6.sin6_addr, str, INET6_ADDRSTRLEN), ntohs(clientaddr6.sin6_port));
+        } else {
+            clientaddrlen = sizeof(clientaddr);
+            int n = recvfrom(sockfd, buffer, MAX_BUFFER_SIZE, 0, (struct sockaddr*) &clientaddr, &clientaddrlen);
+            if (n == -1) {
+                perror("recvfrom");
+                exit(1);
+            }
+            printf("Received packet from %s:%d\n", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
+        }
+        printf("Data: %s\n", buffer);
     }
 
-    printf("Waiting for messages...\n");
-    struct sockaddr_storage client_addr;
-    socklen_t len;
-//    char ipstr[INET6_ADDRSTRLEN];
-    char client_addr_str[
-            (ipv == AF_INET) ? INET_ADDRSTRLEN : INET6_ADDRSTRLEN
-            ];
+    // Close socket
+    close(sockfd);
+}
 
-    struct pollfd fds[MAX_CLIENTS];
+int main() {
+    // Start UDP server on IPv4
+    start_udp_server("0.0.0.0", 8080, 0);
+    return 0;
+}
+
+void start_udp_server(const char* ip_address, int port, int is_ipv6) {
+    // Create socket
+    int sockfd;
+    if (is_ipv6) {
+        sockfd = socket(AF_INET6, SOCK_DGRAM, 0);
+    } else {
+        sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    }
+    if (sockfd == -1) {
+        perror("socket");
+        exit(1);
+    }
+
+    // Bind socket to address and port
+    struct sockaddr_in6 servaddr6;
+    struct sockaddr_in servaddr;
+    memset(&servaddr6, 0, sizeof(servaddr6));
+    memset(&servaddr, 0, sizeof(servaddr));
+
+    if (is_ipv6) {
+        servaddr6.sin6_family = AF_INET6;
+        inet_pton(AF_INET6, ip_address, &servaddr6.sin6_addr);
+        servaddr6.sin6_port = htons(port);
+        if (bind(sockfd, (struct sockaddr*) &servaddr6, sizeof(servaddr6)) == -1) {
+            perror("bind");
+            exit(1);
+        }
+    } else {
+        servaddr.sin_family = AF_INET;
+        inet_pton(AF_INET, ip_address, &servaddr.sin_addr);
+        servaddr.sin_port = htons(port);
+        if (bind(sockfd, (struct sockaddr*) &servaddr, sizeof(servaddr)) == -1) {
+            perror("bind");
+            exit(1);
+        }
+    }
+
+    // Receive and print incoming packets
+    char buffer[MAX_BUFFER_SIZE];
+    struct sockaddr_in6 clientaddr6;
+    struct sockaddr_in clientaddr;
+    socklen_t clientaddrlen;
+    struct pollfd fds[1];
     fds[0].fd = sockfd;
     fds[0].events = POLLIN;
-
-    int max_fd = sockfd;
     while (1) {
-        int pollres = poll(fds, max_fd + 1, -1);
+        int pollres = poll(fds, 1, -1);
         if (pollres < 0) {
             perror("poll failed");
             exit(EXIT_FAILURE);
@@ -104,24 +157,43 @@ void open_server(char *port, int ipv) {
         if ((fds[0].revents & POLLIN) == POLLIN) {
             puts("Data come");
         }
-
-        // reading message
-        char buffer[MAX_MESSAGE_SIZE];
-        ssize_t numbytes;
-        numbytes = recvfrom(sockfd, buffer, MAX_MESSAGE_SIZE - 1, 0, (struct sockaddr *)&client_addr, &len);
-        if (numbytes == -1) {
-            perror("recvfrom");
-            exit(EXIT_FAILURE);
+        memset(&clientaddr6, 0, sizeof(clientaddr6));
+        memset(&clientaddr, 0, sizeof(clientaddr));
+        memset(buffer, 0, MAX_BUFFER_SIZE);
+        if (is_ipv6) {
+            clientaddrlen = sizeof(clientaddr6);
+            char str[INET6_ADDRSTRLEN]; // Define the char array to store the IP address string
+            int n = recvfrom(sockfd, buffer, MAX_BUFFER_SIZE, 0, (struct sockaddr*) &clientaddr6, &clientaddrlen);
+            if (n == -1) {
+                perror("recvfrom");
+                exit(1);
+            }
+            printf("Received packet from %s:%d\n", inet_ntop(AF_INET6, &clientaddr6.sin6_addr, str, INET6_ADDRSTRLEN), ntohs(clientaddr6.sin6_port));
+        } else {
+            clientaddrlen = sizeof(clientaddr);
+            int n = recvfrom(sockfd, buffer, MAX_BUFFER_SIZE, 0, (struct sockaddr*) &clientaddr, &clientaddrlen);
+            if (n == -1) {
+                perror("recvfrom");
+                exit(1);
+            }
+            printf("Received packet from %s:%d\n", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
         }
-        buffer[numbytes] = '\0';
-        printf("Received message: %s\n", buffer);
-
-        print_address_info(&client_addr);
+        printf("Data: %s\n", buffer);
     }
+
+    // Close socket
     close(sockfd);
 }
+#endif
 
-int main(void) {
-    open_server(PORT, AF_INET);
+void handler(char *err) {
+    size_t sz = strlen(err);
+    err[sz] = '\n';
+    puts(err);
+}
+
+int main() {
+    // Start UDP server on IPv4
+    start_udp_server("0.0.0.0", 8080, 0, &handler);
     return 0;
 }

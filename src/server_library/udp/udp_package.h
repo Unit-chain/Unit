@@ -4,28 +4,31 @@
 
 #ifndef UDP_UDP_PACKAGE_H
 #define UDP_UDP_PACKAGE_H
+#include "unistd.h"
+#include "stdint.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 #pragma pack(push, 1)
-/* Define the packet struct */
+///@brief packet_t struct used to transfer data inside protocol
+///@param version protocol version
+///@param data_id data id used for building data
+///@param pkg_num number of package in data stream
+///@param crc32 checksum used for checking if data corrupted
+///@param prev_pkg_sz previous package size used for data plug
+///@param pld_sz represents payload size
 typedef struct {
-    int seq_num;        /* Sequence number of the packet */
-    int data_len;       /* Length of the data in the packet */
-    char data[1024];    /* Data to be sent in the packet */
-    int checksum;       /* Checksum value of the packet */
+    uint16_t version;
+    uint64_t data_id;
+    uint16_t pkg_num;
+    uint32_t crc32;
+    uint32_t prev_pkg_sz;
+    uint32_t pld_sz;
+    uint8_t terminal;
+    char *payload[];
 } packet_t;
-
-/* Define the request struct */
-typedef struct {
-    int seq_num;        /* Sequence number of the missing or corrupted packet */
-} request_t;
-
-/* Define the acknowledgement struct */
-typedef struct {
-    int seq_num;        /* Sequence number of the packet being acknowledged */
-} ack_t;
-
 #pragma pack(pop)
 
 #ifdef __cplusplus
