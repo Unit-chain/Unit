@@ -13,22 +13,17 @@
 #include <poll.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include "queue.h"
+#include "system_data.h"
+#include "stdio.h"
+#include <stdatomic.h>
 
 #define MAX_BUFFER_SIZE 1024
+#define SEC_TO_NSEC 1000000000L
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef struct {
-    int n;
-    pthread_t *threads;
-} thread_array;
-
-typedef struct {
-    uint64_t data_id;
-    char *payload;
-} payload_t;
 
 ///@brief accept errors from server
 typedef void (*error_handler)(char *);
@@ -36,7 +31,8 @@ typedef void (*error_handler)(char *);
 ///@brief accept data from server and parse it
 ///@param char* data accepted by server
 ///@param void* data handler
-typedef void (*data_handler)(char *, void*);
+///@return 0 - error happens, return to the sender, 1 - no errors
+typedef int (*data_processor)(char *, void*);
 
 ///@brief starting UDP server for receiving data on port
 ///@param ip_address declaring which ip will be used. For example, to accept all connection should be used "0.0.0.0"
@@ -46,7 +42,7 @@ typedef void (*data_handler)(char *, void*);
 void start_udp_server(const char* ip_address, int port, int is_ipv6, error_handler err_handler);
 
 ///@brief starting 'n' threads
-void start_threads(int n);
+void start_threads(int n, queue_t *msh_queue);
 
 #ifdef __cplusplus
 }

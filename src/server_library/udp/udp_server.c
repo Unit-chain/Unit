@@ -3,7 +3,9 @@
 //
 #include "udp_server.h"
 
-void start_udp_server(const char *ip_address, int port, int is_ipv6, error_handler err_handler) {
+atomic_ullong time_counter;
+
+_Noreturn void start_udp_server(const char *ip_address, int port, int is_ipv6, error_handler err_handler) {
     int sockfd;
     if (is_ipv6) {
         sockfd = socket(AF_INET6, SOCK_DGRAM, 0);
@@ -45,15 +47,16 @@ void start_udp_server(const char *ip_address, int port, int is_ipv6, error_handl
     struct pollfd fds[1];
     fds[0].fd = sockfd;
     fds[0].events = POLLIN;
+    queue_t q;
+    queue_init(&q);
+    start_threads(get_num_cpus(), &q);
+#if 1
+    uint64_t packages_received = 0;
+    struct timespec start_time, end_time;
+    clock_gettime(CLOCK_MONOTONIC, &start_time);
+#endif
+
     while (1) {
-        int pollres = poll(fds, 1, -1);
-        if (pollres < 0) {
-            err_handler("poll failed");
-            exit(EXIT_FAILURE);
-        }
-//        if ((fds[0].revents & POLLIN) == POLLIN) {
-//            puts("Data come");
-//        }
         memset(&clientaddr6, 0, sizeof(clientaddr6));
         memset(&clientaddr, 0, sizeof(clientaddr));
         memset(buffer, 0, MAX_BUFFER_SIZE);
@@ -65,8 +68,10 @@ void start_udp_server(const char *ip_address, int port, int is_ipv6, error_handl
                 err_handler("recvfrom failed");
                 exit(1);
             }
-            printf("Received packet from %s:%d\n", inet_ntop(AF_INET6, &clientaddr6.sin6_addr, str, INET6_ADDRSTRLEN),
-                   ntohs(clientaddr6.sin6_port));
+#if 1
+            packages_received++;
+#endif
+//            printf("Received packet from %s:%d\n", inet_ntop(AF_INET6, &clientaddr6.sin6_addr, str, INET6_ADDRSTRLEN), ntohs(clientaddr6.sin6_port));
         } else {
             clientaddrlen = sizeof(clientaddr);
             int n = recvfrom(sockfd, buffer, MAX_BUFFER_SIZE, 0, (struct sockaddr *) &clientaddr, &clientaddrlen);
@@ -74,9 +79,59 @@ void start_udp_server(const char *ip_address, int port, int is_ipv6, error_handl
                 err_handler("recvfrom failed");
                 exit(1);
             }
-            printf("Received packet from %s:%d\n", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
+#if 1
+            packages_received++;
+#endif
+//            printf("Received packet from %s:%d\n", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
         }
-        printf("Data: %s\n", buffer);
+        queue_push(&q, buffer, MAX_BUFFER_SIZE);
+#if 1
+        clock_gettime(CLOCK_MONOTONIC, &end_time);
+        if ((end_time.tv_sec - start_time.tv_sec) > 0) {
+            // Calculate packets per second
+            long long elapsed_nanos = (end_time.tv_sec - start_time.tv_sec) * SEC_TO_NSEC +
+                                      end_time.tv_nsec - start_time.tv_nsec;
+            double pps = (double) packages_received / (double) elapsed_nanos * SEC_TO_NSEC;
+
+            // Print result and reset counters
+            printf("RPS: %f, packages: %llu\n", pps, packages_received);
+            start_time = end_time;
+            packages_received = 0;
+        }
+#endif
     }
     close(sockfd);
+}
+
+_Noreturn void *thread_function(void *msg_queue) {
+    queue_t *msgs = (queue_t*) msg_queue;
+    while(1) {
+        if (msgs->count > 0) {
+            char* msg = queue_pop(msgs);
+            uint64_t val = strtoull(msg, NULL, 10);
+            struct timespec time;
+            long long ms, sec_ms, nsec_ms;
+            clock_gettime(CLOCK_REALTIME, &time);
+            sec_ms = time.tv_sec * 1000LL;
+            nsec_ms = time.tv_nsec / 1000000LL;
+            ms = sec_ms + nsec_ms;
+//            printf("time took: %llu ms\n", (ms - val));
+            free(msg);
+        }
+    }
+}
+
+void start_threads(int n, queue_t *msh_queue) {
+    pthread_t threads[n-2];
+    pthread_attr_t attr[n-2];
+    int thread_args[n];
+    for (int i = 0; i < n-2; i++) {
+        thread_args[i] = i;
+        pthread_attr_init(&attr[i]);
+        pthread_attr_setdetachstate(&attr[i], PTHREAD_CREATE_DETACHED);
+        if (pthread_create(&threads[i], &attr[i], thread_function, msh_queue) != 0) {
+            fprintf(stderr, "Error: Failed to create thread\n");
+            exit(EXIT_FAILURE);
+        }
+    }
 }

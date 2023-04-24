@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include "udp_server.h"
+#include "queue.h"
 
 #if 0
 #define MAX_BUFFER_SIZE 1024

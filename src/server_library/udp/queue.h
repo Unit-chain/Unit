@@ -9,37 +9,26 @@
 #include <sys/socket.h>
 #include <pthread.h>
 #include <netinet/in.h>
+#include <string.h>
 #include <stdio.h>
 #include <arpa/inet.h>
 
-#define MAX_MESSAGE_SIZE 4096
-#define QUEUE_SIZE 10
+typedef struct node {
+    char* data;
+    struct node* next;
+} node_t;
 
 typedef struct {
-    char buffer[MAX_MESSAGE_SIZE];
-    struct sockaddr_in cliaddr;
-    socklen_t len;
-} message_t;
-
-typedef struct {
-    int front;
-    int rear;
-    int size;
-    int capacity;
+    node_t* head;
+    node_t* tail;
+    int count;
     pthread_mutex_t lock;
     pthread_cond_t not_empty;
-    pthread_cond_t not_full;
-    message_t *messages;
 } queue_t;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void queue_init(queue_t *q, int capacity);
-void queue_destroy(queue_t *q);
-void enqueue(queue_t *q, message_t msg);
-message_t dequeue(queue_t *q);
+void queue_init(queue_t* q);
+void queue_push(queue_t* q, char* data,  size_t data_len);
+char* queue_pop(queue_t* q);
 
 #ifdef __cplusplus
 }

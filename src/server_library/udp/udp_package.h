@@ -7,6 +7,8 @@
 #include "unistd.h"
 #include "stdint.h"
 
+#define SEC_TO_NSEC 1000000000L
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -30,6 +32,7 @@ typedef struct {
     char *payload[];
 } packet_t;
 #pragma pack(pop)
+
 
 #ifdef __cplusplus
 }
