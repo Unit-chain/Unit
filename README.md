@@ -27,7 +27,7 @@ DASH: Xxpmuz1sNzbQZSSLKLETTbvLsY4vZ7q3se
 
 - I5 10210U 1.6 GHz
 - 16 GB RAM
-- HotSpot: Nothing Phone 1
+- HotSpot: Nothing Phone(1)
 - Memory usage: 240 kB
 - CPU usage: 14%
 - Threads: 6
