@@ -20,3 +20,7 @@ ETH: 0xF2b924363D4f89fa7b1872A58Dc394a9394E786d
 ZEC: t1Ygk4PhkCvLLTMQuPwAoUaZXNss7U5kG63
 
 DASH: Xxpmuz1sNzbQZSSLKLETTbvLsY4vZ7q3se
+
+# Requests Per Second on the new server for Unit User Datagram Protocol(UUDP).
+
+<img src="./attachments/RPS.png">
