@@ -23,4 +23,14 @@ DASH: Xxpmuz1sNzbQZSSLKLETTbvLsY4vZ7q3se
 
 # Requests Per Second on the new server for Unit User Datagram Protocol(UUDP).
 
+### Tests environment:
+
+- I5 10210U 1.6 GHz
+- 16 GB RAM
+- HotSpot: Nothing Phone 1
+- Memory usage: 240 kB
+- CPU usage: 14%
+- Threads: 6
+- OS: ZorinOS 16.2 64-bit
+
 <img src="./attachments/RPS.png">
