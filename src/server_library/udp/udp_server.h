@@ -16,7 +16,8 @@
 #include "queue.h"
 #include "system_data.h"
 #include "stdio.h"
-#include <stdatomic.h>
+
+#define RPS_MODE 0
 
 #define MAX_BUFFER_SIZE 1024
 #define SEC_TO_NSEC 1000000000L

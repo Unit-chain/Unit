@@ -3,8 +3,6 @@
 //
 #include "udp_server.h"
 
-atomic_ullong time_counter;
-
 _Noreturn void start_udp_server(const char *ip_address, int port, int is_ipv6, error_handler err_handler) {
     int sockfd;
     if (is_ipv6) {
@@ -50,7 +48,7 @@ _Noreturn void start_udp_server(const char *ip_address, int port, int is_ipv6, e
     queue_t q;
     queue_init(&q);
     start_threads(get_num_cpus(), &q);
-#if 1
+#if RPS_MODE
     uint64_t packages_received = 0;
     struct timespec start_time, end_time;
     clock_gettime(CLOCK_MONOTONIC, &start_time);
@@ -68,7 +66,7 @@ _Noreturn void start_udp_server(const char *ip_address, int port, int is_ipv6, e
                 err_handler("recvfrom failed");
                 exit(1);
             }
-#if 1
+#if RPS_MODE
             packages_received++;
 #endif
 //            printf("Received packet from %s:%d\n", inet_ntop(AF_INET6, &clientaddr6.sin6_addr, str, INET6_ADDRSTRLEN), ntohs(clientaddr6.sin6_port));
@@ -79,13 +77,13 @@ _Noreturn void start_udp_server(const char *ip_address, int port, int is_ipv6, e
                 err_handler("recvfrom failed");
                 exit(1);
             }
-#if 1
+#if RPS_MODE
             packages_received++;
 #endif
 //            printf("Received packet from %s:%d\n", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
         }
         queue_push(&q, buffer, MAX_BUFFER_SIZE);
-#if 1
+#if RPS_MODE
         clock_gettime(CLOCK_MONOTONIC, &end_time);
         if ((end_time.tv_sec - start_time.tv_sec) > 0) {
             // Calculate packets per second
@@ -94,7 +92,7 @@ _Noreturn void start_udp_server(const char *ip_address, int port, int is_ipv6, e
             double pps = (double) packages_received / (double) elapsed_nanos * SEC_TO_NSEC;
 
             // Print result and reset counters
-            printf("RPS: %f, packages: %llu\n", pps, packages_received);
+            printf("RPS: %f, packages: %llu, queue size: %d\n", pps, packages_received, q.count);
             start_time = end_time;
             packages_received = 0;
         }
