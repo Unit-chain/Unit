@@ -2,7 +2,7 @@
 
 > RAM: >= 2GB 
 >
-> OS: MacOS, Unix, Windows
+> OS: MacOS, Linux, OpenBSD, Windows
 
 # Dependencies 
 
